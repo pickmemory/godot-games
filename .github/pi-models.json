@@ -3,6 +3,7 @@
     "zai-coding-cn": {
       "baseUrl": "https://open.bigmodel.cn/api/coding/paas/v4",
       "api": "openai-completions",
+      "apiKey": "$ZAI_CODING_CN_API_KEY",
       "models": [
         {
           "id": "glm-5.2",
