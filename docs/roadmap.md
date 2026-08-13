@@ -19,7 +19,7 @@
 - [~] #8 已派发 P2-6 开放世界/朝代地图系统 GDD → docs/design/gdd/systems/open-world.md (design-strategist)
 
 ## Phase 3 · 技术搭建（依赖 Phase 1/2）
-- [ ] P3-1 主架构文档 + ≥3 条基础层 ADR → docs/architecture/architecture.md + docs/architecture/adr-*.md (engineering-lead)
+- [~] #9 已派发 P3-1 主架构文档 + ≥3 条基础层 ADR → docs/architecture/architecture.md + docs/architecture/adr-*.md (engineering-lead)
 - [ ] P3-2 Godot 4.7 工程骨架 + 玩家可移动最小场景（TileMap 测试图 + 角色 + 键鼠/手柄移动） → game/ (engineering-lead)
 
 ## Phase 4 · 预制作（依赖 Phase 2/3）
