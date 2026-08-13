@@ -92,6 +92,7 @@ while true; do
         --provider "$PI_PROVIDER" --model "$PI_MODEL" \
         --api-key "$ZAI_CODING_CN_API_KEY" -a > /tmp/orch.log 2>&1
       set -e
+      echo "---[主理人输出末尾 4000 字符]---"; tail -c 4000 /tmp/orch.log 2>/dev/null; echo "\n---[主理人输出结束]---"
       # 主理人改了 roadmap（标记派发）→ 推送
       if [ -n "$(git status --porcelain)" ]; then
         git add "$ROADMAP"; git commit -q -m "chore(roadmap): 主理人派单 (run ${RUN_ID})"
