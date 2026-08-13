@@ -16,7 +16,7 @@
 - [~] #5 已派发 P2-3 主线任务系统 GDD → docs/design/gdd/systems/mainline-quest.md (design-strategist)
 - [~] #6 已派发 P2-4 面板/成长系统 GDD → docs/design/gdd/systems/panel-progression.md (design-strategist)
 - [~] #7 已派发 P2-5 实时战斗系统 GDD → docs/design/gdd/systems/combat.md (design-strategist)
-- [ ] P2-6 开放世界/朝代地图系统 GDD → docs/design/gdd/systems/open-world.md (design-strategist)
+- [~] #8 已派发 P2-6 开放世界/朝代地图系统 GDD → docs/design/gdd/systems/open-world.md (design-strategist)
 
 ## Phase 3 · 技术搭建（依赖 Phase 1/2）
 - [ ] P3-1 主架构文档 + ≥3 条基础层 ADR → docs/architecture/architecture.md + docs/architecture/adr-*.md (engineering-lead)
