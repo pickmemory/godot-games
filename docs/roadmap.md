@@ -8,7 +8,7 @@
 
 ## Phase 1 · 概念孵化
 - [~] #1 已派发 P1-1 游戏概念文档（设计支柱 / MDA / 范围分层 / 核心循环细化 / 赤壁改写节点示例×3） → docs/design/gdd/game-concept.md (design-strategist)
-- [ ] P1-2 美术圣经（九节视觉身份规范） → docs/design/art/art-bible.md (art-director)
+- [~] #2 已派发 P1-2 美术圣经（九节视觉身份规范） → docs/design/art/art-bible.md (art-director)
 
 ## Phase 2 · 系统设计（依赖 Phase 1 产出）
 - [ ] P2-1 系统索引 → docs/design/gdd/systems-index.md (design-strategist)
