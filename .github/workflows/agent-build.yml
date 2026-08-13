@@ -38,6 +38,8 @@ jobs:
         with: { node-version: '20' }
       - name: 安装 pi
         run: npm install -g @earendil-works/pi-coding-agent
+      - name: 刷新 model catalog（让 pi 认 zai-coding-cn 等内置 provider）
+        run: pi update --models --no-approve || true
       - name: 安装 Godot 4.7（headless 校验用，失败不阻断）
         continue-on-error: true
         run: |

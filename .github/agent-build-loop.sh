@@ -16,18 +16,20 @@ WORKFLOW="agent-build.yml"
 ROADMAP="docs/roadmap.md"
 PUSHED_ANY=false
 
-# ---------- 工具：GLM 探活（用 pi 走完整链路，看退出码） ----------
+# ---------- 工具：GLM 探活（基于输出内容判定；pi 退出码不可靠：TTY=0/非TTY=1） ----------
 glm_alive() {
-  local out rc
-  out=$(timeout 90 pi -p "回复一个字：OK" \
+  local out
+  out=$(timeout 90 pi -p "只回复两个字母OK" \
     --provider "$PI_PROVIDER" --model "$PI_MODEL" \
-    --api-key "$ZAI_CODING_CN_API_KEY" 2>&1); rc=$?
-  if [ $rc -ne 0 ]; then
-    echo "---[探活失败 rc=$rc，前1000字符]---"
-    echo "$out" | head -c 1000
-    echo "---[探活错误结束]---"
+    --api-key "$ZAI_CODING_CN_API_KEY" 2>&1)
+  if printf '%s' "$out" | grep -qiE 'OK|好的|可以' \
+     && ! printf '%s' "$out" | grep -qiE '401|403|过期|incorrect|invalid|unauthorized|forbidden|timeout|refused|ENOTFOUND|ECONN|Unknown provider|Unknown option|not found|error'; then
+    return 0
   fi
-  return $rc
+  echo "---[探活未通过，原始输出前1500字符]---"
+  printf '%s' "$out" | head -c 1500; echo ""
+  echo "---[探活输出结束]---"
+  return 1
 }
 
 # ---------- ① 跳过检查：有更早的 agent-build run 在跑就退 ----------
