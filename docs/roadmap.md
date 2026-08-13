@@ -23,7 +23,7 @@
 - [~] #10 已派发 P3-2 Godot 4.7 工程骨架 + 玩家可移动最小场景（TileMap 测试图 + 角色 + 键鼠/手柄移动） → game/ (engineering-lead)
 
 ## Phase 4 · 预制作（依赖 Phase 2/3）
-- [ ] P4-1 关键屏幕 UX 规格（主菜单 / 核心 HUD / 系统面板 / 暂停） → docs/design/gdd/ux-spec.md (design-strategist)
+- [~] #11 已派发 P4-1 关键屏幕 UX 规格（主菜单 / 核心 HUD / 系统面板 / 暂停） → docs/design/gdd/ux-spec.md (design-strategist)
 - [ ] P4-2 垂直切片资产清单 + 规格（赤壁 TileSet 占位 / 角色 / 系统面板 UI） → docs/design/art/asset-manifest.md (art-director)
 
 ## 后续阶段（Phase 5-7 · 待前序完成由主创细化）
