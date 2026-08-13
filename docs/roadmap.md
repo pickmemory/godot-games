@@ -11,7 +11,7 @@
 - [~] #2 已派发 P1-2 美术圣经（九节视觉身份规范） → docs/design/art/art-bible.md (art-director)
 
 ## Phase 2 · 系统设计（依赖 Phase 1 产出）
-- [ ] P2-1 系统索引 → docs/design/gdd/systems-index.md (design-strategist)
+- [~] #3 已派发 P2-1 系统索引 → docs/design/gdd/systems-index.md (design-strategist)
 - [ ] P2-2 改写/因果引擎 GDD → docs/design/gdd/systems/rewrite-causality.md (design-strategist)
 - [ ] P2-3 主线任务系统 GDD → docs/design/gdd/systems/mainline-quest.md (design-strategist)
 - [ ] P2-4 面板/成长系统 GDD → docs/design/gdd/systems/panel-progression.md (design-strategist)
