@@ -1,0 +1,17 @@
+# 强制文本文件用 LF（CI 在 Linux 跑 .sh/.yml，CRLF 会让 bash 报错）
+* text=auto eol=lf
+
+# 明确二进制（不做行尾转换）
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.bmp binary
+*.ogg binary
+*.wav binary
+*.mp3 binary
+*.ttf binary
+*.otf binary
+*.zip binary
+*.exe binary

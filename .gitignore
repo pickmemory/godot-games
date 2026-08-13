@@ -1,0 +1,22 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+/builds/
+
+# Godot Mono / C# (if added later)
+.mono/
+data_*/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Logs & temp
+*.log
+.run-logs/
+/tmp/

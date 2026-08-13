@@ -1,0 +1,53 @@
+name: Agent Build
+
+# 自主接力制作流水线（公仓，GLM/ZAI 驱动）。
+# cron 每 15min 拉起；loop.sh 首步做「跳过检查（在跑就退）+ GLM 探活（不通就退）」，
+# 然后 while 循环：主理人派单（队列空则按 roadmap 建 issue）→ 认领最老 issue → pi 单代理产出
+# → 自验证 → 合 main。无多代理会审。GLM 失效 / 时间到则退出，下次拉起接力。
+# 公仓 Actions 分钟数不限，成本只有 GLM API 调用；队列空即秒退，不空转烧钱。
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # 每15min 拉起；在跑则 loop.sh 首步跳过
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: '起始 issue 号（不填则主理人按路线图派单 / 认领最老 agent-build）'
+        required: false
+
+permissions:
+  contents: write
+  issues: write
+  actions: read   # gh run list 做跳过检查
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330   # 留余量（hosted 单 job 上限 6h=360min）
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      ZAI_CODING_CN_API_KEY: ${{ secrets.ZAI_CODING_CN_API_KEY }}
+      PI_PROVIDER: zai-coding-cn
+      PI_MODEL: ${{ vars.PI_MODEL || 'glm-5.2' }}
+      PI_CALL_TIMEOUT: '2700'   # 单次 pi 调用上限 45min（防挂死）
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: 安装 pi
+        run: npm install -g @earendil-works/pi-coding-agent
+      - name: 安装 Godot 4.7（headless 校验用，失败不阻断）
+        continue-on-error: true
+        run: |
+          mkdir -p /tmp/godot
+          if curl -fsSL -o /tmp/godot/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip; then
+            (cd /tmp/godot && unzip -o godot.zip && rm -f godot.zip)
+            BIN=$(ls /tmp/godot/Godot_v4.7* 2>/dev/null | head -1)
+            if [ -n "$BIN" ]; then chmod +x "$BIN"; echo "GODOT_BIN=$BIN" >> "$GITHUB_ENV"; fi
+          else
+            echo "warn: Godot 下载失败，本轮代码自验证将降级（文档交付不受影响）"
+          fi
+      - name: 接力循环
+        run: bash .github/agent-build-loop.sh "${{ inputs.issue_number || '' }}" || true
