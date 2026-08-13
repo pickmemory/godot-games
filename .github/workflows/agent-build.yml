@@ -38,8 +38,11 @@ jobs:
         with: { node-version: '20' }
       - name: 安装 pi
         run: npm install -g @earendil-works/pi-coding-agent
-      - name: 刷新 model catalog（让 pi 认 zai-coding-cn 等内置 provider）
-        run: pi update --models --no-approve || true
+      - name: 注入 zai-coding-cn provider（CI 全新 pi 无 catalog，手动写 ~/.pi/agent/models.json）
+        run: |
+          mkdir -p ~/.pi/agent
+          cp .github/pi-models.json ~/.pi/agent/models.json
+          echo "已写入 ~/.pi/agent/models.json（zai-coding-cn + glm-5.2/4.7/5-turbo）"
       - name: 安装 Godot 4.7（headless 校验用，失败不阻断）
         continue-on-error: true
         run: |
