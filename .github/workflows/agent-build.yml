@@ -37,8 +37,10 @@ jobs:
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - name: 安装 pi
-        run: npm install -g @earendil-works/pi-coding-agent
+      - name: 安装 pi（>=0.84.1 支持 print 模式 -a）
+        run: |
+          npm install -g @earendil-works/pi-coding-agent@latest
+          pi --version
       - name: 注入 zai-coding-cn provider（CI 全新 pi 无 catalog，写 $PI_CODING_AGENT_DIR/models.json）
         run: |
           mkdir -p "$PI_CODING_AGENT_DIR"
