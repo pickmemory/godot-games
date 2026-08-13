@@ -18,9 +18,16 @@ PUSHED_ANY=false
 
 # ---------- 工具：GLM 探活（用 pi 走完整链路，看退出码） ----------
 glm_alive() {
-  timeout 90 pi -p "回复一个字：OK" \
+  local out rc
+  out=$(timeout 90 pi -p "回复一个字：OK" \
     --provider "$PI_PROVIDER" --model "$PI_MODEL" \
-    --api-key "$ZAI_CODING_CN_API_KEY" -na >/dev/null 2>&1
+    --api-key "$ZAI_CODING_CN_API_KEY" -na 2>&1); rc=$?
+  if [ $rc -ne 0 ]; then
+    echo "---[探活失败 rc=$rc，前1000字符]---"
+    echo "$out" | head -c 1000
+    echo "---[探活错误结束]---"
+  fi
+  return $rc
 }
 
 # ---------- ① 跳过检查：有更早的 agent-build run 在跑就退 ----------
