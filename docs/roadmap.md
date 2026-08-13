@@ -1,5 +1,11 @@
 # 开发路线图（主理人据此派单）
 
+> 路线图已全部完成（2026-08-13）—— P1–P4 全部交付物均已合入 main（git log feat(#1)…feat(#12) 可证）。
+> Phase 5–7（制作/打磨/发布）待主创细化后再以 `- [ ]` 项展开，即可重启流水线。
+>
+> 对账修复（2026-08-13，主理人·游承峰）：#5–#12 交付物均已合入 main 且文件充实，
+> 但 workflow 的 `- [~]→- [x]` 自动翻转再次失效（与 #4 同类 bug），故本轮一次性手动回填完成态。
+
 > 主理人每轮读本文件，为**第一个 `- [ ]` 未完成项**创建 `agent-build` issue（带角色标签），
 > 并在本文件把该项标记为 `- [~] #N 已派发`；专家完成后改 `- [x]`。
 > 全部 `- [x]` 则路线图耗尽，流水线退出等主创扩展。
@@ -13,18 +19,18 @@
 ## Phase 2 · 系统设计（依赖 Phase 1 产出）
 - [x] #3 ✓ 已派发 P2-1 系统索引 → docs/design/gdd/systems-index.md (design-strategist)
 - [x] #4 ✓ 已派发 P2-2 改写/因果引擎 GDD（专家已产出并合入 main，issue #4 agent-done；本轮主理人对账修复：创建 #4 时漏翻 - [~]，致 workflow 的 [~]→[x] 匹配落空，故手动回填完成态） → docs/design/gdd/systems/rewrite-causality.md (design-strategist)
-- [~] #5 已派发 P2-3 主线任务系统 GDD → docs/design/gdd/systems/mainline-quest.md (design-strategist)
-- [~] #6 已派发 P2-4 面板/成长系统 GDD → docs/design/gdd/systems/panel-progression.md (design-strategist)
-- [~] #7 已派发 P2-5 实时战斗系统 GDD → docs/design/gdd/systems/combat.md (design-strategist)
-- [~] #8 已派发 P2-6 开放世界/朝代地图系统 GDD → docs/design/gdd/systems/open-world.md (design-strategist)
+- [x] #5 ✓ 已派发 P2-3 主线任务系统 GDD → docs/design/gdd/systems/mainline-quest.md (design-strategist)
+- [x] #6 ✓ 已派发 P2-4 面板/成长系统 GDD → docs/design/gdd/systems/panel-progression.md (design-strategist)
+- [x] #7 ✓ 已派发 P2-5 实时战斗系统 GDD → docs/design/gdd/systems/combat.md (design-strategist)
+- [x] #8 ✓ 已派发 P2-6 开放世界/朝代地图系统 GDD → docs/design/gdd/systems/open-world.md (design-strategist)
 
 ## Phase 3 · 技术搭建（依赖 Phase 1/2）
-- [~] #9 已派发 P3-1 主架构文档 + ≥3 条基础层 ADR → docs/architecture/architecture.md + docs/architecture/adr-*.md (engineering-lead)
-- [~] #10 已派发 P3-2 Godot 4.7 工程骨架 + 玩家可移动最小场景（TileMap 测试图 + 角色 + 键鼠/手柄移动） → game/ (engineering-lead)
+- [x] #9 ✓ 已派发 P3-1 主架构文档 + ≥3 条基础层 ADR → docs/architecture/architecture.md + docs/architecture/adr-*.md (engineering-lead)
+- [x] #10 ✓ 已派发 P3-2 Godot 4.7 工程骨架 + 玩家可移动最小场景（TileMap 测试图 + 角色 + 键鼠/手柄移动） → game/ (engineering-lead)
 
 ## Phase 4 · 预制作（依赖 Phase 2/3）
-- [~] #11 已派发 P4-1 关键屏幕 UX 规格（主菜单 / 核心 HUD / 系统面板 / 暂停） → docs/design/gdd/ux-spec.md (design-strategist)
-- [~] #12 已派发 P4-2 垂直切片资产清单 + 规格（赤壁 TileSet 占位 / 角色 / 系统面板 UI） → docs/design/art/asset-manifest.md (art-director)
+- [x] #11 ✓ 已派发 P4-1 关键屏幕 UX 规格（主菜单 / 核心 HUD / 系统面板 / 暂停） → docs/design/gdd/ux-spec.md (design-strategist)
+- [x] #12 ✓ 已派发 P4-2 垂直切片资产清单 + 规格（赤壁 TileSet 占位 / 角色 / 系统面板 UI） → docs/design/art/asset-manifest.md (art-director)
 
 ## 后续阶段（Phase 5-7 · 待前序完成由主创细化）
 制作 → 打磨（Playtest / 性能 / 音频） → 发布。当前不展开，避免摊薄焦点。
