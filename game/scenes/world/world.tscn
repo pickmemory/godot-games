@@ -1,0 +1,53 @@
+[gd_scene load_steps=5 format=3]
+
+; world 主场景 · 叠层对齐 architecture §8.2（P3-2 最小可走动子集 + 占位节点保留结构）。
+; 实测确认（§13）：L3 用 Node2D.y_sort_enabled（YSort 独立节点在 Godot 4.7 已移除，K3）；
+; Camera2D 用 position_smoothing_enabled/speed（K9）；地面用 TileMapLayer（K2）。
+
+[ext_resource type="Script" path="res://scripts/gameplay/world.gd" id="world_script"]
+[ext_resource type="Script" path="res://scripts/foundation/test_ground.gd" id="ground_script"]
+[ext_resource type="TileSet" path="res://assets/tilesets/test_tileset.tres" id="test_tileset"]
+[ext_resource type="PackedScene" path="res://scenes/actors/player.tscn" id="player_scene"]
+
+[node name="World" type="Node2D"]
+script = ExtResource("world_script")
+
+[node name="L0_Parallax" type="Node2D" parent="."]
+
+[node name="L1_Ground" type="TileMapLayer" parent="."]
+tile_set = ExtResource("test_tileset")
+script = ExtResource("ground_script")
+
+[node name="L2_Props" type="TileMapLayer" parent="."]
+
+[node name="L2b_Collision" type="NavigationRegion2D" parent="."]
+
+[node name="L3_Characters" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Player" parent="L3_Characters" instance=ExtResource("player_scene")]
+
+[node name="L4_Foreground" type="Node2D" parent="."]
+
+[node name="Systems" type="Node" parent="."]
+
+[node name="OpenWorldSystem" type="Node" parent="Systems"]
+
+[node name="CombatSystem" type="Node" parent="Systems"]
+
+[node name="EncounterSpawner" type="Node" parent="Systems"]
+
+[node name="IntelPOIManager" type="Node" parent="Systems"]
+
+[node name="L5_SystemCanvas" type="CanvasLayer" parent="."]
+
+[node name="RewritePanel" type="CanvasLayer" parent="."]
+
+[node name="X1_Narrator" type="Node" parent="."]
+
+[node name="WindDirector" type="Node" parent="."]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position_smoothing_enabled = true
+position_smoothing_speed = 6.0
+zoom = Vector2(1, 1)

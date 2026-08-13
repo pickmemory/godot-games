@@ -1,0 +1,14 @@
+; 玩家移动全局参数（数据驱动 · architecture §6 / adr-002）。
+; S5 玩家控制器（player.gd）只读此资源；改数值改此处，不硬编码到脚本。
+; ⚠️ P3-2 占位默认值（演示数据驱动边界，非最终调参；精确值待 S5/S4 GDD 联合拍板）。
+[gd_resource type="Resource" script_class="PlayerMovementGlobals" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/player_movement_globals.gd" id="1_globals"]
+
+[resource]
+script = ExtResource("1_globals")
+walk_speed = 180.0
+sprint_speed = 320.0
+crouch_speed = 90.0
+acceleration = 1200.0
+friction = 1400.0
