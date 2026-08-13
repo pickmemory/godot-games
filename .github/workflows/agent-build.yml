@@ -31,6 +31,7 @@ jobs:
       PI_PROVIDER: zai-coding-cn
       PI_MODEL: ${{ vars.PI_MODEL || 'glm-5.2' }}
       PI_CALL_TIMEOUT: '2700'   # 单次 pi 调用上限 45min（防挂死）
+      PI_CODING_AGENT_DIR: /home/runner/.pi-cfg   # 显式指定配置目录，确保读到注入的 models.json
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -38,11 +39,12 @@ jobs:
         with: { node-version: '20' }
       - name: 安装 pi
         run: npm install -g @earendil-works/pi-coding-agent
-      - name: 注入 zai-coding-cn provider（CI 全新 pi 无 catalog，手动写 ~/.pi/agent/models.json）
+      - name: 注入 zai-coding-cn provider（CI 全新 pi 无 catalog，写 $PI_CODING_AGENT_DIR/models.json）
         run: |
-          mkdir -p ~/.pi/agent
-          cp .github/pi-models.json ~/.pi/agent/models.json
-          echo "已写入 ~/.pi/agent/models.json（zai-coding-cn + glm-5.2/4.7/5-turbo）"
+          mkdir -p "$PI_CODING_AGENT_DIR"
+          cp .github/pi-models.json "$PI_CODING_AGENT_DIR/models.json"
+          echo "=== 验证 pi 是否识别 zai-coding-cn ==="
+          pi --list-models 2>&1 | grep -i zai | head -5 || echo "（未识别 zai-coding-cn！）"
       - name: 安装 Godot 4.7（headless 校验用，失败不阻断）
         continue-on-error: true
         run: |
