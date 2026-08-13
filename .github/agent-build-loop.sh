@@ -21,7 +21,7 @@ glm_alive() {
   local out rc
   out=$(timeout 90 pi -p "回复一个字：OK" \
     --provider "$PI_PROVIDER" --model "$PI_MODEL" \
-    --api-key "$ZAI_CODING_CN_API_KEY" -na 2>&1); rc=$?
+    --api-key "$ZAI_CODING_CN_API_KEY" 2>&1); rc=$?
   if [ $rc -ne 0 ]; then
     echo "---[探活失败 rc=$rc，前1000字符]---"
     echo "$out" | head -c 1000
