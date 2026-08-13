@@ -15,7 +15,7 @@
 - [x] #4 ✓ 已派发 P2-2 改写/因果引擎 GDD（专家已产出并合入 main，issue #4 agent-done；本轮主理人对账修复：创建 #4 时漏翻 - [~]，致 workflow 的 [~]→[x] 匹配落空，故手动回填完成态） → docs/design/gdd/systems/rewrite-causality.md (design-strategist)
 - [~] #5 已派发 P2-3 主线任务系统 GDD → docs/design/gdd/systems/mainline-quest.md (design-strategist)
 - [~] #6 已派发 P2-4 面板/成长系统 GDD → docs/design/gdd/systems/panel-progression.md (design-strategist)
-- [ ] P2-5 实时战斗系统 GDD → docs/design/gdd/systems/combat.md (design-strategist)
+- [~] #7 已派发 P2-5 实时战斗系统 GDD → docs/design/gdd/systems/combat.md (design-strategist)
 - [ ] P2-6 开放世界/朝代地图系统 GDD → docs/design/gdd/systems/open-world.md (design-strategist)
 
 ## Phase 3 · 技术搭建（依赖 Phase 1/2）
