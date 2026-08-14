@@ -67,6 +67,52 @@ signal quest_objective_updated(node_id: StringName, objective_short: String, obj
 ## 载荷：chapter_id、p_ch（章节进度 ∈ [0,1]，systems-index 章节推进 P_ch）。
 signal quest_progress_updated(chapter_id: StringName, p_ch: float)
 
+# ── 以下为 issue #16（P5-4 主线任务系统 S2/C2）登记的 §7.2 契约信号（按总表实现，非私加；
+# control-manifest 信号节：新增跨系统信号须 ADR/issue 评审，本 issue 即评审载体）。
+# 信号名/载荷逐条对齐 mainline-quest §6.1/§6.2 + rewrite-causality §7.1 + architecture §7.2，
+# 零新增、零改名（adr-004 / issue #16 验收要点 7）。
+# **C2(QuestSystem) 为本批信号的 S2 侧所有者**：S2→S1 信号由 C2 emit；S1→S2 信号由 C2 connect（emit 侧归 C1/S1，待 P5-5）。
+
+## S2→S1（mainline §6.1 / rewrite-causality §7.1）：C2 派发节点时 emit；C1 收后初始化 v_i=baseline 进入可改写。
+## 载荷：node_id（改写节点）。
+signal node_activated(node_id: StringName)
+
+## S2→S1（mainline §6.1 / §2.1 注）：C2 任务级强制锁定时 emit（玩家确认归 S3、耗尽 attempts 归 S1 内部）。
+## 载荷：node_id。
+signal node_committed(node_id: StringName)
+
+## S1→S2（mainline §6.1 / rewrite-causality §7.1）：节点确认回告，C2 connect 置「已确认」+ 推进章节进度。
+## 载荷：node_id、final_vars（最终 v_i 取值 Dictionary）、delta_node（历史偏差分 [0,100]）、cp_earned（S1 产出 CP，C2 只读引用）。
+## **emit 侧归 C1/S1，待 P5-5 落地**；C2 仅 connect，测试用手动 emit 驱动（不写 S1 桩，知识诚实红线）。
+signal node_resolved(node_id: StringName, final_vars: Dictionary, delta_node: int, cp_earned: int)
+
+## S1→S2（mainline §6.1 / §2.3 两段式）：因果链传递，C2 connect；type=existence 时 C2 做「派发/消失」决策。
+## 载荷：link_id（因果链 id）、source_node（源节点）、resolved_value（解析值字符串，如 "high"）、target（下游节点/输入）。
+## existence 规则（condition/on_false）归 S1，C2 只读 + 决策，绝不重定义（control-manifest DAG 守护）。
+## **emit 侧归 C1/S1，待 P5-5 落地**；C2 仅 connect，测试用手动 emit 驱动。
+signal causal_link_propagated(link_id: StringName, source_node: StringName, resolved_value: String, target: StringName)
+
+## S1→S2（mainline §6.1 / rewrite-causality §7.1）：存在性不满足回告，C2 connect 置「已消失」+ 更新账本。
+## 载荷：node_id。**emit 侧归 C1/S1，待 P5-5 落地**；C2 仅 connect，测试用手动 emit 驱动。
+signal node_vanished(node_id: StringName)
+
+## S2→S5（mainline §6.2）：节点目标场所设置，C5 据此布置冷光环/触发器（art-bible §3.3）。
+## 载荷：node_id、target_scene（场所 id，如 scene_altar）。
+signal quest_target_scene_set(node_id: StringName, target_scene: StringName)
+
+## S2→X1（mainline §6.2/§6.3）：派单旁白文案，X1 以冷光记录员演出（文案归 S2，表现归 X1，§1.2 两段式）。
+## 载荷：node_id、system_dispatch_voice（文案字符串）。
+signal quest_dispatch_voiced(node_id: StringName, system_dispatch_voice: String)
+
+## S2→X1/S3/S5（mainline §6.2）：消失节点文案 + UI/场所移除通知。
+## 载荷：node_id、system_vanish_voice（文案字符串）。
+signal quest_node_vanished_voiced(node_id: StringName, system_vanish_voice: String)
+
+## S2→S3（mainline §6.2，可选信号）：节点已确认后声明 CP 加成参数，供 S3 账户侧应用（§4.1 CP 两段式）。
+## **选「信号」而非「查表」**（issue #16 验收要点 7 注）：control-manifest「信号驱动禁轮询」，
+## C3 落地时 connect 即可，无需主动轮询 C2；C2 亦暴露 get_quest_reward_* getter 供调试/查表兜底。
+## 载荷：node_id、quest_reward_mult（倍率 [1.0,2.0]）、quest_cp_flat_bonus（固定 CP 点 ≥0）。
+signal quest_reward_declared(node_id: StringName, quest_reward_mult: float, quest_cp_flat_bonus: int)
+
 # TODO(p-followup): 其余 §7.2 跨系统信号（cp_awarded/intent_match_computed/feedback_tier/
-# critical_deviation_triggered/blueprint_declared/quest_reward_declared/quest_node_vanished_voiced/
-# node_resolved/node_vanished/causal_link_propagated/...）随对应核心层（C1~C3/C5）issue 落地登记。
+# critical_deviation_triggered/blueprint_declared/...）随对应核心层（C1/C3/C5）issue 落地登记。
