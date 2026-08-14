@@ -43,4 +43,30 @@ signal bf_changed(new_bf: int, max_bf: int)
 ## 载荷：ability_id（join 键，snake_case）。
 signal ability_unlocked(ability_id: StringName)
 
-# TODO(p-followup): 其余 §7.2 跨系统信号随对应核心层（C1~C3/C5）issue 落地登记。
+# ── 以下为 issue #15（P5-3 系统面板）消费侧登记的 §7.2 契约信号（按总表实现，非私加）。
+# 信号名/载荷逐条对齐 panel-progression §6.1/§6.2 + rewrite-causality §6.1 + mainline-quest §6.2，
+# 零新增、零改名（control-manifest 信号节 / adr-004）。
+# **emit 侧归 C1(S1)/C2(S2)/C3(PanelProgression)，待 P5-4/P5-5 核心层落地**；
+# 本 issue 仅 connect 做只读显示，不臆造 S1/S2 实现（知识诚实红线）。
+
+## C1(S1)→C3(S3)/HUD：节点偏差重算（rewrite-causality §6.1 / panel-progression §6.1）。
+## 载荷：node_id（改写节点）、delta_node（历史偏差分 ∈ [0,100]）、
+##       is_preview（true=改写预览实时跳，ux-spec §6.3 Δ 预览；false=节点结算，§2.5/§9.2）。
+signal deviation_recomputed(node_id: StringName, delta_node: int, is_preview: bool)
+
+## C3(S3)→HUD：CP 账户余额变更（panel-progression §6.4）。
+## 载荷：new_balance（账户余额，点，C3 唯一持有）、delta（本次变动量，点；入账为正/消耗为负）。
+## **余额权威属 C3（PanelProgression 账户所有者，§3.3/§4.1），待 P5-4/P5-5 落地**；UI 只读显示。
+signal cp_balance_changed(new_balance: int, delta: int)
+
+## C2(S2)→C3(S3)：当前改写节点目标文案更新（mainline-quest §6.2 / panel-progression §6.2）。
+## 载荷：node_id、objective_short（HUD/面板短目标，核心层）、objective_long（面板长目标，进阶层）。
+signal quest_objective_updated(node_id: StringName, objective_short: String, objective_long: String)
+
+## C2(S2)→C3(S3)：章节进度更新（mainline-quest §6.2 / panel-progression §6.2）。
+## 载荷：chapter_id、p_ch（章节进度 ∈ [0,1]，systems-index 章节推进 P_ch）。
+signal quest_progress_updated(chapter_id: StringName, p_ch: float)
+
+# TODO(p-followup): 其余 §7.2 跨系统信号（cp_awarded/intent_match_computed/feedback_tier/
+# critical_deviation_triggered/blueprint_declared/quest_reward_declared/quest_node_vanished_voiced/
+# node_resolved/node_vanished/causal_link_propagated/...）随对应核心层（C1~C3/C5）issue 落地登记。

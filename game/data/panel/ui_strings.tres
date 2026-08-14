@@ -1,0 +1,33 @@
+; 面板静态文案（数据驱动 · S3 面板/成长 · panel-progression §3.5 / architecture §6.2）。
+; 朝代命名空间：dyn_threekingdoms_chibi（art-bible §9.1）。
+; 系统「冷峻记录员」语气倾向（game-concept §9① 待审批）；改语气只改本资源，不改面板逻辑。
+; 本 issue（P5-3）覆盖系统面板四项核心只读显示 + 五 Tab 名 + 占位提示文案。
+[gd_resource type="Resource" script_class="PanelUiStrings" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/panel_ui_strings.gd" id="1_main"]
+
+[resource]
+script = ExtResource("1_main")
+dynasty = &"dyn_threekingdoms_chibi"
+panel_title = "改写者系统 · 观测台"
+cp_balance_label = "因果点余额"
+cp_unit = "点"
+cp_anim_duration = 0.3
+tab_deviation = "偏差"
+tab_skill_tree = "技能树"
+tab_exchange = "兑换"
+tab_intel = "情报"
+tab_quest = "任务"
+deviation_node_label = "节点"
+deviation_node_none = "—"
+deviation_label = "历史偏差"
+deviation_preview_suffix = "（实时预览）"
+deviation_settled_suffix = "（已结算）"
+chapter_label = "章节进度"
+chapter_none = "—"
+progress_label = "进度"
+quest_node_label = "当前节点"
+quest_node_none = "—"
+quest_objective_none = "暂无目标"
+todo_placeholder = "（待实现 · TODO(p-followup)）"
+system_tone = &"cold_recordist"
