@@ -1,28 +1,80 @@
 # P5-10 · 核心可玩美术资产 AI 生成规格（替换 greybox）
 
 > 阶段：Phase 5 · 制作（P5-10）　|　执行角色：林绘澄（art-director）
-> 文档版本：v0.1（首版，待主创/工程评审）　|　状态：可评审
+> 文档版本：v0.2（mmx 现可用 · 真实占位资产已生成，见 §0.5）　|　状态：真实资产已交付 / 待工程接线
 > Issue：#22 `[P5] 核心可玩美术资产 AI 生成（玩家精灵 / 山贼敌人 / 赤壁村落 TileSet / 系统面板背景，替换 greybox）`
 > 派单：主理人 游承峰 → 林绘澄（art-director）。
 
 ---
 
-## 0. 任务状态与降级声明（必读）
+## 0. 任务状态（mmx 现可用 · 真实占位资产已生成）
 
-**mmx 不可用 → 本交付降级为「逐资产规格 + 最终英文 prompt（含公共前缀）+ 命名 + 尺寸 + 接线计划」纯文档**，未臆造任何实际图像（守 issue 执行约束「mmx 未装/无 key 时降级纯文档，不臆造实际图像」+ AGENTS.md 红线「不臆造」）。
+> ✅ **本次执行环境 mmx 可用**（`command -v mmx` 命中 `/opt/.../bin/mmx`，`MINIMAX_API_KEY` 非空，mmx 1.0.19 / 模型 image-01）。本 issue 主路径「用 mmx image 出真实占位图」**已执行**：§0.5 列实际落位的 **14 张真实占位资产**（玩家 / 山贼 / TileSet / 系统面板四类各覆盖）+ 后处理 + 视觉核对记录。§3–§6 的逐资产规格 + 最终 prompt **保留作续产参照**（其余方向集 / 名角 / v_wind·v_altar 变体可复用同 prompt 续产）。
+>
+> ⚠️ 本文仍是 **asset-manifest.md（P4-2）的执行子集**，不重定义规范；凡引用写作 `art-bible §x` / `asset-manifest §x`，命名零偏离 `art-bible §9`。视觉纪律（双轨反差 / 色相法则 / 轨道归属）**逐资产复述 asset-manifest §2**，不新增。
 
-证据（CI 环境实测，2025-08-14）：
+---
 
-| 检查项 | 命令 | 结果 |
+## 0.5. 实际生成结果（mmx image-01 · 真实占位资产）
+
+> 本节为本次执行（mmx 可用）的产图 + 后处理 + 视觉核对实录。生成口径：`mmx image generate --out <确切路径> --width/--height <512–2048，8 的倍数> --prompt "<§3–§6 最终 prompt>"`（用 `--out` 控命名、`--width/--height` 控比例；min 维度 512）。
+
+### 0.5.1 已落位资产清单（14 张 · `game/assets/{sprites,tilesets,ui}/`）
+
+| # | 资产 ID（文件名） | 类别 | 尺寸 | alpha | 替换的 greybox（接线见 §8） |
+|---|---|---|---|---|---|
+| 1 | `sprites/char_player_traveler_idle_s.png` | ①玩家 | 640×960 | 透明 30% | `player.tscn` Sprite2D `PlaceholderTexture2D(48×48)` |
+| 2 | `sprites/char_player_traveler_walk_s.png` | ①玩家(动作) | 512×768 | 透明 33% | 同上（行走帧，方向集 `_s` 先行） |
+| 3 | `sprites/npc_folk_bandit_idle_s.png` | ②山贼 | 512×768 | 透明 31% | `bandit.tscn` Sprite2D `PlaceholderTexture2D(48×48)`+红 modulate |
+| 4 | `tilesets/tile_..._ground_dry.png` | ③Tile | 512×512 | 满铺 100% | `test_tileset.tres` PlaceholderTexture2D 之一（旱地基底） |
+| 5 | `tilesets/tile_..._ground_wetland.png` | ③Tile | 512×512 | 满铺 100% | 同上（滩涂） |
+| 6 | `tilesets/tile_..._water_river.png` | ③Tile | 512×512 | 满铺 100% | 同上（墨青江水） |
+| 7 | `tilesets/tile_..._water_wave_wind_se.png` | ③Tile叠层 | 512×512 | 透明 33% | 浪纹叠层（`v_wind=southeast`），叠于 `_water_river` 上 |
+| 8 | `tilesets/tile_..._shore_edge.png` | ③Tile | 512×512 | 满铺 100% | 水陆过渡边（terrain/peering 拼接） |
+| 9 | `tilesets/prop_..._reed_wind_se.png` | ③prop | 512×768 | 透明 40% | 芦苇荡（`v_wind=southeast`，倾 NW） |
+| 10 | `tilesets/prop_..._camp_tent_shu.png` | ③prop | 512×512 | 透明 27% | 夏口(蜀)checkpoint 营寨 |
+| 11 | `ui/ui_panel_frame_system.png` | ④面板背景 | 512×512 | 透明 23% | RewritePanel/暂停菜单 `NinePatchRect` 背景（issue §4 核心件） |
+| 12 | `ui/ui_panel_rewrite_blueprint_card.png` | ④改写卡 | 512×512 | 透明 46% | 改写面板蓝图卡背景 |
+| 13 | `ui/ui_panel_tab_icon_deviation.png` | ④Tab图标 | 512×512 | 透明 30% | 系统面板「偏差」Tab 图标 |
+| 14 | `ui/ui_panel_tab_icon_skill_tree.png` | ④Tab图标 | 512×512 | 透明 24% | 系统面板「技能树」Tab 图标 |
+
+> ✅ issue「四类至少各落 1 真实占位图」**全覆盖**：玩家×2（idle+walk 满足「至少 idle+1 动作」）/ 山贼×1 / TileSet×8（ground_dry/wetland/water_river/water_wave/shore_edge 全 5 类 + reed/camp_tent_shu 2 prop）/ UI×4（panel_frame_system 九宫格背景 + 改写卡 + 2 Tab 图标）。
+
+### 0.5.2 后处理（mmx image-01 无原生 alpha → Pillow alpha-cut 技术美术工序）
+
+mmx image-01 **输出不透明 JPEG（存为 .png 扩展名，RGB 无 alpha 通道）**，环境内**无 ffmpeg/ImageMagick/netpbm**，故装 Pillow 做技术美术后处理（属 art-director 职责，非游戏逻辑）：
+
+| 工序 | 适用资产 | 说明 |
 |---|---|---|
-| mmx 二进制 | `command -v mmx mmx-cli` | 均不在 PATH |
-| mmx 全局包 | `npm ls -g \| grep -i mmx` | 无 |
-| 托管 node_modules | `ls /opt/.../node_modules \| grep -i mmx` | 无 |
-| API Key | `$MINIMAX_API_KEY` / `$MMX_API_KEY` | 均空（EMPTY） |
+| **JPEG→真 PNG 重编码** | 全 14 张 | PIL 按内容识别 JPEG，重编为真 PNG（Godot 导入按 magic bytes 识别，但真 PNG 最稳） |
+| **flood-white key**（从画布四边 BFS，键出连通近白底） | 玩家 idle/walk、山贼、reed、camp_tent、2 Tab 图标、改写卡 | 保护角色内部近白（如米色衣袍）——仅键与边连通的背景白；alpha 边轻羽化（有机形 feather≈1.0，硬边 UI feather=0） |
+| **global-white key**（键全部近白） | `ui_panel_frame_system` | 面板重画为「青蓝硬边框 + 纯白内部」→ 键白得**仅余边框环 + 透明内部**，作 NinePatchRect 九宫格（内部透出 `system_panel.tscn` 的 `BgRect` ColorRect 半透蓝，art-bible §6.1） |
+| **flood-black key**（键连通近黑底） | `water_wave_wind_se` | 浪纹白笔触画在纯黑底 → 键黑留白浪 |
+| **wave 提亮**（不透明像素压向 200–255） | `water_wave_wind_se` | 模型产墨色渐变浪（非纯白）→ 确定性提亮为「宣纸白浪纹」（art-bible §5.2） |
+| **reed 水平镜像** | `reed_wind_se` | 模型原倾 NE，镜像为倾 **NW**（`v_wind=southeast` → 芦苇倾西北，asset-manifest §3.3 物理） |
+| **tile make-seamless**（4 折镜像） | `ground_dry/wetland/water_river` | 原图非无缝（dry 有可见 4×4 网格；wetland/water 边缘不匹配）→ 4 折镜像使四边边缘亮度差=0.0（**实测无缝**），代价为 4 抱对称（占位可接受；最终手绘无缝 tile 归 P6） |
+| **none**（仅重编码） | `ground_dry/wetland/water_river`（make-seamless 前）/`shore_edge` | 满铺不透明纹理，无 alpha 需求 |
 
-**结论**：本 issue 要求的「mmx image 出真实占位图」**无法在本环境执行**。改为交付本规格文档——它**已把 asset-manifest.md（P4-2）的差异化 prompt 与 art-bible §1.6 公共前缀预先组合成「可直接喂 mmx 的最终英文 prompt」**，并附每资产的 mmx 命令、尺寸/比例、命名、与 greybox 的接线计划。mmx 可用后，工程/美术直接复制本文 §3–§6 的 prompt 与命令即可量产。
+### 0.5.3 视觉核对（`mmx vision describe`，关键资产确认 on-spec）
 
-> ⚠️ 本文是 **asset-manifest.md（P4-2）的执行子集**，不重定义规范；凡引用写作 `art-bible §x` / `asset-manifest §x`，命名零偏离 `art-bible §9`。视觉纪律（双轨反差 / 色相法则 / 轨道归属）**逐资产复述 asset-manifest §2**，不新增。
+| 资产 | 核对结论 |
+|---|---|
+| 玩家 idle | ✅ 角色完整、暖墨彩（赭/青/米）、**透明背景无白边框**、3/4 俯视、待机姿态；符合 §4.1 辨识度 |
+| 山贼 idle | ✅ 凡人山贼（粗布赭褐 + 劈砍钝刀）、**非正规军非志怪**、暖墨彩、透明底；契合 §7 凡人 folk 决策 |
+| `ui_panel_frame_system` | ✅ **仅青蓝边框环 + 内部全透明**、无文字；可作 NinePatchRect |
+| `water_wave_wind_se` | ✅ 浪纹提亮后「明亮白笔触」叠深青水底清晰可读、读作江浪（木刻水质感）；方向为模型近似（西/NW） |
+| `prop_camp_tent_shu` | ✅ 单顶军帐、朱赤+暖金边+旗号纹样、顶视 3/4、透明底（vision 检出 vermilion/warm-gold/banner） |
+| `ui_panel_rewrite_blueprint_card` | ✅ 冷青蓝横向卡片 + 边框 + 内几何纹、上下白边键透浮动卡、无文字 |
+| `tile_ground_dry`（重产+无缝） | ✅ 有机泥土肌理、**无 4×4 网格/无线框**、4 折镜像无缝 |
+
+### 0.5.4 已知局限 / 续产待办（不阻断交付，列给主创 + 程基岩）
+
+1. **方向集 / 序列帧**：玩家仅 `_s`（idle+walk）；`_n/_e/_w` 与多帧行走/普攻/施法为续产（复用 §3 prompt + `--subject-ref` 保角色一致性）。
+2. **浪纹方向语义待 reconcile**：asset-manifest §3.1（浪）prompt 与 §3.3（芦苇）prompt 对 `v_wind=southeast` 的「倾倒向」措辞不一致（浪 prompt 写「crests leaning southeast」，芦苇写「leaning northwest」）。本次**统一按物理**（SE 风 → 浪/芦苇皆倾 NW）落地；请主创/engineering-lead 在 `WindDirector` 统一 `wind_visual_dir` 映射后，据此产 `_wind_none/_nw` 两态。
+3. **Tab 图标为抽象几何占位**：模型未严格产出「delta 三角」/「节点图」精确字形（deviation 偏立方簇、skill_tree 偏雪花）；64px 下作抽象系统图标可读，精确字形归 P6 手绘。
+4. **tile 无缝为占位技法**：4 折镜像保证边缘无缝但有 4 抱对称；最终手绘无缝 tile（含 `road_dirt/rock_hill` 目标态、`shore_edge` terrain 集）归 P6。
+5. **mmx 无原生 alpha**：透明靠 Pillow flood-key 占位；最终 alpha 边缘（去毛边/精准描边）归 P6 手绘或专用抠图工序。
+6. **资产尺寸为生成分辨率**（512–640 边，非 64×64 像素工作尺寸）；engine 导入后按 `tile_size=64`/角色 64×96 绘制区缩放对齐（§8 接线）。
 
 ---
 
@@ -62,9 +114,10 @@ top-down 3/4 isometric game asset (camera ~60-65°), hand-painted ink-wash style
 | ② 山贼敌人 | §4 | 2 张动作占位（idle/attack，`_s`） | `npc_folk_bandit`（见 §7 对齐决策） |
 | ③ 赤壁村落 TileSet | §5 | 7 张 tile + 8 张 prop（含 v_wind/v_altar 变体） | `dyn_threekingdoms_chibi` |
 | ④ 系统面板背景 + MVP UI 件 | §6 | 1 九宫格框 + 2 改写卡 + 2 Tab 图标 + 1 技能节点 | `ui_*` |
-| **合计** | | **~26 张可量产占位规格** | — |
+| **合计（可量产规格）** | | **~26 张可量产占位规格** | — |
+| **本次实际已落位（mmx）** | §0.5 | **14 张真实占位**：玩家×2 / 山贼×1 / Tile+prop×8 / UI×4 | — |
 
-> 范围对齐 issue：TileSet 覆盖 `ground_dry/wetland/water_river/water_wave/shore_edge` 全 5 类 + 必要 `prop_*`（altar/reed/camp_tent_shu/flag_shu，皆 MVP 关键路径，asset-manifest §7.2）；UI 以 `ui_panel_frame_system`（系统面板背景）为核 + 改写面板卡 / Tab 图标 / 技能节点（issue §4「系统 Tab / 改写面板卡等 MVP UI 件」）。
+> 范围对齐 issue：TileSet 覆盖 `ground_dry/wetland/water_river/water_wave/shore_edge` 全 5 类 + 必要 `prop_*`（reed/camp_tent_shu 已落，altar/flag 待续产）；UI 以 `ui_panel_frame_system`（系统面板背景）为核 + 改写面板卡 / Tab 图标（技能节点/动词卡待续产）。**本次实际落位 14 张见 §0.5；未落的变体/名角/方向集复用 §3–§6 prompt 续产。**
 
 ---
 
@@ -307,18 +360,20 @@ top-down 3/4 isometric game asset (camera ~60-65°), hand-painted ink-wash style
 | Tile 64×64 倾向（不擅自冻结） | §5 全 64×64；§9 待主创④ | ✅ |
 | 接线计划（每图替换哪个 greybox + 待工程接线项入 comment） | §8.1-§8.5 逐项；§11 comment 汇总 | ✅ |
 | 纯美术任务，不写程序逻辑 | 不碰 `game/scripts/`/`game/systems/`；接线全交程基岩（§8） | ✅ |
-| mmx 不可用 → 降级纯文档，报告注明 | §0 降级声明 + 证据表；本任务未臆造图像 | ✅ |
+| mmx 可用 → 出真实占位资产（仅 mmx 未装/无 key 时降级纯文档） | §0.5 已落位 14 张真实占位 + §0.5.2 Pillow alpha-cut 技术美术工序 + §0.5.3 mmx vision 核对；本任务未臆造图像 | ✅ |
 | 目标目录落位（`game/assets/{sprites,tilesets,ui}/`） | `sprites/`、`tilesets/` 已存在；`ui/` 本次创建（README 指向本规格） | ✅ |
 
 ---
 
-## 11. Issue Comment 同步（已按 issue 要求写入 GitHub issue #22）
+## 11. Issue Comment 同步（comment-ready 汇总 · 由主理人/workflow 转发 issue #22）
 
-按 issue「请在 comment 里说明对齐决策」「在 comment 列出待程基岩协助的纹理导入接线项」，已在 issue #22 发布一条汇总 comment，含：
-1. mmx 不可用降级声明（证据）。
-2. 山贼 folk 对齐决策（凡人 `npc_folk_bandit` ≠ 超自然 `npc_folk_omen`）。
+> ⚠️ 本执行 agent **不做 git/GitHub 操作**（AGENTS.md 红线）；以下 comment-ready 汇总由主理人/自主接力 workflow 转发至 issue #22。
+
+按 issue「请在 comment 里说明对齐决策」「在 comment 列出待程基岩协助的纹理导入接线项」，汇总 comment 含：
+1. **mmx 现可用 → 真实占位资产已落位 14 张**（§0.5 清单，四类全覆盖），非降级纯文档。
+2. 山贼 folk 对齐决策（凡人 `npc_folk_bandit` ≠ 超自然 `npc_folk_omen`，§7）。
 3. 待程基岩/engineering-lead 接线项（§8 浓缩：sprite_ref 对齐 / NinePatchRect 九宫格 / TileSet terrain+peering / 多 TileMapLayer 浪纹叠层 / v_wind·v_altar 切图 API / texture import）。
-4. 待主创拍板项（§9 ③④①②）。
+4. 待主创拍板项（§9 ③④①②）+ §0.5.4 续产待办（方向集/浪向 reconcile/Tab 精确字形/无缝手绘 tile/原生 alpha）。
 
 ---
 
@@ -326,15 +381,15 @@ top-down 3/4 isometric game asset (camera ~60-65°), hand-painted ink-wash style
 
 | Issue 验收要点 | 本规格 |
 |---|---|
-| 四类至少各落 1 真实占位（mmx 可用）或 1 逐资产规格+prompt（不可用） | mmx 不可用 → §3-§6 逐资产规格+最终 prompt（mmx 可用即量产） ✅ |
+| 四类至少各落 1 真实占位（mmx 可用）或 1 逐资产规格+prompt（不可用） | mmx 可用 → §0.5 已落 14 张真实占位（四类全覆盖）；§3-§6 规格+prompt 作续产参照 ✅ |
 | 命名严守 art-bible §9 | §3-§6 全合规；§7 山贼决策合规 ✅ |
 | 轨道 A/B 配色不串味 | §1.3 + 逐资产轨道标注 ✅ |
 | 复用 asset-manifest 已写差异化 prompt + 补 §1.6 公共前缀 | §1 预组合 PREFIX_WORLD/PREFIX_UI；§3-§6 直接复用 asset-manifest §3-§5 prompt ✅ |
 | 接线计划：替换 greybox + 待工程项入 comment | §8 逐项 + §11 comment ✅ |
 | 纯美术，不写程序逻辑 | 不碰 scripts/systems；接线交程基岩 ✅ |
-| 自验证：mmx vision 核对（可用）+ `ls game/assets/{sprites,tilesets,ui}/` 落位+命名合规 | mmx 不可用未跑 vision；§10 已 `ls` 核对三目录落位 + 命名 grep 合规 ✅ |
+| 自验证：mmx vision 核对（可用）+ `ls game/assets/{sprites,tilesets,ui}/` 落位+命名合规 | mmx 可用 → §0.5.3 已 `mmx vision` 核对关键资产；§10 已 `ls`+PIL 核三目录落位/格式/alpha/命名合规 ✅ |
 | 不跑 Godot headless（无代码改动） | 本任务无代码改动，未跑 headless ✅ |
 
 ---
 
-*—— 林绘澄（art-director）· Phase 5 制作（P5-10 核心可玩美术资产 AI 生成 · 降级纯文档）· 待主创/工程评审*
+*—— 林绘澄（art-director）· Phase 5 制作（P5-10 核心可玩美术资产 AI 生成 · mmx 真实占位资产已交付 + 续产规格参照）· 待主创/工程评审*
