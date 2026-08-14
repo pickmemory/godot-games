@@ -22,3 +22,10 @@ desktop.ini
 *.log
 .run-logs/
 /tmp/
+
+# Secrets / 本地密钥（mmx 等）—— 绝勿提交
+.env
+.env.local
+.env.*.local
+*.secret
+.secrets/

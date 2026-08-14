@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=22 format=3]
 
 ; world 主场景 · 叠层对齐 architecture §8.2（P3-2 最小可走动子集 + 占位节点保留结构）。
 ; 实测确认（§13）：L3 用 Node2D.y_sort_enabled（YSort 独立节点在 Godot 4.7 已移除，K3）；
@@ -13,7 +13,7 @@
 
 [ext_resource type="Script" path="res://scripts/gameplay/world.gd" id="world_script"]
 [ext_resource type="Script" path="res://scripts/foundation/test_ground.gd" id="ground_script"]
-[ext_resource type="TileSet" path="res://assets/tilesets/test_tileset.tres" id="test_tileset"]
+[ext_resource type="TileSet" path="res://assets/tilesets/tileset_dyn_threekingdoms_chibi.tres" id="test_tileset"]
 [ext_resource type="PackedScene" path="res://scenes/actors/player.tscn" id="player_scene"]
 [ext_resource type="Script" path="res://scripts/gameplay/encounter_spawner.gd" id="encounter_spawner_script"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/bandit.tscn" id="bandit_scene"]
@@ -29,6 +29,8 @@
 [ext_resource type="Script" path="res://scripts/juice/juice_controller.gd" id="juice_controller_script"]
 [ext_resource type="Script" path="res://scripts/juice/screen_shake.gd" id="screen_shake_script"]
 [ext_resource type="Shader" path="res://shaders/screen_damage_vignette.gdshader" id="damage_vignette_shader"]
+[ext_resource type="Texture2D" path="res://assets/tilesets/prop_dyn_threekingdoms_chibi_camp_tent_shu.png" id="prop_tent"]
+[ext_resource type="Texture2D" path="res://assets/tilesets/prop_dyn_threekingdoms_chibi_reed_wind_se.png" id="prop_reed"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_damage_vignette"]
 shader = ExtResource("damage_vignette_shader")
@@ -47,6 +49,21 @@ tile_set = ExtResource("test_tileset")
 script = ExtResource("ground_script")
 
 [node name="L2_Props" type="TileMapLayer" parent="."]
+
+[node name="CampTentShu" type="Sprite2D" parent="L2_Props"]
+texture = ExtResource("prop_tent")
+scale = Vector2(0.25, 0.25)
+position = Vector2(-256, -192)
+
+[node name="ReedSE_A" type="Sprite2D" parent="L2_Props"]
+texture = ExtResource("prop_reed")
+scale = Vector2(0.13, 0.13)
+position = Vector2(128, 160)
+
+[node name="ReedSE_B" type="Sprite2D" parent="L2_Props"]
+texture = ExtResource("prop_reed")
+scale = Vector2(0.13, 0.13)
+position = Vector2(-160, 176)
 
 [node name="L2b_Collision" type="NavigationRegion2D" parent="."]
 
