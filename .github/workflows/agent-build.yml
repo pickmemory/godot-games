@@ -52,11 +52,13 @@ jobs:
       - name: 安装 mmx（MiniMax 多模态 CLI；失败不阻断，美术/音频项降级纯文档）
         continue-on-error: true
         run: npm install -g mmx-cli
-      - name: 验证 mmx 鉴权与额度（Token Plan 订阅 Key）
+      - name: mmx 鉴权 + 验证额度（Token Plan 订阅 Key；持久化到 ~/.mmx 供专家 pi 会话复用）
         continue-on-error: true
         run: |
-          echo "=== mmx quota（验证 MINIMAX_API_KEY + 区域 cn）==="
-          mmx quota 2>&1 | head -25 || echo "（mmx 鉴权失败：MINIMAX_API_KEY 未配 / 订阅 Key 不兼容 mmx --api-key / 需 OAuth）"
+          echo "=== mmx auth login --api-key（非交互持久化）==="
+          mmx auth login --api-key "$MINIMAX_API_KEY" 2>&1 | head -8
+          echo "=== mmx quota（验证鉴权 + 额度）==="
+          mmx quota 2>&1 | head -25
       - name: 安装 Godot 4.7（headless 校验用，失败不阻断）
         continue-on-error: true
         run: |
