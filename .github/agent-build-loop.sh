@@ -79,7 +79,7 @@ echo "✅ GLM 可用，开始接力。"
 for l in "agent-build:0e8a16" "agent-running:fbca04" "agent-done:0e8a16" "agent-failed:d73a4a" "agent-continue:1f88feb"; do
   gh label create "${l%%:*}" --color "${l##*:}" --force >/dev/null 2>&1 || true
 done
-for r in design-strategist engineering-lead art-director; do
+for r in design-strategist engineering-lead art-director audio-director; do
   gh label create "$r" --color c5def5 --force >/dev/null 2>&1 || true
 done
 

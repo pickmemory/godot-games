@@ -32,5 +32,21 @@
 - [x] #11 ✓ 已派发 P4-1 关键屏幕 UX 规格（主菜单 / 核心 HUD / 系统面板 / 暂停） → docs/design/gdd/ux-spec.md (design-strategist)
 - [x] #12 ✓ 已派发 P4-2 垂直切片资产清单 + 规格（赤壁 TileSet 占位 / 角色 / 系统面板 UI） → docs/design/art/asset-manifest.md (art-director)
 
-## 后续阶段（Phase 5-7 · 待前序完成由主创细化）
-制作 → 打磨（Playtest / 性能 / 音频） → 发布。当前不展开，避免摊薄焦点。
+## Phase 5 · 制作（可玩原型 · 依赖 Phase 1-4，逐项实现 Loop A 闭环）
+- [ ] P5-1 敌人与遭遇原型（1 种山贼/妖异：巡逻 + 追击 + 受击；读 combat.md / open-world.md） → game/scenes/enemies/ (engineering-lead)
+- [ ] P5-2 实时战斗实现（普攻连段 + 1 个系统术法，命中盒 / 伤害 / 无敌帧 / 击退；读 combat.md） → game/systems/combat/ (engineering-lead)
+- [ ] P5-3 系统面板 UI（呼出/关闭，显示 等级 / 因果点 CP / 当前任务 / 历史偏差 Δ；读 panel-progression.md + ux-spec.md） → game/ui/system_panel/ (engineering-lead)
+- [ ] P5-4 主线任务系统（接取 / 追踪 / 完成 + 任务日志；读 mainline-quest.md） → game/systems/quest/ (engineering-lead)
+- [ ] P5-5 改写/因果引擎（关键变量 + 历史偏差 Δ 计算 + 因果点 CP 发放 + 历史线分支判定；读 rewrite-causality.md） → game/systems/rewrite/ (engineering-lead)
+- [ ] P5-6 抉择与历史线反馈（改写节点抉择 UI + 系统旁白 + 分叉播报；读 rewrite-causality.md） → game/systems/rewrite/ (engineering-lead)
+- [ ] P5-7 第一个改写节点可玩内容（赤壁·借东风：村落探索 → 收集气象线索 / 求术士 → 触发抉择 → 系统反馈；串联 P5-1..6） → game/scenes/rewrite_node_chibi/ (engineering-lead)
+- [ ] P5-8 主菜单 + 简易存档（新游戏 / 继续 / 设置；进入垂直切片） → game/scenes/menu/ (engineering-lead)
+- [ ] P5-9 垂直切片整合 + 烟雾自测（主菜单 → 新游戏 → 探索 → 战斗 → 完成 1 个改写节点闭环；Godot headless import 自测通过；附 playtest 说明） → game/ (engineering-lead)
+
+## Phase 6 · 打磨（依赖 Phase 5 可玩原型）
+- [ ] P6-1 音频方向文档 + 占位音效/BGM（菜单 / 探索 / 战斗 / 抉择；读 art-bible.md 情绪 + 各系统触发点） → docs/design/audio/sound-design.md + game/assets/audio/ (audio-director)
+- [ ] P6-2 视觉打磨与 juice（占位美术风格化：玩家 / 敌人 / 赤壁村落 TileSet 配色对齐 art-bible；屏幕震屏 / 命中停顿 / 拖尾） → game/assets/ + game/shaders/ (art-director)
+- [ ] P6-3 Playtest 自测报告 + 已知问题清单（跑垂直切片，记新玩家体验 / 难度曲线 / 卡点，开 follow-up issues） → docs/playtests/round-1.md (design-strategist)
+
+## Phase 7 · 发布（待 Phase 5-6 完成后细化）
+发布清单 / 本地化 / 构建 / 补丁说明。当前不展开。
