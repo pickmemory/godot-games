@@ -38,7 +38,7 @@
 - [~] #13 已派发 P5-1 敌人与遭遇原型（1 种山贼/妖异：巡逻 + 追击 + 受击；读 combat.md / open-world.md） → game/scenes/enemies/ (engineering-lead)
 - [~] #14 已派发 P5-2 实时战斗实现（普攻连段 + 1 个系统术法，命中盒 / 伤害 / 无敌帧 / 击退；读 combat.md） → game/systems/combat/ (engineering-lead)
 - [~] #15 已派发 P5-3 系统面板 UI（呼出/关闭，显示 等级 / 因果点 CP / 当前任务 / 历史偏差 Δ；读 panel-progression.md + ux-spec.md） → game/ui/system_panel/ (engineering-lead)
-- [ ] P5-4 主线任务系统（接取 / 追踪 / 完成 + 任务日志；读 mainline-quest.md） → game/systems/quest/ (engineering-lead)
+- [~] #16 已派发 P5-4 主线任务系统（接取 / 追踪 / 完成 + 任务日志；生命周期状态机 + 派发决策 + 数据驱动章节/节点 + 任务日志只读 API + 存档态契约；读 mainline-quest.md §2.1/§2.3/§3/§4/§6 + rewrite-causality §7.1） → game/systems/quest/ (engineering-lead)
 - [ ] P5-5 改写/因果引擎（关键变量 + 历史偏差 Δ 计算 + 因果点 CP 发放 + 历史线分支判定；读 rewrite-causality.md） → game/systems/rewrite/ (engineering-lead)
 - [ ] P5-6 抉择与历史线反馈（改写节点抉择 UI + 系统旁白 + 分叉播报；读 rewrite-causality.md） → game/systems/rewrite/ (engineering-lead)
 - [ ] P5-7 第一个改写节点可玩内容（赤壁·借东风：村落探索 → 收集气象线索 / 求术士 → 触发抉择 → 系统反馈；串联 P5-1..6） → game/scenes/rewrite_node_chibi/ (engineering-lead)
