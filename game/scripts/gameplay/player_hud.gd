@@ -81,7 +81,8 @@ func _show_death() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _dead and _death_armed and event.pressed and (event is InputEventKey or event is InputEventMouseButton):
+	# 先验类型再读 pressed（InputEventMouseMotion 无 pressed 属性，直接访问会报错）。
+	if _dead and _death_armed and (event is InputEventKey or event is InputEventMouseButton) and event.pressed:
 		get_viewport().set_input_as_handled()
 		Engine.time_scale = 1.0   # 保险：残留 time_scale 归位（历史 bug：命中停顿残留 → 假死）
 		get_tree().reload_current_scene()
