@@ -48,7 +48,7 @@
 
 ## Phase 6 · 打磨（依赖 Phase 5 可玩原型）
 - [~] #23 已派发 P6-1 音频方向文档 + 占位音效/BGM（菜单 / 探索 / 战斗 / 抉择；音乐方向 + 调色板 + 四态 BGM + SFX 事件清单 + 系统旁白 VO + 混音/实现/可访问性；读 art-bible.md §1.2/§2/§2.4/§5.1/§6/§9 情绪 + combat §2.7/§3/§6.4/§6.6 + mainline-quest §3.2/§6 + rewrite-causality 旁白 + game-concept §6.2/§9①；mmx music/speech 出真实占位） → docs/design/audio/sound-design.md + game/assets/audio/ (audio-director)
-- [ ] P6-2 视觉打磨与 juice（占位美术风格化：玩家 / 敌人 / 赤壁村落 TileSet 配色对齐 art-bible；屏幕震屏 / 命中停顿 / 拖尾） → game/assets/ + game/shaders/ (art-director)
+- [~] #24 已派发 P6-2 视觉打磨与 juice（占位美术风格化：玩家 / 敌人 / 赤壁村落 TileSet 配色对齐 art-bible；屏幕震屏 / 命中停顿 / 拖尾） → game/assets/ + game/shaders/ (art-director)
 - [ ] P6-3 Playtest 自测报告 + 已知问题清单（跑垂直切片，记新玩家体验 / 难度曲线 / 卡点，开 follow-up issues） → docs/playtests/round-1.md (design-strategist)
 
 ## Phase 7 · 发布（待 Phase 5-6 完成后细化）
