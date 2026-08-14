@@ -60,11 +60,11 @@ top-down 3/4 isometric game asset (camera ~60-65°), hand-painted ink-wash style
 |---|---|---|---|
 | ① 玩家精灵 | §3 | 3 张方向集占位（idle/walk/attack，皆 `_s` 先行） | `char_player_traveler` |
 | ② 山贼敌人 | §4 | 2 张动作占位（idle/attack，`_s`） | `npc_folk_bandit`（见 §7 对齐决策） |
-| ③ 赤壁村落 TileSet | §5 | 7 张 tile + 6 张 prop（含 v_wind/v_altar 变体） | `dyn_threekingdoms_chibi` |
+| ③ 赤壁村落 TileSet | §5 | 7 张 tile + 8 张 prop（含 v_wind/v_altar 变体） | `dyn_threekingdoms_chibi` |
 | ④ 系统面板背景 + MVP UI 件 | §6 | 1 九宫格框 + 2 改写卡 + 2 Tab 图标 + 1 技能节点 | `ui_*` |
-| **合计** | | **~21 张可量产占位规格** | — |
+| **合计** | | **~26 张可量产占位规格** | — |
 
-> 范围对齐 issue：TileSet 覆盖 `ground_dry/wetland/water_river/water_wave/shore_edge` 全 5 类 + 必要 `prop_*`（altar/reed/camp_tent_shu，皆 MVP 关键路径，asset-manifest §7.2）；UI 以 `ui_panel_frame_system`（系统面板背景）为核 + 改写面板卡 / Tab 图标 / 技能节点（issue §4「系统 Tab / 改写面板卡等 MVP UI 件」）。
+> 范围对齐 issue：TileSet 覆盖 `ground_dry/wetland/water_river/water_wave/shore_edge` 全 5 类 + 必要 `prop_*`（altar/reed/camp_tent_shu/flag_shu，皆 MVP 关键路径，asset-manifest §7.2）；UI 以 `ui_panel_frame_system`（系统面板背景）为核 + 改写面板卡 / Tab 图标 / 技能节点（issue §4「系统 Tab / 改写面板卡等 MVP UI 件」）。
 
 ---
 
@@ -105,7 +105,7 @@ top-down 3/4 isometric game asset (camera ~60-65°), hand-painted ink-wash style
 
 ## 4. 类别 ② · 山贼敌人（`npc_folk_bandit` · 轨道 A 暖墨彩）
 
-> **对齐决策见 §7**：bandit = **凡人 folk 非正规敌人**（`data/enemies/npc_bandit_chibi.tres` `faction=folk` / `display_name="赤壁民间山贼"` / 凡人近战 `atk_bandit_cleave`），命名 `npc_folk_bandit`，**既非** `npc_<wei|shu|wu>_soldier`（正规军模板，asset-manifest §4.3），**也非** `npc_folk_omen`（超自然志怪墨晕形，asset-manifest §4.4）。凡人外观：暖墨彩 + 粗布短褐 + 劈砍钝刀，**无冷光、无朱黄墨晕**。
+> **对齐决策见 §7**：bandit = **凡人 folk 非正规敌人**（`data/enemies/npc_bandit_chibi.tres` `faction=folk` / `display_name="赤壁山贼"` / 凡人近战 `atk_bandit_cleave`），命名 `npc_folk_bandit`，**既非** `npc_<wei|shu|wu>_soldier`（正规军模板，asset-manifest §4.3），**也非** `npc_folk_omen`（超自然志怪墨晕形，asset-manifest §4.4）。凡人外观：暖墨彩 + 粗布短褐 + 劈砍钝刀，**无冷光、无朱黄墨晕**。
 
 ### 4.1 `npc_folk_bandit_idle_s`
 - **用途**：山贼待机（enemy.gd FSM `patrol⇄chase⇄attack`，combat §2.8 / `npc_bandit_chibi.tres` `fsm_preset=patrol_chase_attack`）。替换 `game/scenes/enemies/bandit.tscn` 的 `Sprite2D` 节点现用 `PlaceholderTexture2D(48×48)` + `modulate=Color(0.8,0.32,0.32,1)`。
@@ -162,8 +162,10 @@ top-down 3/4 isometric game asset (camera ~60-65°), hand-painted ink-wash style
 | `prop_..._reed_wind_none` | 同上 | `...reeds standing upright (no wind), semi-transparent...` | `v_wind=none`。 | ✅ |
 | `prop_..._reed_wind_nw` | 同上 | `...reeds leaning toward southeast (northwest wind), semi-transparent...` | `v_wind=northwest`。 | ✅ |
 | `prop_dyn_threekingdoms_chibi_camp_tent_shu` | ≤128×128 | `Military camp tent, gongbi ink-wash, top-down 3/4, vermilion-red cloth with warm-gold trim and a Han-dragon banner emblem on the tent ridge, sturdy silhouette, same tent shape as wei/wu variants (differ ONLY by color + emblem), restrained.` | 夏口(蜀)联军后方 checkpoint（open-world §2.1/§2.8）；阵营多通道辨识（art-bible §2.3）。 | ✅ |
+| `prop_dyn_threekingdoms_chibi_flag_shu_wind_se` | ≤48×96 | `Vertical war banner on a pole, gongbi ink-wash, top-down 3/4, vermilion cloth with warm-gold trim and a Han-dragon emblem, flag blowing toward northwest (southeast wind), same flag silhouette as wei/wu (differ ONLY by color + emblem).` | 阵营旗号；**飘向 = v_wind**（`v_wind=southeast`）；阵营辨识多通道之一（art-bible §2.3/§4.3）。 | ✅ |
+| `prop_..._flag_shu_wind_none` | ≤48×96 | 同上构图，`...the same vermilion Han-dragon banner hanging limp and still (no wind)...` | `v_wind=none`。 | ✅ |
 
-> 📌 **prop 命名与 data 对应**（art-bible §9.5 / asset-manifest §8）：`prop_..._altar_*` ↔ `data/variables/v_altar.tres` `world_visual.{intact/destroyed}` + `data/world/scenes/scene_altar.tres` `v_i_visual_refs.v_altar`；`prop_..._reed_wind_*` / `tile_..._water_wave_wind_*` ↔ `data/world/environment/env_globals.tres` `wind_visual_map`（由 `v_wind` 映射，`WindDirector` 广播 `wind_visual_dir`）；`prop_..._camp_tent_shu` ↔ `data/npcs/*.tres` `faction` / 朝代包 `strongholds`。
+> 📌 **prop 命名与 data 对应**（art-bible §9.5 / asset-manifest §8）：`prop_..._altar_*` ↔ `data/variables/v_altar.tres` `world_visual.{intact/destroyed}` + `data/world/scenes/scene_altar.tres` `v_i_visual_refs.v_altar`；`prop_..._reed_wind_*` / `tile_..._water_wave_wind_*` / `prop_..._flag_shu_wind_*` ↔ `data/world/environment/env_globals.tres` `wind_visual_map`（由 `v_wind` 映射，`WindDirector` 广播 `wind_visual_dir`）；`prop_..._camp_tent_shu` ↔ `data/npcs/*.tres` `faction` / 朝代包 `strongholds`。
 
 ---
 
@@ -224,7 +226,7 @@ top-down 3/4 isometric game asset (camera ~60-65°), hand-painted ink-wash style
 |---|---|---|
 | 数据 `faction` | `folk`（`npc_bandit_chibi.tres`）✅ | `folk`（同 token，但语义不同） |
 | 性质 | **凡人**（mortal）民间山贼 | **超自然**志怪兆头/术士 |
-| 数据佐证 | `display_name="赤壁民间山贼"`；凡人近战 `atk_bandit_cleave`（windup/active/recover，无任何法术/manifest 字段）；`fsm_preset=patrol_chase_attack`（凡人巡逻战斗 AI） | asset-manifest §4.4 动作集 `idle/manifest(墨晕扩散)/dissipate`；克制冷峻形；禁金光大佛/御剑 |
+| 数据佐证 | `display_name="赤壁山贼"`；凡人近战 `atk_bandit_cleave`（windup/active/recover，无任何法术/manifest 字段）；`fsm_preset=patrol_chase_attack`（凡人巡逻战斗 AI） | asset-manifest §4.4 动作集 `idle/manifest(墨晕扩散)/dissipate`；克制冷峻形；禁金光大佛/御剑 |
 | 视觉 | 暖墨彩 + 粗布短褐 + 劈砍钝刀（§4） | 朱黄墨晕扩散 + 符箓（art-bible §1.2/§2.4） |
 | 轨道 | A 暖墨彩（**无冷光、无朱黄**，凡人） | A 奇幻子集（朱黄墨晕，超自然） |
 
@@ -295,7 +297,7 @@ top-down 3/4 isometric game asset (camera ~60-65°), hand-painted ink-wash style
 
 | 验收点（issue / team·art-director 输出规范） | 本规格处理 | 核对 |
 |---|---|---|
-| 四类资产至少各落 1 份逐资产规格 + prompt（mmx 不可用降级） | §3 玩家×3 / §4 山贼×2 / §5 tile×7+prop×6 / §6 ui×6；每条含最终 prompt（PREFIX 已预组合）+ mmx 命令 + 尺寸 + 接线 | ✅ |
+| 四类资产至少各落 1 份逐资产规格 + prompt（mmx 不可用降级） | §3 玩家×3 / §4 山贼×2 / §5 tile×7+prop×8 / §6 ui×6；每条含最终 prompt（PREFIX 已预组合）+ mmx 命令 + 尺寸 + 接线 | ✅ |
 | 美术圣经一致性（配色/风格/命名零偏离） | §1 公共前缀引 §1.6；逐资产标轨道 A/B；命名全引 §9；§7 山贼对齐决策 | ✅ |
 | 轨道 A/B 配色不串味（暖墨彩 vs 冷青蓝） | §1.3 色相后缀；§3-§5 轨道 A 无冷光；§6 轨道 B 仅 L5；§4 山贼明确「无冷光无朱黄」 | ✅ |
 | 资产 ID 与 `game/data` 字段一一可对应（art-bible §9.5） | §5.2 prop ↔ v_altar/v_wind 映射；§7 + §8.2 sprite_ref 对齐；§8 接线逐项 | ✅ |
