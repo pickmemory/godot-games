@@ -40,7 +40,7 @@
 - [~] #15 已派发 P5-3 系统面板 UI（呼出/关闭，显示 等级 / 因果点 CP / 当前任务 / 历史偏差 Δ；读 panel-progression.md + ux-spec.md） → game/ui/system_panel/ (engineering-lead)
 - [~] #16 已派发 P5-4 主线任务系统（接取 / 追踪 / 完成 + 任务日志；生命周期状态机 + 派发决策 + 数据驱动章节/节点 + 任务日志只读 API + 存档态契约；读 mainline-quest.md §2.1/§2.3/§3/§4/§6 + rewrite-causality §7.1） → game/systems/quest/ (engineering-lead)
 - [~] #17 已派发 P5-5 改写/因果引擎（C1/S1 核心层；关键变量 + 历史偏差 Δ 计算 + 因果点 CP 发放 + 历史线分支判定；读 rewrite-causality.md） → game/systems/rewrite/ (engineering-lead)
-- [ ] P5-6 抉择与历史线反馈（改写节点抉择 UI + 系统旁白 + 分叉播报；读 rewrite-causality.md） → game/systems/rewrite/ (engineering-lead)
+- [~] #18 已派发 P5-6 抉择与历史线反馈（改写节点抉择 UI RewritePanel + 系统旁白 X1 + 历史线分叉演出 STG/结算屏；消费 #17 引擎全套信号，读 rewrite-causality §6.1/§6.3/§2.7/§4.4 + ux-spec §6.3/§6.4/§9.2/§10.2） → game/systems/rewrite/ + game/ui/rewrite_panel/ (engineering-lead)
 - [ ] P5-7 第一个改写节点可玩内容（赤壁·借东风：村落探索 → 收集气象线索 / 求术士 → 触发抉择 → 系统反馈；串联 P5-1..6） → game/scenes/rewrite_node_chibi/ (engineering-lead)
 - [ ] P5-8 主菜单 + 简易存档（新游戏 / 继续 / 设置；进入垂直切片） → game/scenes/menu/ (engineering-lead)
 - [ ] P5-9 垂直切片整合 + 烟雾自测（主菜单 → 新游戏 → 探索 → 战斗 → 完成 1 个改写节点闭环；Godot headless import 自测通过；附 playtest 说明） → game/ (engineering-lead)
