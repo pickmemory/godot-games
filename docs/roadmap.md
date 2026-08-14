@@ -36,7 +36,7 @@
 
 ## Phase 5 · 制作（可玩原型 · 依赖 Phase 1-4，逐项实现 Loop A 闭环）
 - [~] #13 已派发 P5-1 敌人与遭遇原型（1 种山贼/妖异：巡逻 + 追击 + 受击；读 combat.md / open-world.md） → game/scenes/enemies/ (engineering-lead)
-- [ ] P5-2 实时战斗实现（普攻连段 + 1 个系统术法，命中盒 / 伤害 / 无敌帧 / 击退；读 combat.md） → game/systems/combat/ (engineering-lead)
+- [~] #14 已派发 P5-2 实时战斗实现（普攻连段 + 1 个系统术法，命中盒 / 伤害 / 无敌帧 / 击退；读 combat.md） → game/systems/combat/ (engineering-lead)
 - [ ] P5-3 系统面板 UI（呼出/关闭，显示 等级 / 因果点 CP / 当前任务 / 历史偏差 Δ；读 panel-progression.md + ux-spec.md） → game/ui/system_panel/ (engineering-lead)
 - [ ] P5-4 主线任务系统（接取 / 追踪 / 完成 + 任务日志；读 mainline-quest.md） → game/systems/quest/ (engineering-lead)
 - [ ] P5-5 改写/因果引擎（关键变量 + 历史偏差 Δ 计算 + 因果点 CP 发放 + 历史线分支判定；读 rewrite-causality.md） → game/systems/rewrite/ (engineering-lead)
