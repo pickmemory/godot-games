@@ -57,13 +57,13 @@ position = Vector2(-256, -192)
 
 [node name="ReedSE_A" type="Sprite2D" parent="L2_Props"]
 texture = ExtResource("prop_reed")
-scale = Vector2(0.13, 0.13)
-position = Vector2(128, 160)
+scale = Vector2(0.2, 0.2)
+position = Vector2(300, 690)
 
 [node name="ReedSE_B" type="Sprite2D" parent="L2_Props"]
 texture = ExtResource("prop_reed")
-scale = Vector2(0.13, 0.13)
-position = Vector2(-160, 176)
+scale = Vector2(0.2, 0.2)
+position = Vector2(-360, 1450)
 
 [node name="L2b_Collision" type="NavigationRegion2D" parent="."]
 

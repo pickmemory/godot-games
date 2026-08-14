@@ -71,6 +71,15 @@ const _ATTACK_HITBOX_OFFSET_RATIO: float = 0.5  # 命中盒置于朝向前方 ra
 @onready var _attack_hitbox: Area2D = $AttackHitbox
 @onready var _attack_shape_node: CollisionShape2D = $AttackHitbox/CollisionShape2D
 @onready var _debug_label: Label = $DebugLabel
+@onready var _sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
+
+# ── 精灵表现（idle/walk 双帧 + 镜像翻转 + 行走浮动；方向集/多帧动画归续产）──
+const _TEX_IDLE_PATH := "res://assets/sprites/char_player_traveler_idle_s.png"
+const _TEX_WALK_PATH := "res://assets/sprites/char_player_traveler_walk_s.png"
+var _tex_idle: Texture2D = null
+var _tex_walk: Texture2D = null
+var _sprite_base_offset := Vector2.ZERO
+var _bob_phase := 0.0
 
 
 func _ready() -> void:
@@ -85,6 +94,12 @@ func _ready() -> void:
 		_attack_shape_node.shape = own_shape
 	_disable_hitbox()
 	_apply_debug_visible(false)
+	_tex_idle = load(_TEX_IDLE_PATH) as Texture2D
+	_tex_walk = load(_TEX_WALK_PATH) as Texture2D
+	if _sprite != null:
+		if _sprite.texture == null and _tex_idle != null:
+			_sprite.texture = _tex_idle
+		_sprite_base_offset = _sprite.offset
 
 
 func _physics_process(delta: float) -> void:
@@ -113,9 +128,10 @@ func _physics_process(delta: float) -> void:
 		# DOWNED 由 combat_system 持有态；本节点表现：禁输入（locked 已置），表现见 _draw/_update_debug_label。
 		pass
 
-	if debug_draw:
+	if debug_draw or _combat_state == CombatState.ATTACKING:
 		queue_redraw()
 	_update_debug_label()
+	_update_visual(delta)
 
 
 # ───────────────────────── 移动 / stance（P3-2 保留，勿破坏） ─────────────────────────
@@ -479,14 +495,19 @@ func _apply_debug_visible(vis: bool) -> void:
 
 
 func _draw() -> void:
-	if not debug_draw or _combat_system == null:
+	if _combat_system == null:
 		return
 	var data: PlayerCombatData = _combat_system.get_combat_data_safe()
 	if data == null:
 		return
-	# 命中盒前方弧形（active 时高亮；art-bible §3.3 信息焦点）。
+	# 挥砍弧光（ACTIVE 阶段始终显示——战斗可读性，非 debug 专属；art-bible §3.3 信息焦点）。
+	if _attack_phase == AttackPhase.ACTIVE:
+		_draw_cone(Color(1.0, 0.93, 0.72, 0.38), data.hitbox_range_px, 55.0)
+	if not debug_draw:
+		return
+	# 命中盒前方弧形（active 时高亮）。
 	var col: Color = Color(0.4, 0.8, 1.0, 0.5) if _attack_phase == AttackPhase.ACTIVE else Color(0.4, 0.8, 1.0, 0.2)
-	_draw_cone(col, data.hitbox_range_px, 55.0)  # 半角 55° 近似 arc_front 扇形
+	_draw_cone(col, data.hitbox_range_px, 55.0)
 	if _combat_system.is_player_downed():
 		_draw_circle_outline(Color(0.8, 0.1, 0.1, 0.5), 28.0)
 
@@ -509,6 +530,25 @@ func _draw_cone(color: Color, radius_px: float, half_deg: float) -> void:
 		var a: float = base_ang - half + (2.0 * half) * float(i) / float(count)
 		pts.append(Vector2(cos(a), sin(a)) * radius_px)
 	draw_colored_polygon(pts, color)
+
+
+# ───────────────────────── 精灵表现（双帧 + 翻转 + 浮动） ─────────────────────────
+
+## idle/walk 双帧切换 + 左右镜像 + 行走微浮动（廉价但有效的“活”感；完整方向集/序列帧归续产）。
+func _update_visual(delta: float) -> void:
+	if _sprite == null:
+		return
+	_sprite.flip_h = _facing.x < -0.05
+	var moving: bool = velocity.length() > 12.0
+	var want: Texture2D = _tex_walk if moving else _tex_idle
+	if want != null and _sprite.texture != want:
+		_sprite.texture = want
+	if moving:
+		_bob_phase = fmod(_bob_phase + delta * 9.0, TAU)
+		_sprite.offset = _sprite_base_offset + Vector2(0.0, sin(_bob_phase) * 2.5)
+	else:
+		_bob_phase = 0.0
+		_sprite.offset = _sprite_base_offset
 
 
 # ───────────────────────── 公共查询（测试/调试） ─────────────────────────

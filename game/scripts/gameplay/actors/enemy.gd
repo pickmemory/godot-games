@@ -73,6 +73,7 @@ const _DEAD_CLEAN_DELAY: float = 0.6    # 倒地到清理（秒）
 @onready var _attack_hitbox: Area2D = $AttackHitbox
 @onready var _attack_shape_node: CollisionShape2D = $AttackHitbox/CollisionShape2D
 @onready var _debug_label: Label = $DebugLabel
+@onready var _sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
 
 
 func _ready() -> void:
@@ -114,6 +115,9 @@ func _physics_process(delta: float) -> void:
 	# 击退叠加到本帧位移之上（combat §4.4 击退方向）。
 	_apply_knockback(delta)
 	move_and_slide()
+
+	if _sprite != null and _state != State.DEAD:
+		_sprite.flip_h = _facing.x < -0.01
 
 	if debug_draw:
 		queue_redraw()
@@ -189,11 +193,13 @@ func _tick_attack(delta: float) -> void:
 		AttackPhase.WINDUP:
 			# 前摇：停下预备（可读 telegraph）。
 			_velocity_target = Vector2.ZERO
-			if _attack_timer <= 0.0:
-				_attack_phase = AttackPhase.ACTIVE
-				_attack_timer = atk.active
-				_attack_has_landed = false
-				_enable_attack_hitbox(atk)
+		if _attack_timer <= 0.0:
+			_attack_phase = AttackPhase.ACTIVE
+			_attack_timer = atk.active
+			_attack_has_landed = false
+			_enable_attack_hitbox(atk)
+			if _sprite != null:
+				_sprite.modulate = Color(1, 1, 1, 1)   # 暖色预警结束回正
 		AttackPhase.ACTIVE:
 			# 命中盒生效期间小幅前冲；每帧检测重叠（已在内不依赖 body_entered 转换）。
 			_velocity_target = _facing * (enemy_data.move_speed_px * 0.6)
@@ -215,6 +221,9 @@ func _start_attack() -> void:
 	_attack_phase = AttackPhase.WINDUP
 	_attack_timer = atk.windup
 	_attack_has_landed = false
+	# 前摇暖色预警（可读 telegraph，combat §2.8；命中白闪/死亡置灰另管）
+	if _sprite != null and _state != State.DEAD:
+		_sprite.modulate = Color(1.5, 1.05, 0.7, 1)
 
 
 func _check_attack_hit() -> void:
@@ -368,6 +377,8 @@ func _change_state(new_state: State, force: bool = false) -> void:
 	if new_state != State.CHASE and _attack_phase != AttackPhase.NONE:
 		_disable_attack_hitbox()
 		_attack_phase = AttackPhase.NONE
+		if _sprite != null and new_state != State.DEAD:
+			_sprite.modulate = Color(1, 1, 1, 1)   # 预警色回正
 	state_changed.emit(_state_name(new_state))
 	_apply_debug_visible(debug_draw)
 

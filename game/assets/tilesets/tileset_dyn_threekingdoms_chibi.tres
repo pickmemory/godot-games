@@ -30,7 +30,7 @@ texture_region_size = Vector2i(512, 512)
 0:0/0 = 0
 
 [resource]
-tile_size = Vector2i(64, 64)
+tile_size = Vector2i(256, 256)
 sources/0 = SubResource("src_dry")
 sources/1 = SubResource("src_wetland")
 sources/2 = SubResource("src_water")

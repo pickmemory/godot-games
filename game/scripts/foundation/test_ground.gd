@@ -15,8 +15,8 @@ const SRC_WATER := 2
 const SRC_SHORE := 3
 
 const AC := Vector2i(0, 0)
-const HALF_W := 30   # x: [-30, 30) = 60 格 ≈ 3840px
-const HALF_H := 20   # y: [-20, 20) = 40 格 ≈ 2560px
+const HALF_W := 16   # x: [-16, 16) = 32 格 × 256px = 8192px
+const HALF_H := 12   # y: [-12, 12) = 24 格 × 256px = 6144px
 
 
 func _ready() -> void:
@@ -33,7 +33,7 @@ func _paint_chibi() -> void:
 			set_cell(Vector2i(x, y), SRC_DRY, AC, 0)
 	# 2. 蜿蜒赤壁江（横向 + 正弦微弯）：江心 2 格水，南北各 1 格岸 + 1 格滩涂
 	for x in range(-HALF_W, HALF_W):
-		var cy: int = 2 + int(round(sin(x * 0.22) * 2.0))   # 江心行（微蜿蜒，振幅 ±2）
+		var cy: int = 3 + int(round(sin(x * 0.22) * 1.0))   # 江心行（微蜿蜒，振幅 ±1）
 		set_cell(Vector2i(x, cy), SRC_WATER, AC, 0)
 		set_cell(Vector2i(x, cy + 1), SRC_WATER, AC, 0)
 		_set_if_in_range(x, cy - 1, SRC_SHORE)   # 北岸

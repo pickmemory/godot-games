@@ -57,6 +57,12 @@ func _process(delta: float) -> void:
 			_hit_stop_remaining = 0.0
 			Engine.time_scale = 1.0
 
+func _exit_tree() -> void:
+	# 防切场景卡死：本节点被释放时若命中停顿还压着 time_scale（如杀敌即切场景），
+	# 恢复逻辑随节点消失 → 全局 6% 速度假死。此处强制归位。
+	if Engine.time_scale != 1.0:
+		Engine.time_scale = 1.0
+
 # ───────────────────────── 受击反馈（观察 EventBus.hp_changed 的 HP 下降） ─────────────────────────
 func _on_hp_changed(new_hp: int, _max_hp: int) -> void:
 	if _prev_hp >= 0 and new_hp < _prev_hp:
