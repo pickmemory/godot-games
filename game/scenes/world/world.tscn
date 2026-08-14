@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=16 format=3]
 
 ; world 主场景 · 叠层对齐 architecture §8.2（P3-2 最小可走动子集 + 占位节点保留结构）。
 ; 实测确认（§13）：L3 用 Node2D.y_sort_enabled（YSort 独立节点在 Godot 4.7 已移除，K3）；
@@ -21,7 +21,6 @@
 [ext_resource type="Resource" path="res://data/combat/player_combat.tres" id="player_combat_data"]
 [ext_resource type="Resource" path="res://data/globals/detection_globals.tres" id="detection_globals_data"]
 [ext_resource type="Script" path="res://scripts/core/quest_system.gd" id="quest_system_script"]
-[ext_resource type="Resource" path="res://data/quests/chapters/ch_chibi_war.tres" id="chapter_data"]
 [ext_resource type="Script" path="res://systems/rewrite/rewrite_causality_engine.gd" id="rewrite_engine_script"]
 [ext_resource type="Script" path="res://systems/rewrite/rewrite_feedback_controller.gd" id="rewrite_feedback_script"]
 [ext_resource type="PackedScene" path="res://ui/system_panel/system_panel.tscn" id="system_panel_scene"]
@@ -59,7 +58,10 @@ detection_globals = ExtResource("detection_globals_data")
 
 [node name="QuestSystem" type="Node" parent="Systems"]
 script = ExtResource("quest_system_script")
-chapter_data = ExtResource("chapter_data")
+; chapter_data 故意置空（P5-9 校时 · issue #21）：world 作 Loop A「探索+战斗」前奏，N2 派发延迟到
+; 改写节点场景（见 rewrite_node_director.gd 类注 + world.gd 类注），避免 world 一进入就 emit
+; node_activated → RewritePanel 立即弹出，破坏「探索→战斗→改写」序列。C1/C2 仍留 world 供「继续」
+; 读档 apply_pending_load 注入（§9.2）；chapter_data 置空不影响 deserialize（独立恢复账本/进度）。
 
 [node name="RewriteCausalityEngine" type="Node" parent="Systems"]
 script = ExtResource("rewrite_engine_script")
@@ -100,6 +102,36 @@ position = Vector2(48, -200)
 [node name="X1_Narrator" type="Node" parent="."]
 
 [node name="WindDirector" type="Node" parent="."]
+
+[node name="HUDLayer" type="CanvasLayer" parent="."]
+
+[node name="ObjectiveLabel" type="Label" parent="HUDLayer"]
+unique_name_in_owner = true
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 1100.0
+offset_bottom = 52.0
+text = "目标"
+theme_override_colors/font_color = Color(0.6, 0.85, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_constants/shadow_outline_size = 4
+theme_override_font_sizes/font_size = 22
+
+[node name="HintLabel" type="Label" parent="HUDLayer"]
+unique_name_in_owner = true
+offset_left = 24.0
+offset_top = 56.0
+offset_right = 1100.0
+offset_bottom = 82.0
+text = ""
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_constants/shadow_outline_size = 4
+theme_override_font_sizes/font_size = 16
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true

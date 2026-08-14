@@ -58,6 +58,10 @@ var _in_shaman: bool = false
 var _in_altar: bool = false
 var _shaman_triggered: bool = false
 
+# ── Loop A 返回世界（issue #21 收口）──
+const _WORLD_SCENE := "res://scenes/world/world.tscn"
+var _returning: bool = false
+
 
 # ═══════════════════════════ 生命周期 ═══════════════════════════
 
@@ -96,6 +100,11 @@ func _physics_process(_delta: float) -> void:
 	if _state == State.EXPLORING or _state == State.REWRITE_ACTIVE:
 		if Input.is_action_just_pressed("interact"):
 			_handle_interact()
+	elif _state == State.NODE_COMPLETE:
+		# Loop A 收口（issue #21）：节点确认 + 反馈演出结束后，按 interact(E) 返回 world。
+		# 守卫：仅当本导演是当前场景根（裸实例/测试不转场）且反馈演出不在进行（让玩家先看完结算）。
+		if Input.is_action_just_pressed("interact") and _can_return_to_world():
+			_return_to_world()
 
 
 func _exit_tree() -> void:
@@ -115,7 +124,7 @@ func _enter_state(s: int) -> void:
 			_set_status("术士已授术法·改写节点激活")
 		State.NODE_COMPLETE:
 			_set_objective(flow_data.objective_complete)
-			_set_status("Loop A 闭环完成")
+			_set_status("Loop A 闭环完成 · 按 E（interact）返回世界")
 	_refresh_clue_label()
 
 
@@ -346,6 +355,38 @@ func _refresh_clue_label() -> void:
 	var collected: int = _collected_clue_ids.size()
 	var total: int = flow_data.clue_pois.size()
 	_clue_label.text = "气象线索：%d/%d  ·  intel_cov：%.2f" % [collected, total, _intel_cov]
+
+
+# ═══════════════════════════ Loop A 返回世界（issue #21 收口） ═══════════════════════════
+
+## 是否允许返回 world：本导演为当前场景根（非裸实例/测试）且反馈演出（TimelineStage）不在进行。
+## TimelineStage 消费 ui_accept/ui_cancel；interact(E) 不被其消费，但演出进行中按 E 会跳过体验 →
+## 故加 _timeline_playing() 守卫，等玩家看完结算（ui_accept 关闭演出后）再允许返回。
+func _can_return_to_world() -> bool:
+	if _returning:
+		return false
+	# 裸实例/测试（RewriteNodeDirector.new() 为测试根的子节点）不转场。
+	if get_tree().current_scene != self:
+		return false
+	if _timeline_playing():
+		return false
+	return true
+
+## 反馈演出（TimelineStage）是否仍在进行（可见 = 演出或结算停留中）。
+func _timeline_playing() -> bool:
+	var ts: Node = get_tree().get_first_node_in_group("timeline_stage")
+	if ts is TimelineStage:
+		return (ts as TimelineStage).is_playing()
+	return false
+
+## 返回 world（Loop A 闭环）。节点确认时 SaveManager 已自动存档（node_resolved → atomic_save）。
+func _return_to_world() -> void:
+	if _returning:
+		return
+	_returning = true
+	print("[RewriteNodeDirector] Loop A → 返回 world（节点已确认并存档）")
+	# call_deferred：避开信号回调中直接 change_scene 的「busy set」错误（同 boot.gd 范式）。
+	get_tree().call_deferred("change_scene_to_file", _WORLD_SCENE)
 
 
 # ═══════════════════════════ 公共查询（测试/调试） ═══════════════════════════
