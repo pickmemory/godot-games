@@ -271,6 +271,8 @@ func take_hit(amount: int, from_dir: Vector2, knockback_px: float = 24.0, _damag
 	var kdir: Vector2 = from_dir.normalized() if from_dir.length() > 0.001 else _facing
 	_knockback_vel = kdir * (knockback_px / max(0.1, enemy_data.knockback_mass))
 	hurt.emit(dmg, kdir)
+	queue_redraw()
+	_spawn_damage_number(dmg)
 
 	if _current_hp <= 0:
 		_die()
@@ -299,6 +301,7 @@ func _flash_sprite() -> void:
 
 func _die() -> void:
 	_change_state(State.DEAD)
+	queue_redraw()
 	_disable_attack_hitbox()
 	_dead_clean_timer = _DEAD_CLEAN_DELAY  # 倒地表现后清理
 	if _flash_tween != null and _flash_tween.is_valid():
@@ -424,6 +427,8 @@ func _apply_debug_visible(vis: bool) -> void:
 
 
 func _draw() -> void:
+	if enemy_data != null:
+		_draw_hp_bar()
 	if not debug_draw or enemy_data == null or enemy_data.detection == null:
 		return
 	var det: EnemyDetectionData = enemy_data.detection
@@ -454,6 +459,41 @@ func _draw_cone(color: Color, radius_px: float, half_deg: float) -> void:
 		var a: float = base_ang - half + (2.0 * half) * float(i) / float(count)
 		pts.append(Vector2(cos(a), sin(a)) * radius_px)
 	draw_colored_polygon(pts, color)
+
+
+# ───────────────────────── HP 条 + 飘字（战斗可读性·纯表现） ─────────────────────────
+
+## 受击后头顶血条（alive 且掉血时显示；死亡隐藏）。local space 绘制。
+func _draw_hp_bar() -> void:
+	if _state == State.DEAD:
+		return
+	var max_hp: int = enemy_data.hp_max
+	if max_hp <= 0 or _current_hp >= max_hp:
+		return
+	var ratio: float = clampf(float(_current_hp) / float(max_hp), 0.0, 1.0)
+	var w: float = 44.0
+	var h: float = 5.0
+	var x: float = -w * 0.5
+	var y: float = -56.0
+	draw_rect(Rect2(x - 1.0, y - 1.0, w + 2.0, h + 2.0), Color(0, 0, 0, 0.55), true)
+	var col: Color = Color(0.35, 0.85, 0.45) if ratio > 0.5 else (Color(0.95, 0.75, 0.2) if ratio > 0.25 else Color(0.9, 0.25, 0.2))
+	draw_rect(Rect2(x, y, w * ratio, h), col, true)
+
+
+## 飘字伤害数字（从命中点向上浮 + 淡出后自清理）。
+func _spawn_damage_number(amount: int) -> void:
+	var lbl := Label.new()
+	lbl.text = str(amount)
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.92, 0.35))
+	lbl.add_theme_font_size_override("font_size", 20)
+	lbl.set_as_top_level(true)
+	lbl.global_position = global_position + Vector2(-10.0, -58.0)
+	lbl.z_index = 100
+	add_child(lbl)
+	var tw := create_tween()
+	tw.tween_property(lbl, "position:y", lbl.position.y - 42.0, 0.6).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(lbl, "modulate:a", 0.0, 0.55)
+	tw.tween_callback(lbl.queue_free)
 
 
 # ───────────────────────── 公共查询（测试/调试/P5-2） ─────────────────────────
