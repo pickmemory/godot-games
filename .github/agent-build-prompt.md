@@ -14,6 +14,15 @@
 - 代码遵循 AGENTS.md 的 Godot 约定（工程根 `game/`、数据驱动、信号优先）。
 - 只做本 issue 的事；需用户决策的事项写进 issue comment，不擅自定。
 
+## 第二步·B：多模态资产生成（美术/音频交付物优先用 mmx 出真资产）
+若交付物是美术或音频资产，且 `command -v mmx >/dev/null` 且 `MINIMAX_API_KEY` 非空，**优先用 mmx 生成真实占位资产**（而非只写规格）：
+- **图像**：`mmx image "<prompt>" --aspect-ratio <16:9|1:1> --out-dir <目标目录>/`（模型 image-01；prompt 必须对齐 art-bible 配色/风格/俯视角）
+- **BGM**：`mmx music generate --prompt "<风格+情绪>" --instrumental --out <path>.mp3`（music-3.0，纯器乐）
+- **语音/旁白**：`mmx speech synthesize --text "<台词>" --voice <音色> --out <path>.mp3`（speech-2.6-hd；“系统”旁白用冷静中性音色）
+- **视觉核对**：`mmx vision <图片>` 可检查生成图是否对齐 art-bible
+生成前**必读** `docs/design/art/art-bible.md`（配色/风格/命名）与对应资产规格；资产命名遵循 `asset-manifest.md`，输出到 `game/assets/`。
+mmx 不可用（未装/无 key）→ 降级为纯规格文档，并在报告注明“mmx 未可用，未生成实资产”。
+
 ## 第三步：自验证（替代会审，必须做）
 - **文档类**：核对文件已写入指定路径 + 角色 .md 规定的必需节/字段齐全；缺则补齐。
 - **代码类（Godot）**：若环境变量 `GODOT_BIN` 存在且可执行，在 `game/` 目录跑：

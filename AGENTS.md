@@ -55,6 +55,14 @@ godot-games/
 - 朝代 = TileSet + 遭遇表 + BGM 的组合，可热切换（为多朝代扩展铺路）。
 - 验证：`$GODOT_BIN --headless --import --quit`（在 `game/` 下）。
 
+## 多模态资产生成（MiniMax `mmx` CLI · Token Plan 驱动）
+CI 装了 `mmx`（`npm i -g mmx-cli`）并配 `MINIMAX_API_KEY`（订阅 Key，区域 cn=api.minimaxi.com）。美术/音频类交付物**优先用 mmx 出真实占位资产**，而非纯规格：
+- 图像 `mmx image "<prompt>" --aspect-ratio 16:9 --out-dir game/assets/sprites/`（image-01）
+- BGM `mmx music generate --prompt "<风格/情绪>" --instrumental --out game/assets/audio/x.mp3`（music-3.0，纯器乐）
+- 旁白/配音 `mmx speech synthesize --text "..." --voice <音色> --out game/assets/audio/x.mp3`（speech-2.6-hd；“系统”旁白用冷静中性音色）
+- 视觉核对 `mmx vision <图>`
+生成前必读 `docs/design/art/art-bible.md` 对齐配色/风格/命名；输出到 `game/assets/`，命名遵循 `asset-manifest.md`。mmx 未装/无 key 时降级纯文档。
+
 ## 红线（违反会被 workflow 拒合并）
 - 不做 git 操作（add/commit/push/branch）——workflow 管 git。
 - 不碰密钥、`.env*`、`.github/workflows/`（除非 issue 明确要求）。

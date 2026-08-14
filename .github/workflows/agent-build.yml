@@ -32,6 +32,8 @@ jobs:
       PI_MODEL: ${{ vars.PI_MODEL || 'glm-5.2' }}
       PI_CALL_TIMEOUT: '2700'   # 单次 pi 调用上限 45min（防挂死）
       PI_CODING_AGENT_DIR: /home/runner/.pi-cfg   # 显式指定配置目录，确保读到注入的 models.json
+      MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}   # MiniMax Token Plan 订阅 Key（多模态资产生成；未配则 mmx 调用失败、自动降级纯文档）
+      MINIMAX_REGION: cn
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -47,6 +49,9 @@ jobs:
           cp .github/pi-models.json "$PI_CODING_AGENT_DIR/models.json"
           echo "=== 验证 pi 是否识别 zai-coding-cn ==="
           pi --list-models 2>&1 | grep -i zai | head -5 || echo "（未识别 zai-coding-cn！）"
+      - name: 安装 mmx（MiniMax 多模态 CLI；失败不阻断，美术/音频项降级纯文档）
+        continue-on-error: true
+        run: npm install -g mmx-cli
       - name: 安装 Godot 4.7（headless 校验用，失败不阻断）
         continue-on-error: true
         run: |
