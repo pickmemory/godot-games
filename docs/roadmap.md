@@ -1,7 +1,9 @@
 # 开发路线图（主理人据此派单）
 
-> 路线图已全部完成（2026-08-13）—— P1–P4 全部交付物均已合入 main（git log feat(#1)…feat(#12) 可证）。
-> Phase 5–7（制作/打磨/发布）待主创细化后再以 `- [ ]` 项展开，即可重启流水线。
+> P1–P4 全部交付物均已合入 main（git log feat(#1)…feat(#12) 可证）。
+> Phase 5–7（制作/打磨/发布）已展开为 `- [ ]` 项，流水线已重启。
+>
+> 2026-08-14 主理人修正：上轮头部误标「全部完成」，实际 Phase 5 已列 9 项 `- [ ]`；本轮派发 P5-1（#13），流水线恢复自上而下派单。
 >
 > 对账修复（2026-08-13，主理人·游承峰）：#5–#12 交付物均已合入 main 且文件充实，
 > 但 workflow 的 `- [~]→- [x]` 自动翻转再次失效（与 #4 同类 bug），故本轮一次性手动回填完成态。
@@ -33,7 +35,7 @@
 - [x] #12 ✓ 已派发 P4-2 垂直切片资产清单 + 规格（赤壁 TileSet 占位 / 角色 / 系统面板 UI） → docs/design/art/asset-manifest.md (art-director)
 
 ## Phase 5 · 制作（可玩原型 · 依赖 Phase 1-4，逐项实现 Loop A 闭环）
-- [ ] P5-1 敌人与遭遇原型（1 种山贼/妖异：巡逻 + 追击 + 受击；读 combat.md / open-world.md） → game/scenes/enemies/ (engineering-lead)
+- [~] #13 已派发 P5-1 敌人与遭遇原型（1 种山贼/妖异：巡逻 + 追击 + 受击；读 combat.md / open-world.md） → game/scenes/enemies/ (engineering-lead)
 - [ ] P5-2 实时战斗实现（普攻连段 + 1 个系统术法，命中盒 / 伤害 / 无敌帧 / 击退；读 combat.md） → game/systems/combat/ (engineering-lead)
 - [ ] P5-3 系统面板 UI（呼出/关闭，显示 等级 / 因果点 CP / 当前任务 / 历史偏差 Δ；读 panel-progression.md + ux-spec.md） → game/ui/system_panel/ (engineering-lead)
 - [ ] P5-4 主线任务系统（接取 / 追踪 / 完成 + 任务日志；读 mainline-quest.md） → game/systems/quest/ (engineering-lead)
