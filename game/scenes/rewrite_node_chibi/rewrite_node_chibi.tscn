@@ -13,7 +13,7 @@
 
 [ext_resource type="Script" path="res://scenes/rewrite_node_chibi/rewrite_node_director.gd" id="1_director"]
 [ext_resource type="Script" path="res://scripts/foundation/test_ground.gd" id="2_ground"]
-[ext_resource type="TileSet" path="res://assets/tilesets/test_tileset.tres" id="3_tileset"]
+[ext_resource type="TileSet" path="res://assets/tilesets/tileset_dyn_threekingdoms_chibi.tres" id="3_tileset"]
 [ext_resource type="PackedScene" path="res://scenes/actors/player.tscn" id="4_player"]
 [ext_resource type="Script" path="res://scripts/core/combat_system.gd" id="5_combat"]
 [ext_resource type="Resource" path="res://data/combat/player_combat.tres" id="6_player_combat"]
