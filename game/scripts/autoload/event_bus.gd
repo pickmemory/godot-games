@@ -16,4 +16,11 @@ extends Node
 ##   - P5 不得私加跨系统信号（需 ADR/issue 评审）。
 ##   - 场景内高频信号走节点原生 signal / 节点分组，不塞总线。
 
-# TODO(p3-followup): 登记 S1~S5 跨系统 typed signals（architecture §7.2 总表）。
+# ── 已登记的 §7.2 跨系统信号（按总表实现，非私加；control-manifest：新增跨系统信号须 ADR/issue 评审）──
+
+## C4→C5：遭遇清场（architecture §7.2 C4 发出表 / open-world §2.6）。
+## 由战斗侧（C4/G5 EncounterSpawner）判定全灭或玩家脱战后发出；C5 据此更新遭遇 spawn_state。
+## 载荷：encounter_id（遭遇表 id，StringName）。
+signal encounter_cleared(encounter_id: StringName)
+
+# TODO(p-followup): 其余 §7.2 跨系统信号随对应核心层（C1~C5）issue 落地登记。

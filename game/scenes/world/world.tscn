@@ -1,13 +1,16 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 ; world 主场景 · 叠层对齐 architecture §8.2（P3-2 最小可走动子集 + 占位节点保留结构）。
 ; 实测确认（§13）：L3 用 Node2D.y_sort_enabled（YSort 独立节点在 Godot 4.7 已移除，K3）；
 ; Camera2D 用 position_smoothing_enabled/speed（K9）；地面用 TileMapLayer（K2）。
+; P5-1（#13）：EncounterSpawner 接入 enemy_scene + Marker2D 刷新点；玩家移动/相机/地面保持不变。
 
 [ext_resource type="Script" path="res://scripts/gameplay/world.gd" id="world_script"]
 [ext_resource type="Script" path="res://scripts/foundation/test_ground.gd" id="ground_script"]
 [ext_resource type="TileSet" path="res://assets/tilesets/test_tileset.tres" id="test_tileset"]
 [ext_resource type="PackedScene" path="res://scenes/actors/player.tscn" id="player_scene"]
+[ext_resource type="Script" path="res://scripts/gameplay/encounter_spawner.gd" id="encounter_spawner_script"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/bandit.tscn" id="bandit_scene"]
 
 [node name="World" type="Node2D"]
 script = ExtResource("world_script")
@@ -36,6 +39,20 @@ y_sort_enabled = true
 [node name="CombatSystem" type="Node" parent="Systems"]
 
 [node name="EncounterSpawner" type="Node" parent="Systems"]
+script = ExtResource("encounter_spawner_script")
+enemy_scene = ExtResource("bandit_scene")
+encounter_id = &"enc_bandit_ambush_01"
+spawn_parent = NodePath("../../L3_Characters")
+patrol_pace_px = 128.0
+
+[node name="SpawnPointA" type="Marker2D" parent="Systems/EncounterSpawner"]
+position = Vector2(180, 120)
+
+[node name="SpawnPointB" type="Marker2D" parent="Systems/EncounterSpawner"]
+position = Vector2(-220, 40)
+
+[node name="SpawnPointC" type="Marker2D" parent="Systems/EncounterSpawner"]
+position = Vector2(48, -200)
 
 [node name="IntelPOIManager" type="Node" parent="Systems"]
 
