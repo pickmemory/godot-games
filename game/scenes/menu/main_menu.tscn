@@ -1,0 +1,200 @@
+[gd_scene load_steps=4 format=3]
+
+; MainMenu · 主菜单（ux-spec §4 关键屏幕一 · MM）。
+; 场景由 boot.tscn 启动序列跳入（architecture §8.4）；新游戏/继续/槽位 → world（§9.2 注入重同步）。
+; 布局对齐 §4.3 ASCII 线框：背景层 / 标题区 / 条目区 / 底部冷光数据条。
+; greybox 占位（ColorRect + 系统材质字体）；真实开场卷轴/冷光材质 P5-10 由 art-director 替换。
+; 节点引用用 scene-unique 名（%Name）。
+[ext_resource type="Script" path="res://scenes/menu/main_menu.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/menu/save_slot_panel.tscn" id="2_slot_panel"]
+[ext_resource type="PackedScene" path="res://scenes/menu/confirm_dialog.tscn" id="3_confirm"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="BgRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.03, 0.04, 0.06, 1)
+
+[node name="CenterWrap" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="ContentVBox" type="VBoxContainer" parent="CenterWrap"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="CenterWrap/ContentVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "《赤壁·改写者》"
+
+[node name="SubtitleLabel" type="Label" parent="CenterWrap/ContentVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+text = "[ 记录员·系统 v0.1 · 已就位 ]"
+
+[node name="Spacer" type="Control" parent="CenterWrap/ContentVBox"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+
+[node name="MenuVBox" type="VBoxContainer" parent="CenterWrap/ContentVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ContinueButton" type="Button" parent="CenterWrap/ContentVBox/MenuVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+text = "继续游戏"
+
+[node name="NewGameButton" type="Button" parent="CenterWrap/ContentVBox/MenuVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+text = "开始新游戏"
+
+[node name="SlotsButton" type="Button" parent="CenterWrap/ContentVBox/MenuVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+text = "存档槽位"
+
+[node name="SettingsButton" type="Button" parent="CenterWrap/ContentVBox/MenuVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+text = "设置"
+
+[node name="ExitButton" type="Button" parent="CenterWrap/ContentVBox/MenuVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(280, 0)
+text = "退出游戏"
+
+[node name="StatusBar" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -90
+offset_left = 48
+offset_right = -48
+offset_bottom = -48
+
+[node name="Margin" type="MarginContainer" parent="StatusBar"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 10
+
+[node name="StatusLabel" type="Label" parent="StatusBar/Margin"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+text = "> 朝代: … · 存档槽: … · v0.1\n> 「…」"
+
+[node name="SaveSlotPanel" parent="." instance=ExtResource("2_slot_panel")]
+unique_name_in_owner = true
+
+[node name="SettingsPanel" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+
+[node name="SettingsDim" type="ColorRect" parent="SettingsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+color = Color(0, 0, 0, 0.55)
+
+[node name="SettingsCenter" type="CenterContainer" parent="SettingsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="SettingsBox" type="PanelContainer" parent="SettingsPanel/SettingsCenter"]
+custom_minimum_size = Vector2(520, 280)
+
+[node name="SettingsMargin" type="MarginContainer" parent="SettingsPanel/SettingsCenter/SettingsBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 22
+
+[node name="SettingsVBox" type="VBoxContainer" parent="SettingsPanel/SettingsCenter/SettingsBox/SettingsMargin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="SettingsTitle" type="Label" parent="SettingsPanel/SettingsCenter/SettingsBox/SettingsMargin/SettingsVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "设置（垂直切片·最小）"
+
+[node name="VolumeRow" type="HBoxContainer" parent="SettingsPanel/SettingsCenter/SettingsBox/SettingsMargin/SettingsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VolumeKeyLabel" type="Label" parent="SettingsPanel/SettingsCenter/SettingsBox/SettingsMargin/SettingsVBox/VolumeRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+text = "主音量"
+
+[node name="VolumeSlider" type="HSlider" parent="SettingsPanel/SettingsCenter/SettingsBox/SettingsMargin/SettingsVBox/VolumeRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(220, 0)
+
+[node name="VolumeValueLabel" type="Label" parent="SettingsPanel/SettingsCenter/SettingsBox/SettingsMargin/SettingsVBox/VolumeRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+text = "100%"
+
+[node name="DisplayRow" type="HBoxContainer" parent="SettingsPanel/SettingsCenter/SettingsBox/SettingsMargin/SettingsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="DisplayKeyLabel" type="Label" parent="SettingsPanel/SettingsCenter/SettingsBox/SettingsMargin/SettingsVBox/DisplayRow"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+text = "显示模式"
+
+[node name="DisplayModeOption" type="OptionButton" parent="SettingsPanel/SettingsCenter/SettingsBox/SettingsMargin/SettingsVBox/DisplayRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SettingsCloseButton" type="Button" parent="SettingsPanel/SettingsCenter/SettingsBox/SettingsMargin/SettingsVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 0)
+text = "关闭 (Esc/B)"
+
+[node name="ConfirmDialog" parent="." instance=ExtResource("3_confirm")]
+unique_name_in_owner = true

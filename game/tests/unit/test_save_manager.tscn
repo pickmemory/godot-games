@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+; test_save_manager.tscn —— SaveManager（X4）单元测试运行器。
+; 运行：$GODOT_BIN --headless --path game res://tests/unit/test_save_manager.tscn
+[ext_resource type="Script" path="res://tests/unit/test_save_manager.gd" id="1_script"]
+
+[node name="TestSaveManager" type="Node"]
+script = ExtResource("1_script")

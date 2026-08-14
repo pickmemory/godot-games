@@ -1,0 +1,115 @@
+[gd_scene load_steps=4 format=3]
+
+; SaveSlotPanel · 存档槽位子面板（ux-spec §4.3）。主菜单/未来暂停菜单共用（§15 风险3 DRY）。
+; 每槽：章节/Δ累计/世界线/时间/朝代；空槽直写、非空二次确认（§9.3）。
+; 朝代切换 = §5.4 待审批·禁用预留入口（灰禁 tooltip，不实现切换逻辑）。
+; 节点引用用 scene-unique 名（%Name）。冷光材质（art-bible §6.1）纯色占位（P5-10 替换）。
+[ext_resource type="Script" path="res://scenes/menu/save_slot_panel.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/menu/confirm_dialog.tscn" id="2_confirm"]
+
+[sub_resource type="StyleBoxFlat" id="sb_panel"]
+bg_color = Color(0.03, 0.06, 0.11, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.78, 1, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="SaveSlotPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="DimRect" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+color = Color(0, 0, 0, 0.55)
+
+[node name="CenterWrap" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Panel" type="PanelContainer" parent="CenterWrap"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(960, 420)
+theme_override_styles/panel = SubResource("sb_panel")
+
+[node name="Margin" type="MarginContainer" parent="CenterWrap/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="CenterWrap/Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="CenterWrap/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="CenterWrap/Panel/Margin/VBox/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "存档管理 · dyn_threekingdoms_chibi"
+
+[node name="DynastySwitchLabel" type="Label" parent="CenterWrap/Panel/Margin/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_colors/font_color = Color(0.5, 0.55, 0.62, 1)
+text = "[朝代切换 ⌀禁用 · 多朝代愿景，垂直切片仅三国·赤壁]"
+
+[node name="SlotsRow" type="HBoxContainer" parent="CenterWrap/Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="ActionRow" type="HBoxContainer" parent="CenterWrap/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="LoadButton" type="Button" parent="CenterWrap/Panel/Margin/VBox/ActionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(160, 0)
+text = "载入 (Enter/A)"
+
+[node name="NewSaveButton" type="Button" parent="CenterWrap/Panel/Margin/VBox/ActionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+text = "覆盖新存档"
+
+[node name="BackButton" type="Button" parent="CenterWrap/Panel/Margin/VBox/ActionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "返回 (Esc/B)"
+
+[node name="HintLabel" type="Label" parent="CenterWrap/Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+text = "←/→ 选槽 · Enter 载入 · Esc 返回"
+
+[node name="ConfirmDialog" parent="." instance=ExtResource("2_confirm")]
+unique_name_in_owner = true

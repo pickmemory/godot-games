@@ -1,0 +1,89 @@
+[gd_scene load_steps=3 format=3]
+
+; ConfirmDialog · 通用确认弹窗（ux-spec §9.1）。模态·居中·遮罩 60%；默认焦点=取消（防误触高危）。
+; 复用场景：主菜单（覆盖存档/退出）/ 未来暂停菜单（返回主菜单/手动存档覆盖）。
+; 节点引用用 scene-unique 名（%Name）。冷光材质（art-bible §6.1）纯色占位（P5-10 替换）。
+[ext_resource type="Script" path="res://scenes/menu/confirm_dialog.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="sb_panel"]
+bg_color = Color(0.03, 0.06, 0.11, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.78, 1, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="ConfirmDialog" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+script = ExtResource("1_script")
+
+[node name="DimRect" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+color = Color(0, 0, 0, 0.6)
+
+[node name="CenterWrap" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="DialogPanel" type="PanelContainer" parent="CenterWrap"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(520, 0)
+theme_override_styles/panel = SubResource("sb_panel")
+
+[node name="Margin" type="MarginContainer" parent="CenterWrap/DialogPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="CenterWrap/DialogPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="CenterWrap/DialogPanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.45, 0.35, 1)
+theme_override_font_sizes/font_size = 20
+text = "⚠ 确认"
+
+[node name="BodyLabel" type="Label" parent="CenterWrap/DialogPanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+autowrap_mode = 3
+text = "（后果说明·记录员语气）"
+
+[node name="ButtonRow" type="HBoxContainer" parent="CenterWrap/DialogPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="CancelButton" type="Button" parent="CenterWrap/DialogPanel/Margin/VBox/ButtonRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "取消 (Esc/B)"
+
+[node name="ConfirmButton" type="Button" parent="CenterWrap/DialogPanel/Margin/VBox/ButtonRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "确认 (Enter/A)"
