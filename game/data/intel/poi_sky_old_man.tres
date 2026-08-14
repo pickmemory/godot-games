@@ -1,0 +1,20 @@
+; 情报采集点 · 观天老叟（数据驱动 · S5 · open-world §3.2 / §2.2）。
+; poi_id: poi_sky_old_man —— N2 借东风「天象/湿度」线索（intel_kind=wind_intel，偏向天象观测）。
+; 玩家靠近老叟按 E 采集 → 产出湿度与云象情报（东南风征兆）。命名空间 dyn_threekingdoms_chibi。
+[gd_resource type="Resource" script_class="IntelPOIData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/intel_poi_data.gd" id="1_main"]
+
+[resource]
+script = ExtResource("1_main")
+poi_id = &"poi_sky_old_man"
+dynasty = &"dyn_threekingdoms_chibi"
+display_name = "观天老叟"
+position = Vector2(-32, -352)
+interact_radius_px = 80.0
+intel_kind = &"wind_intel"
+intel_raw = 0.25
+relates_to_node = &"n2_east_wind"
+intel_entry_id = &"intel_sky_old_man_sign"
+lore_text = "观天老叟指云：「湿度渐浓，天象将转——东南风或在今夜。」"
+system_voice_on_collect = "情报已收录·天象观测·湿度与云象。"

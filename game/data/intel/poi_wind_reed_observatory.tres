@@ -1,0 +1,21 @@
+; 情报采集点 · 芦苇观察点（数据驱动 · S5 拥有采集内容 · open-world §3.2 / §2.2）。
+; poi_id: poi_wind_reed_observatory —— N2 借东风的「风向」线索之一（intel_kind=wind_intel）。
+; 玩家进入交互区按 E 采集 → S5 代理聚合 intel_cov → 发 intel_updated（S5→S1，降 diff/解锁蓝图）。
+; lore 对齐 art-bible §5.5（芦苇倾角表达风向）；命名空间 dyn_threekingdoms_chibi。
+[gd_resource type="Resource" script_class="IntelPOIData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/intel_poi_data.gd" id="1_main"]
+
+[resource]
+script = ExtResource("1_main")
+poi_id = &"poi_wind_reed_observatory"
+dynasty = &"dyn_threekingdoms_chibi"
+display_name = "芦苇观察点"
+position = Vector2(-448, -32)
+interact_radius_px = 80.0
+intel_kind = &"wind_intel"
+intel_raw = 0.25
+relates_to_node = &"n2_east_wind"
+intel_entry_id = &"intel_wind_reed_sign"
+lore_text = "芦苇皆向西北倾——东风未起，火攻无风可借。"
+system_voice_on_collect = "情报已收录·风向观测·芦苇倾角。"

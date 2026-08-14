@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+; tests/unit/test_rewrite_node_chibi.tscn —— 赤壁·借东风改写节点编排测试场景（issue #19）。
+; 运行：$GODOT_BIN --headless --path game res://tests/unit/test_rewrite_node_chibi.tscn
+
+[ext_resource type="Script" path="res://tests/unit/test_rewrite_node_chibi.gd" id="1_script"]
+
+[node name="TestRewriteNodeChibi" type="Node"]
+script = ExtResource("1_script")
