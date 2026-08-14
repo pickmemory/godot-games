@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=10 format=3]
 
 ; world 主场景 · 叠层对齐 architecture §8.2（P3-2 最小可走动子集 + 占位节点保留结构）。
 ; 实测确认（§13）：L3 用 Node2D.y_sort_enabled（YSort 独立节点在 Godot 4.7 已移除，K3）；
 ; Camera2D 用 position_smoothing_enabled/speed（K9）；地面用 TileMapLayer（K2）。
 ; P5-1（#13）：EncounterSpawner 接入 enemy_scene + Marker2D 刷新点；玩家移动/相机/地面保持不变。
+; P5-2（#14）：Systems/CombatSystem 挂 C4 核心脚本 + player_combat/detection_globals 数据资源（combat §3.1/§3.4）。
 
 [ext_resource type="Script" path="res://scripts/gameplay/world.gd" id="world_script"]
 [ext_resource type="Script" path="res://scripts/foundation/test_ground.gd" id="ground_script"]
@@ -11,6 +12,9 @@
 [ext_resource type="PackedScene" path="res://scenes/actors/player.tscn" id="player_scene"]
 [ext_resource type="Script" path="res://scripts/gameplay/encounter_spawner.gd" id="encounter_spawner_script"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/bandit.tscn" id="bandit_scene"]
+[ext_resource type="Script" path="res://scripts/core/combat_system.gd" id="combat_system_script"]
+[ext_resource type="Resource" path="res://data/combat/player_combat.tres" id="player_combat_data"]
+[ext_resource type="Resource" path="res://data/globals/detection_globals.tres" id="detection_globals_data"]
 
 [node name="World" type="Node2D"]
 script = ExtResource("world_script")
@@ -37,6 +41,9 @@ y_sort_enabled = true
 [node name="OpenWorldSystem" type="Node" parent="Systems"]
 
 [node name="CombatSystem" type="Node" parent="Systems"]
+script = ExtResource("combat_system_script")
+player_combat = ExtResource("player_combat_data")
+detection_globals = ExtResource("detection_globals_data")
 
 [node name="EncounterSpawner" type="Node" parent="Systems"]
 script = ExtResource("encounter_spawner_script")

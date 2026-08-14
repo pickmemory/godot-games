@@ -1,0 +1,28 @@
+; 能力执行数据 · 系统·借风术（数据驱动 · S4 战斗执行 · combat §3.2 示例二 / architecture §6.2）。
+; ability_id: ability_system_magic_wind —— MVP 唯一系统术法（game-concept §7.1 玩家能力最小集）。
+; kind=rewrite_proxy：兼作改写动词 verb_self_borrow_wind 的物理执行（combat §2.6），**不造伤害**（damage=null）。
+; join 键：S3 的 data/progression/skills/<skill_id>.tres 的 grants.value 引用本 ability_id（两段式）。
+; 释放流程（combat §2.6）：C4 校验 ability_id∈S3 解锁集 ∧ BF≥bf_cost ∧ 未冷却 ∧ 可施法 →
+;   cast_time 前摇（可被受击打断，打断不耗 BF）→ 释放瞬间不可打断 → commit 扣 BF + 进冷却 +
+;   发 EventBus.verb_executed(verb_self_borrow_wind, requires_scene, true)（→C1/S1，**不写 v_i/Δ**）。
+[gd_resource type="Resource" script_class="AbilityData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/ability_data.gd" id="1_main"]
+
+[resource]
+script = ExtResource("1_main")
+ability_id = &"ability_system_magic_wind"
+display_name = "系统·借风术"
+dynasty = &"dyn_threekingdoms_chibi"
+kind = 3
+bf_cost = 30
+cooldown = 8.0
+cast_time = 0.6
+damage = null
+rewrite_proxy_verb = &"verb_self_borrow_wind"
+requires_scene = &"scene_altar"
+vfx_ref = &"vfx_system_magic_wind_burst"
+sfx_ref = &"sfx_system_magic_wind"
+anim_ref = &"anim_player_cast_wind"
+special_flags = PackedStringArray("triggers_system_voice")
+mvp_available = true

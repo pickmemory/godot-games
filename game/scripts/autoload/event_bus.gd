@@ -23,4 +23,24 @@ extends Node
 ## 载荷：encounter_id（遭遇表 id，StringName）。
 signal encounter_cleared(encounter_id: StringName)
 
-# TODO(p-followup): 其余 §7.2 跨系统信号随对应核心层（C1~C5）issue 落地登记。
+## C4→C1：战斗击杀/破坏改写目标，或 rewrite_proxy 术法释放（combat §6.1 / §2.9 / rewrite-causality §6.2）。
+## **DAG 硬契约**：C4 只发事件，绝不直写 v_i/Δ（由 C1 据 verbs[].effect 自算，combat §5.3）。
+## 载荷：verb_id（改写动词）、target（目标 enemy_id 或 requires_scene）、success（成败）。
+signal verb_executed(verb_id: StringName, target: StringName, success: bool)
+
+## C4→C1：警戒档位跨档（combat §6.1 / §2.7 / §4.5）。
+## C4 拥有 alert 态机与 alert_mult；C1 是否应用、如何应用 [待与 S1 联合确认]（combat §7.7①）。
+## 载荷：node_id（当前改写节点；MVP 暂可为空 StringName）、alert_level（0..3）、alert_mult（乘子）。
+signal alert_state_changed(node_id: StringName, alert_level: int, alert_mult: float)
+
+## C4→C3：玩家战斗状态只读显示（combat §6.2 / panel-progression §6.5 核心 HUD）。
+## 状态机归 C4，只读显示归 C3（systems-index §6 玩家战斗状态行）。HP/BF 非持久态（combat §3.5）。
+signal hp_changed(new_hp: int, max_hp: int)
+signal bf_changed(new_bf: int, max_bf: int)
+
+## C3→C4：能力解锁（combat §6.3 / panel-progression §6.3）。
+## S3 解锁 → C4 加入已解锁集；玩家释放术法时 C4 查此集做 requires.ability 校验（combat §2.6）。
+## 载荷：ability_id（join 键，snake_case）。
+signal ability_unlocked(ability_id: StringName)
+
+# TODO(p-followup): 其余 §7.2 跨系统信号随对应核心层（C1~C3/C5）issue 落地登记。

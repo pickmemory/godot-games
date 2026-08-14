@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+
+; tests/unit/test_combat.tscn —— 玩家战斗侧测试场景（issue #14）。
+; 运行：$GODOT_BIN --headless --path game res://tests/unit/test_combat.tscn
+
+[ext_resource type="Script" path="res://tests/unit/test_combat.gd" id="1_script"]
+
+[node name="TestCombat" type="Node"]
+script = ExtResource("1_script")
