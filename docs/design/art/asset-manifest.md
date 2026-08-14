@@ -723,4 +723,34 @@
 
 ---
 
-*—— 林绘澄（art-director）· Phase 4 预制作（P4-2 资产清单 + 规格）· 待主创评审*
+## 12. P6 juice 着色器与最小视觉挂载代码（`shd_` 新增前缀 · art-bible §9 扩展）
+
+> 来源：P6 视觉打磨（issue #24 / `p6-polish-juice.md`）。art-bible §9.2 未给「着色器」类别前缀，**本节新增 `shd_`（shader）前缀**，命名结构 `<shd_>_<命名空间>_<主体>`，小写蛇形（守 art-bible §9.1）。juice 视觉挂载脚本属工程 `game/scripts/juice/`，用 class_name（`JuiceController`/`ScreenShake`/`WeaponTrail`），不进美术资产命名空间。
+
+### 12.1 juice 着色器（`game/shaders/*.gdshader` · CanvasItem · Godot 4.7 可工作）
+
+| 资产 ID（§9 口径） | 文件路径 | 轨道 | 用途 | 对齐 | MVP |
+|---|---|---|---|---|---|
+| `shd_juice_screen_damage_vignette` | `game/shaders/screen_damage_vignette.gdshader` | A 点睛（朱砂赤） | 受击屏幕边缘红光（多通道之一） | art-bible §2.1 / combat §6.5/§7.6① | ✅ 已接线 |
+| `shd_juice_hit_flash` | `game/shaders/hit_flash.gdshader` | 中性（白闪） | 精灵受击白闪 | combat §6.5 / art-bible §7.1 | ✅ 待接线 |
+| `shd_juice_weapon_trail` | `game/shaders/weapon_trail.gdshader` | A（宣纸白墨描） | 普攻挥砍拖尾（**非系统青蓝**，art-bible §2.4） | art-bible §7.1/§2.4 | ✅ 待接线 |
+| `shd_juice_glitch_deviation` | `game/shaders/glitch_deviation.gdshader` | B 点睛（警示橙红） | 高 Δ 世界线震荡屏幕失真 | art-bible §2.5/§7.2 | ✅ 待接线 |
+| `shd_world_color_grade` | `game/shaders/world_color_grade.gdshader` | 双轨色温 | 世界色温分级（待用，默认 intensity=0） | art-bible §0/§2 [待主创审批] | ⏸ 待用 |
+
+### 12.2 juice 视觉挂载代码（`game/scripts/juice/*.gd` · 最小视觉挂载，不改玩法逻辑）
+
+| class_name | 挂载 | 职责 | 接线状态 |
+|---|---|---|---|
+| `JuiceController` | `world.tscn` Systems/ | juice 编排 + `reduce_motion` 可访问性总开关 | ✅ 已接线（监听 `EventBus.hp_changed`） |
+| `ScreenShake` | `Camera2D` 子节点 | trauma 模型震屏（写 `Camera2D.offset`） | ✅ 已接线 |
+| `WeaponTrail` | 玩家/武器子节点（Line2D） | 普攻拖尾采样 | ⏳ 待 player.gd 接 `add_swing_point` |
+
+### 12.3 命名 ↔ 路径 ↔ 数据映射（art-bible §9.5）
+
+- 着色器资产 ID（`shd_juice_*`）↔ Godot 资源路径（`game/shaders/<简短名>.gdshader`）一一对齐（§12.1 表）。
+- juice 不产 `Δ`/不写 `v_i`（守 combat §2.9 DAG 硬契约）；只观察 `EventBus.hp_changed` 做纯表现。
+- 可访问性：`reduce_motion` 经 `JuiceController.set_reduce_motion()` 接设置菜单（ux-spec §11.1），详见 `p6-polish-juice.md` §3.2/§7。
+
+---
+
+*—— 林绘澄（art-director）· Phase 4 预制作（P4-2 资产清单 + 规格）· P6 juice 资产节（§12）由 issue #24 追加 · 待主创评审*

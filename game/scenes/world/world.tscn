@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=20 format=3]
 
 ; world 主场景 · 叠层对齐 architecture §8.2（P3-2 最小可走动子集 + 占位节点保留结构）。
 ; 实测确认（§13）：L3 用 Node2D.y_sort_enabled（YSort 独立节点在 Godot 4.7 已移除，K3）；
@@ -26,6 +26,16 @@
 [ext_resource type="PackedScene" path="res://ui/system_panel/system_panel.tscn" id="system_panel_scene"]
 [ext_resource type="PackedScene" path="res://ui/rewrite_panel/rewrite_panel.tscn" id="rewrite_panel_scene"]
 [ext_resource type="PackedScene" path="res://ui/rewrite_panel/timeline_stage.tscn" id="timeline_stage_scene"]
+[ext_resource type="Script" path="res://scripts/juice/juice_controller.gd" id="juice_controller_script"]
+[ext_resource type="Script" path="res://scripts/juice/screen_shake.gd" id="screen_shake_script"]
+[ext_resource type="Shader" path="res://shaders/screen_damage_vignette.gdshader" id="damage_vignette_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_damage_vignette"]
+shader = ExtResource("damage_vignette_shader")
+shader_parameter/intensity = 0.0
+shader_parameter/glow_color = Color(0.85, 0.12, 0.10, 1)
+shader_parameter/edge_band = 0.32
+shader_parameter/max_alpha = 0.55
 
 [node name="World" type="Node2D"]
 script = ExtResource("world_script")
@@ -89,9 +99,23 @@ position = Vector2(48, -200)
 
 [node name="IntelPOIManager" type="Node" parent="Systems"]
 
+[node name="JuiceController" type="Node" parent="Systems"]
+; P6 juice 编排（art-director 最小视觉挂载 · 纯表现，不改玩法数值/逻辑，combat §6.5/§7.6）。
+; 自动监听 EventBus.hp_changed（HP 下降→受击反馈：朱赤边缘光 + 微震屏）；reduce_motion 预留接设置菜单。
+script = ExtResource("juice_controller_script")
+
 [node name="L5_SystemCanvas" type="CanvasLayer" parent="."]
 
 [node name="TimelineStage" parent="L5_SystemCanvas" instance=ExtResource("timeline_stage_scene")]
+
+[node name="DamageVignette" type="ColorRect" parent="L5_SystemCanvas"]
+; P6 受击朱赤边缘光（art-bible §2.1 点睛A / combat §7.6① 多通道之一）。全屏，不挡输入，intensity 默认 0。
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+material = SubResource("ShaderMaterial_damage_vignette")
 
 [node name="RewritePanel" type="CanvasLayer" parent="."]
 
@@ -137,3 +161,7 @@ theme_override_font_sizes/font_size = 16
 position_smoothing_enabled = true
 position_smoothing_speed = 6.0
 zoom = Vector2(1, 1)
+
+[node name="ScreenShake" type="Node" parent="Camera2D"]
+; P6 震屏（trauma 模型，写 Camera2D.offset，与 world.gd 的 global_position 正交；art-bible §3.1 节制）。
+script = ExtResource("screen_shake_script")
