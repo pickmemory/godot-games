@@ -102,11 +102,17 @@ while true; do
     gh issue edit "$zid" --remove-label agent-running >/dev/null 2>&1 || true
   done
 
-  # —— 主理人派单：队列空 & 路线图有未完成项 → 建 issue ——
-  OPEN_COUNT=$(gh issue list --label agent-build --state open --limit 1 --json number --jq 'length' 2>/dev/null || echo 0)
-  if [ "${OPEN_COUNT:-0}" -eq 0 ]; then
-    if [ -f "$ROADMAP" ]; then
-      echo "📋 主理人派单：队列空，按 roadmap 找下一项..."
+  # —— 派单 + 认领（退出前置门：退出前必须尝试创建下一个 issue；最多 2 轮“主理人 pi + 兜底”）——
+  ISSUE=""
+  if [ -n "$START_ISSUE" ]; then ISSUE="$START_ISSUE"; START_ISSUE=""; fi
+  for ATTEMPT in 1 2; do
+    [ -n "$ISSUE" ] && break
+    OPEN_COUNT=$(gh issue list --label agent-build --state open --limit 1 --json number --jq 'length' 2>/dev/null || echo 0)
+    if [ "${OPEN_COUNT:-0}" -gt 0 ]; then
+      : # 队列已有，跳过创建，直接下方认领
+    elif [ -f "$ROADMAP" ] && grep -qE '^- \[ \]' "$ROADMAP" 2>/dev/null; then
+      # 队列空 & roadmap 有未派项 → 拉起主理人创建下一个 issue
+      echo "📋 派单（第${ATTEMPT}次）：队列空但 roadmap 有未派项，拉起主理人创建..."
       sed "s|{RUN_URL}|$RUN_URL|g" .github/orchestrator-prompt.md > /tmp/orch-prompt.md
       set +e
       timeout "$PI_CALL_TIMEOUT" pi -p "$(cat /tmp/orch-prompt.md)" \
@@ -114,35 +120,32 @@ while true; do
         --api-key "$ZAI_CODING_CN_API_KEY" -a > /tmp/orch.log 2>&1
       set -e
       echo "---[主理人输出末尾 4000 字符]---"; tail -c 4000 /tmp/orch.log 2>/dev/null; echo "\n---[主理人输出结束]---"
-      # 主理人改了 roadmap（标记派发）→ 推送
       if [ -n "$(git status --porcelain)" ]; then
-        git add "$ROADMAP"; git commit -q -m "chore(roadmap): 主理人派单 (run ${RUN_ID})"
+        git add "$ROADMAP"; git commit -q -m "chore(roadmap): 主理人派单 (run ${RUN_ID} 第${ATTEMPT}次)"
         git pull --rebase origin HEAD 2>/dev/null || true
         git push origin HEAD 2>/dev/null || true
       fi
-      # 契约校验：主理人必须让队列从空→有；若漏派且 roadmap 仍有 - [ ]，loop.sh 兜底建一个
+      # 主理人漏派 → loop.sh 兜底从 roadmap 确定性建一个
       OPEN_AFTER=$(gh issue list --label agent-build --state open --limit 1 --json number --jq 'length' 2>/dev/null || echo 0)
-      if [ "${OPEN_AFTER:-0}" -eq 0 ] && grep -qE '^- \[ \]' "$ROADMAP" 2>/dev/null; then
-        echo "⚠️ 主理人未派单，loop.sh 兜底从 roadmap 建下一个 issue..."
+      if [ "${OPEN_AFTER:-0}" -eq 0 ]; then
+        echo "⚠️ 主理人第${ATTEMPT}次未派单，loop.sh 兜底建下一个 issue..."
         fallback_create_issue
       fi
     else
-      echo "✅ 无 $ROADMAP，队列空，全部完成，退出。"
+      echo "✅ roadmap 无未派项（全部完成），无需创建。"
       break
     fi
-  fi
-
-  # —— 认领最老 agent-build issue（dispatch 指定起始 issue 仅首轮用）——
-  if [ -n "$START_ISSUE" ]; then
-    ISSUE="$START_ISSUE"; START_ISSUE=""
-  else
+    # 认领最老 agent-build issue（排除 agent-running）
     ISSUE=$(gh issue list --label agent-build --state open --limit 100 \
             --json number,labels \
             --jq '[ .[] | select(any(.labels[].name; . == "agent-running") | not) ]
                   | sort_by(.number) | .[0].number // empty')
-  fi
+    [ -n "$ISSUE" ] && echo "   → 第${ATTEMPT}次认领到 #${ISSUE}"
+  done
+
+  # 退出前置门：经 2 轮派单尝试后队列仍空 → 才允许退出（说明 roadmap 耗尽 或 创建持续失败）
   if [ -z "${ISSUE:-}" ]; then
-    echo "✅ 队列空（主理人本轮未派新单），退出，等下次拉起。"
+    echo "✅ 经 2 轮派单尝试队列仍空（roadmap 耗尽 或 创建持续失败），退出，等下次拉起。"
     break
   fi
 
