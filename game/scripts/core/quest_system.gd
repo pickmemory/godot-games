@@ -316,7 +316,7 @@ func _set_node_vanished(node_id: StringName) -> void:
 		print("[QuestSystem] %s -> 已消失" % node_id)
 
 
-# ───────────────────────── existence 满足性判定（MVP 约定，[待 p5-5 联合确认]） ─────────────────────────
+# ───────────────────────── existence 满足性判定（P5-5 已确认：C1 canonical token 精确评估） ─────────────────────────
 
 ## P5-5 联合确认（issue #17 落地）：C1 已做 existence condition 精确评估，发 canonical token "met"/"unmet"。
 ## C2 只读该 token 做派发/消失决策（不重定义 condition，control-manifest DAG 守护 / rewrite-causality §7.1）。
