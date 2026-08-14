@@ -366,7 +366,7 @@ func validate_chapter(chap: ChapterData) -> Dictionary:
 	var errors: Array[String] = []
 	if chap == null:
 		return {"ok": false, "errors": ["chapter_data is null"]}
-	var sum_w := chap.sum_weights()
+	var sum_w: float = chap.sum_weights()
 	if not is_equal_approx(sum_w, 1.0):
 		errors.append("Σw_node=%.4f ≠ 1.0（§4.3 归一化）" % sum_w)
 	var ordered_ids: Dictionary = {}

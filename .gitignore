@@ -4,8 +4,10 @@
 /builds/
 
 # Godot Mono / C# (if added later)
-.mono/
-data_*/
+# 锚定到 Godot 工程根（game/）：Mono 生成的 game/data_<project>/ 目录。
+# ⚠️ 勿用未锚定的 `data_*/` —— 它会误伤 game/scripts/foundation/data_resources/
+# （曾导致改写/战斗/任务数据资源脚本被 git 忽略、workflow git add 漏提交，引发 #26 P6-Blocker 回归）。
+game/data_*/
 
 # OS
 .DS_Store
