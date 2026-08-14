@@ -193,13 +193,13 @@ func _tick_attack(delta: float) -> void:
 		AttackPhase.WINDUP:
 			# 前摇：停下预备（可读 telegraph）。
 			_velocity_target = Vector2.ZERO
-		if _attack_timer <= 0.0:
-			_attack_phase = AttackPhase.ACTIVE
-			_attack_timer = atk.active
-			_attack_has_landed = false
-			_enable_attack_hitbox(atk)
-			if _sprite != null:
-				_sprite.modulate = Color(1, 1, 1, 1)   # 暖色预警结束回正
+			if _attack_timer <= 0.0:
+				_attack_phase = AttackPhase.ACTIVE
+				_attack_timer = atk.active
+				_attack_has_landed = false
+				_enable_attack_hitbox(atk)
+				if _sprite != null:
+					_sprite.modulate = Color(1, 1, 1, 1)   # 暖色预警结束回正
 		AttackPhase.ACTIVE:
 			# 命中盒生效期间小幅前冲；每帧检测重叠（已在内不依赖 body_entered 转换）。
 			_velocity_target = _facing * (enemy_data.move_speed_px * 0.6)
