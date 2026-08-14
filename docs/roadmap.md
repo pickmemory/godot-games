@@ -43,7 +43,7 @@
 - [~] #18 已派发 P5-6 抉择与历史线反馈（改写节点抉择 UI RewritePanel + 系统旁白 X1 + 历史线分叉演出 STG/结算屏；消费 #17 引擎全套信号，读 rewrite-causality §6.1/§6.3/§2.7/§4.4 + ux-spec §6.3/§6.4/§9.2/§10.2） → game/systems/rewrite/ + game/ui/rewrite_panel/ (engineering-lead)
 - [~] #19 已派发 P5-7 第一个改写节点可玩内容（赤壁·借东风：村落探索 → 收集气象线索 / 求术士 → 触发抉择 → 系统反馈；串联 P5-1..6） → game/scenes/rewrite_node_chibi/ (engineering-lead)
 - [~] #20 已派发 P5-8 主菜单 + 简易存档（新游戏 / 继续 / 设置；进入垂直切片；落地 SaveManager X4 原子写/多槽/读档重同步 + boot→MainMenu→world 开场链路；读 ux-spec §3/§4 + architecture §8.4/§9 + control-manifest 存档节） → game/scenes/menu/ + game/scripts/autoload/save_manager.gd (engineering-lead)
-- [ ] P5-9 垂直切片整合 + 烟雾自测（主菜单 → 新游戏 → 探索 → 战斗 → 完成 1 个改写节点闭环；Godot headless import 自测通过；附 playtest 说明） → game/ (engineering-lead)
+- [~] #21 已派发 P5-9 垂直切片整合 + 烟雾自测（主菜单 → 新游戏 → 探索 → 战斗 → 完成 1 个改写节点闭环；复用 P5-1..8 已落地产出接线；Godot headless import 自测通过；附 playtest 说明 docs/playtests/smoke-test.md） → game/ + docs/playtests/smoke-test.md (engineering-lead)
 - [ ] P5-10 核心可玩美术资产 AI 生成（玩家精灵 / 山贼敌人 / 赤壁村落 TileSet / 系统面板背景，用 mmx image 按 art-bible 生成，替换 greybox） → game/assets/sprites/ + game/assets/tilesets/ + game/assets/ui/ (art-director)
 
 ## Phase 6 · 打磨（依赖 Phase 5 可玩原型）
