@@ -43,6 +43,7 @@ var _prev_hp: int = -1
 var _hit_stop_remaining: float = 0.0
 
 func _ready() -> void:
+	add_to_group("juice_controller")
 	_resolve_refs()
 	# 只「观察」已有跨系统信号（EventBus 已登记，architecture §7.2），不新增信号（adr-004 纪律）。
 	if EventBus != null and EventBus.has_signal(&"hp_changed"):

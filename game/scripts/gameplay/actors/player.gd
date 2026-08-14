@@ -60,6 +60,7 @@ var _hit_signal_enemies: Array[Node] = []
 
 # ── 核心层引用（经分组定位，adr-004 §2）──
 var _combat_system: CombatSystem = null
+var _juice: JuiceController = null
 
 # ── 常量（非战斗核心数值，作常量不落数据）──
 const _KNOCKBACK_DECAY: float = 2400.0      # 击退衰减（px/s²，与 enemy.gd 量级一致）
@@ -351,6 +352,10 @@ func _check_hitbox_hits() -> void:
 		var was_alive: bool = body.is_alive()
 		body.take_hit(dmg, _facing, stage.knockback, &"physical")
 		_combat_system.on_player_hit_enemy()  # §4.2 命中回战意
+		_ensure_juice()
+		if _juice != null:
+			_juice.request_hit_stop()   # 命中停顿（手感）
+			_juice.request_shake(0.22)   # 轻震屏
 		# DAG 硬契约（combat §2.9/§5.3）：改写目标击杀 → 回报 C4 发 verb_executed（C4 不写 v_i/Δ）。
 		if was_alive and not body.is_alive():
 			var verb: StringName = body.enemy_data.rewrite_verb_id if body.enemy_data != null else &""
@@ -434,6 +439,10 @@ func _apply_knockback(delta: float) -> void:
 func _ensure_combat_system() -> void:
 	if not is_instance_valid(_combat_system):
 		_combat_system = get_tree().get_first_node_in_group("combat_system") as CombatSystem
+
+func _ensure_juice() -> void:
+	if not is_instance_valid(_juice):
+		_juice = get_tree().get_first_node_in_group("juice_controller") as JuiceController
 
 
 # ───────────────────────── 调试可视（issue #14 验收要点 5：可调试，可开关） ─────────────────────────

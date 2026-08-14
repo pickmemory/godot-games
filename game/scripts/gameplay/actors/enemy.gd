@@ -60,6 +60,7 @@ var _attack_has_landed: bool = false
 # 受击/击退
 var _hurt_timer: float = 0.0
 var _knockback_vel: Vector2 = Vector2.ZERO
+var _flash_tween: Tween = null
 
 # 死亡清理
 var _dead_clean_timer: float = 0.6
@@ -274,6 +275,7 @@ func take_hit(amount: int, from_dir: Vector2, knockback_px: float = 24.0, _damag
 	if _current_hp <= 0:
 		_die()
 	else:
+		_flash_sprite()
 		_enter_hurt()
 
 
@@ -283,11 +285,24 @@ func _enter_hurt() -> void:
 	_state_before_hurt = _state
 	_change_state(State.HURT)
 
+## 受击白闪（纯表现，手感反馈）。命中后 sprite 提亮一瞬再回正；死亡时由 _die 接管置灰。
+func _flash_sprite() -> void:
+	var sprite: Sprite2D = get_node_or_null("Sprite2D") as Sprite2D
+	if sprite == null:
+		return
+	if _flash_tween != null and _flash_tween.is_valid():
+		_flash_tween.kill()
+	sprite.modulate = Color(3.5, 3.5, 3.5, 1.0)
+	_flash_tween = create_tween()
+	_flash_tween.tween_property(sprite, "modulate", Color(1, 1, 1, 1), 0.08)
+
 
 func _die() -> void:
 	_change_state(State.DEAD)
 	_disable_attack_hitbox()
 	_dead_clean_timer = _DEAD_CLEAN_DELAY  # 倒地表现后清理
+	if _flash_tween != null and _flash_tween.is_valid():
+		_flash_tween.kill()
 	# 倒地：关闭物理碰撞（不再挡路/被打），保留实体做倒地表现后清理。
 	var col: CollisionShape2D = get_node_or_null("CollisionShape2D")
 	if col != null:
