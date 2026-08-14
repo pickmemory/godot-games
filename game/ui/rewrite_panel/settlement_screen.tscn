@@ -1,0 +1,82 @@
+[gd_scene load_steps=2 format=3]
+
+; SettlementScreen · 改写节点结算屏（ux-spec §9.2 / rewrite-causality §2.8）。
+; 嵌于 TimelineStage 内（ux-spec §9.2「STG 内或 HUD 叠层」）；由 RewriteFeedbackController 驱动。
+; 节点引用用 scene-unique 名（%Name）。冷光材质（art-bible §6.1）纯色占位。
+[ext_resource type="Script" path="res://ui/rewrite_panel/settlement_screen.gd" id="1_script"]
+
+[node name="SettlementScreen" type="Control"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(640, 150)
+script = ExtResource("1_script")
+
+[node name="Bg" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.02, 0.05, 0.1, 0.45)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 14
+
+[node name="VBox" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="NodeIdLabel" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+text = "节点已确认"
+
+[node name="DeltaLabel" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "Δ_node  0/100"
+
+[node name="MatchLabel" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.9, 0.98, 1)
+text = "意图匹配 M  0.00"
+
+[node name="CpLabel" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "CP_earned  +0"
+
+[node name="TierLabel" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.85, 1, 1)
+text = "feedback_tier:  minor"
+
+[node name="WorldlineLabel" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.45, 0.35, 1)
+text = "⚠ 世界线震荡"
+
+[node name="DownstreamLabel" type="Label" parent="Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.85, 1, 1)
+autowrap_mode = 3
+text = ""

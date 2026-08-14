@@ -1,0 +1,249 @@
+[gd_scene load_steps=3 format=3]
+
+; RewritePanelView · 改写面板（Loop A「改写」环操作台 · ux-spec §6.3 / rewrite-causality §6.3）。
+; 挂 world.tscn RewritePanel(CanvasLayer) 子（与 SystemPanel 同层，architecture §8.3）；默认关闭。
+; 节点引用用 scene-unique 名（%Name）。蓝图/动词列表由脚本动态填充（数据驱动）。
+; 冷光材质（art-bible §6.1）纯色 + 默认主题占位（半透明网格墨蓝底 + 青蓝硬边 + 数据白等宽）。
+[ext_resource type="Script" path="res://ui/rewrite_panel/rewrite_panel.gd" id="1_script"]
+[ext_resource type="Resource" path="res://systems/rewrite/rewrite_narration_chibi.tres" id="2_narration"]
+
+[node name="RewritePanelView" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_script")
+narration_data = ExtResource("2_narration")
+
+[node name="BgRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.01, 0.03, 0.07, 0.45)
+
+[node name="CenterWrap" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="PanelBg" type="PanelContainer" parent="CenterWrap"]
+custom_minimum_size = Vector2(900, 640)
+
+[node name="Margin" type="MarginContainer" parent="CenterWrap/PanelBg"]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="CenterWrap/PanelBg/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderRow" type="HBoxContainer" parent="CenterWrap/PanelBg/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="NodeTitleLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "— · 改写面板（未激活）"
+
+[node name="DispatchIntroLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/HeaderRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.85, 0.9, 0.98, 1)
+autowrap_mode = 3
+text = ""
+
+[node name="IntelRow" type="HBoxContainer" parent="CenterWrap/PanelBg/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="IntelKeyLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/IntelRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+text = "情报覆盖率 intel_cov"
+
+[node name="IntelBar" type="ProgressBar" parent="CenterWrap/PanelBg/Margin/VBox/IntelRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="IntelValueLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/IntelRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+text = "0.00"
+
+[node name="IntelGateLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/IntelRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.65, 0.78, 1)
+text = "（情境化：蓝图 unlock_intel_cov 门控）"
+
+[node name="BlueprintSection" type="VBoxContainer" parent="CenterWrap/PanelBg/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BlueprintHeader" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/BlueprintSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+text = "可用蓝图（按 intel_cov 过滤 · 方向键焦点 · 冷光描边=选中）"
+
+[node name="BlueprintList" type="VBoxContainer" parent="CenterWrap/PanelBg/Margin/VBox/BlueprintSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="VerbSection" type="VBoxContainer" parent="CenterWrap/PanelBg/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="VerbHeader" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/VerbSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+text = "可用动词（verb_id + cost_RE 预览 + requires.ability 校验 · 物理执行归 S4/S5）"
+
+[node name="VerbList" type="VBoxContainer" parent="CenterWrap/PanelBg/Margin/VBox/VerbSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ResourceRow" type="HBoxContainer" parent="CenterWrap/PanelBg/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ReKeyLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/ResourceRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+text = "改写能量 RE"
+
+[node name="ReBar" type="ProgressBar" parent="CenterWrap/PanelBg/Margin/VBox/ResourceRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+max_value = 100.0
+value = 0.0
+show_percentage = false
+
+[node name="ReValueLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/ResourceRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+text = "0/100"
+
+[node name="AttemptsKeyLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/ResourceRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+text = "尝试 attempts_used"
+
+[node name="AttemptsValueLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/ResourceRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+text = "0/3"
+
+[node name="PreviewSection" type="PanelContainer" parent="CenterWrap/PanelBg/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Margin2" type="MarginContainer" parent="CenterWrap/PanelBg/Margin/VBox/PreviewSection"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox2" type="VBoxContainer" parent="CenterWrap/PanelBg/Margin/VBox/PreviewSection/Margin2"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PreviewHeader" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/PreviewSection/Margin2/VBox2"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.78, 0.95, 1)
+text = "实时预览（is_preview=true · 不发 CP / 不锁因果链，§2.7）"
+
+[node name="PreviewVarsLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/PreviewSection/Margin2/VBox2"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+autowrap_mode = 3
+text = ""
+
+[node name="PreviewDeltaLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/PreviewSection/Margin2/VBox2"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+text = "Δ_node: 0/100 (minor)"
+
+[node name="SpecialFlagLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/PreviewSection/Margin2/VBox2"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.85, 1, 1)
+autowrap_mode = 3
+text = ""
+
+[node name="ExchangeSubView" type="PanelContainer" parent="CenterWrap/PanelBg/Margin/VBox"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+
+[node name="Margin3" type="MarginContainer" parent="CenterWrap/PanelBg/Margin/VBox/ExchangeSubView"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox3" type="VBoxContainer" parent="CenterWrap/PanelBg/Margin/VBox/ExchangeSubView/Margin3"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ExchangeNoteLabel" type="Label" parent="CenterWrap/PanelBg/Margin/VBox/ExchangeSubView/Margin3/VBox3"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.65, 0.78, 1)
+text = "RE 兑换 · C3 账户逻辑待 P5-4 落地（panel-progression §4.6）。本切片面板仅占位。"
+
+[node name="ExchangeRefillButton" type="Button" parent="CenterWrap/PanelBg/Margin/VBox/ExchangeSubView/Margin3/VBox3"]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "兑换 RE（待 C3）"
+
+[node name="ActionRow" type="HBoxContainer" parent="CenterWrap/PanelBg/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="ExchangeButton" type="Button" parent="CenterWrap/PanelBg/Margin/VBox/ActionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "快速兑换 RE ▷"
+
+[node name="CommitButton" type="Button" parent="CenterWrap/PanelBg/Margin/VBox/ActionRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "✦ 确认改写"

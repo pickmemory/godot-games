@@ -1,0 +1,156 @@
+[gd_scene load_steps=4 format=3]
+
+; TimelineStage · 历史线分叉演出 STG（ux-spec §6.4 / rewrite-causality §4.4 / art-bible §6.2）。
+; 强模态：压制其他面板跳转；minor 不进 STG 仅短横幅，notable/critical 进横向卷轴演出 + 结算屏。
+; SettlementScreen 以**场景实例**嵌入（携带其结算数值标签）；挂 world.tscn L5_SystemCanvas（轨道 B 冷光唯一入口）。
+; 节点引用用 scene-unique 名（%Name）。
+[ext_resource type="Script" path="res://ui/rewrite_panel/timeline_stage.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://ui/rewrite_panel/settlement_screen.tscn" id="2_settle_scene"]
+
+[node name="TimelineStage" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="OverlayDim" type="ColorRect" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+color = Color(0.01, 0.02, 0.05, 0.6)
+
+[node name="GlitchOverlay" type="ColorRect" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(1, 0.32, 0.22, 0)
+
+[node name="CenterWrap" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="StagePanel" type="PanelContainer" parent="CenterWrap"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(760, 460)
+
+[node name="Margin" type="MarginContainer" parent="CenterWrap/StagePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 26
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 26
+theme_override_constants/margin_bottom = 22
+
+[node name="VBox" type="VBoxContainer" parent="CenterWrap/StagePanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="CenterWrap/StagePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "历史线分叉演出"
+
+[node name="BranchScroll" type="Control" parent="CenterWrap/StagePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 110)
+
+[node name="InkLine" type="ColorRect" parent="CenterWrap/StagePanel/Margin/VBox/BranchScroll"]
+layout_mode = 1
+anchors_preset = 10
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 52.0
+offset_right = 712.0
+offset_bottom = 56.0
+color = Color(0.12, 0.16, 0.22, 1)
+
+[node name="CurrentNodeDot" type="ColorRect" parent="CenterWrap/StagePanel/Margin/VBox/BranchScroll"]
+layout_mode = 1
+offset_left = 340.0
+offset_top = 44.0
+offset_right = 360.0
+offset_bottom = 64.0
+color = Color(0.6, 0.85, 1, 1)
+
+[node name="BaselineBranchLabel" type="Label" parent="CenterWrap/StagePanel/Margin/VBox/BranchScroll"]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 60.0
+offset_top = 18.0
+offset_right = 340.0
+offset_bottom = 44.0
+theme_override_colors/font_color = Color(0.5, 0.55, 0.62, 1)
+text = "基准：历史原线"
+
+[node name="ActualBranchLabel" type="Label" parent="CenterWrap/StagePanel/Margin/VBox/BranchScroll"]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = 380.0
+offset_top = 70.0
+offset_right = 700.0
+offset_bottom = 100.0
+theme_override_colors/font_color = Color(0.6, 0.85, 1, 1)
+text = "改写：偏差已注入"
+
+[node name="NarrationLabel" type="Label" parent="CenterWrap/StagePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.9, 0.98, 1)
+autowrap_mode = 3
+text = ""
+
+[node name="SettlementScreen" parent="CenterWrap/StagePanel/Margin/VBox" instance=ExtResource("2_settle_scene")]
+unique_name_in_owner = true
+
+[node name="CompressNoteLabel" type="Label" parent="CenterWrap/StagePanel/Margin/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.65, 0.78, 1)
+text = "（世界线持续震荡，演出已压缩以减负。）"
+
+[node name="HintLabel" type="Label" parent="CenterWrap/StagePanel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.65, 0.78, 1)
+text = "[ ui_accept / ui_cancel 跳过演出 ]"
+
+[node name="MinorBanner" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(460, 56)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -230.0
+offset_right = 230.0
+offset_top = 120.0
+offset_bottom = 176.0
+
+[node name="Margin2" type="MarginContainer" parent="MinorBanner"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 10
+
+[node name="MinorBannerLabel" type="Label" parent="MinorBanner/Margin2"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.9, 0.98, 1)
+text = ""

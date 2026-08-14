@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=17 format=3]
 
 ; world 主场景 · 叠层对齐 architecture §8.2（P3-2 最小可走动子集 + 占位节点保留结构）。
 ; 实测确认（§13）：L3 用 Node2D.y_sort_enabled（YSort 独立节点在 Godot 4.7 已移除，K3）；
@@ -7,6 +7,9 @@
 ; P5-2（#14）：Systems/CombatSystem 挂 C4 核心脚本 + player_combat/detection_globals 数据资源（combat §3.1/§3.4）。
 ; P5-5（#17）：Systems/RewriteCausalityEngine 挂 C1 核心脚本（改写/因果引擎·系统心脏，rewrite-causality.md）；
 ;   class_name Node（K10：非 Autoload），_ready 加 group "rewrite_engine"，挂 Systems/ 与 C2/C4 同范式。
+; P5-6（#18）：Systems/RewriteFeedbackController 挂反馈调度（C1 锁结算信号 → STG/结算屏，按 feedback_tier 三档）；
+;   L5_SystemCanvas/TimelineStage 挂历史线分叉演出（含 SettlementScreen，轨道 B 冷光唯一入口，art-bible §6/§0）；
+;   RewritePanel/RewritePanelView 挂改写面板（Loop A 改写环操作台，ux-spec §6.3，与 SystemPanel 同层）。
 
 [ext_resource type="Script" path="res://scripts/gameplay/world.gd" id="world_script"]
 [ext_resource type="Script" path="res://scripts/foundation/test_ground.gd" id="ground_script"]
@@ -20,7 +23,10 @@
 [ext_resource type="Script" path="res://scripts/core/quest_system.gd" id="quest_system_script"]
 [ext_resource type="Resource" path="res://data/quests/chapters/ch_chibi_war.tres" id="chapter_data"]
 [ext_resource type="Script" path="res://systems/rewrite/rewrite_causality_engine.gd" id="rewrite_engine_script"]
+[ext_resource type="Script" path="res://systems/rewrite/rewrite_feedback_controller.gd" id="rewrite_feedback_script"]
 [ext_resource type="PackedScene" path="res://ui/system_panel/system_panel.tscn" id="system_panel_scene"]
+[ext_resource type="PackedScene" path="res://ui/rewrite_panel/rewrite_panel.tscn" id="rewrite_panel_scene"]
+[ext_resource type="PackedScene" path="res://ui/rewrite_panel/timeline_stage.tscn" id="timeline_stage_scene"]
 
 [node name="World" type="Node2D"]
 script = ExtResource("world_script")
@@ -59,6 +65,10 @@ chapter_data = ExtResource("chapter_data")
 script = ExtResource("rewrite_engine_script")
 causal_links_path = "res://data/causal_links/causal_links_chibi.tres"
 
+[node name="RewriteFeedbackController" type="Node" parent="Systems"]
+script = ExtResource("rewrite_feedback_script")
+timeline_stage_path = NodePath("../L5_SystemCanvas/TimelineStage")
+
 [node name="EncounterSpawner" type="Node" parent="Systems"]
 script = ExtResource("encounter_spawner_script")
 enemy_scene = ExtResource("bandit_scene")
@@ -79,9 +89,13 @@ position = Vector2(48, -200)
 
 [node name="L5_SystemCanvas" type="CanvasLayer" parent="."]
 
+[node name="TimelineStage" parent="L5_SystemCanvas" instance=ExtResource("timeline_stage_scene")]
+
 [node name="RewritePanel" type="CanvasLayer" parent="."]
 
 [node name="SystemPanel" parent="RewritePanel" instance=ExtResource("system_panel_scene")]
+
+[node name="RewritePanelView" parent="RewritePanel" instance=ExtResource("rewrite_panel_scene")]
 
 [node name="X1_Narrator" type="Node" parent="."]
 

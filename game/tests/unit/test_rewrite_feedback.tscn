@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+; tests/unit/test_rewrite_feedback.tscn —— 改写/因果反馈层测试场景（issue #18）。
+; 运行：$GODOT_BIN --headless --path game res://tests/unit/test_rewrite_feedback.tscn
+[ext_resource type="Script" path="res://tests/unit/test_rewrite_feedback.gd" id="1_script"]
+
+[node name="TestRewriteFeedback" type="Node"]
+script = ExtResource("1_script")

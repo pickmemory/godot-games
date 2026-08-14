@@ -1,0 +1,24 @@
+; 系统旁白文案 · 赤壁（X1 冷光记录员语气 · 数据驱动 · issue #18）。
+; 朝代命名空间：dyn_threekingdoms_chibi。语气基调 game-concept §9① **待审批**——本文件为占位
+; 中性「冷峻记录员」语气，主创定稿前不擅自改口吻（改语气只改本 .tres，不改消费方逻辑）。
+; 消费方：RewriteFeedbackController / TimelineStage / RewritePanel（systems/rewrite + ui/rewrite_panel）。
+[gd_resource type="Resource" script_class="RewriteNarrationData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://systems/rewrite/rewrite_narration_data.gd" id="1_main"]
+
+[resource]
+script = ExtResource("1_main")
+dynasty = &"dyn_threekingdoms_chibi"
+system_tone = &"cold_recordist"
+dispatch_prefix = ""
+intent_voice_template = "意图已归档：{label}。偏差将据此丈量。"
+self_replacement_voice = "注：本次借风功劳归于穿越者本人。记录员已标注。"
+settle_voice_minor = "节点已确认。偏差微弱，历史线维持。"
+settle_voice_notable = "节点已确认。偏差已记录，因果已传递。"
+settle_voice_critical = "节点已确认。历史线在此分叉，记录员全功率观测。"
+worldline_shaken_voice = "世界线剧烈震荡。下游节点难度上浮，风险已转嫁。"
+intent_unreachable_voice = "意图落空。偏差仍被记录，因果点≈0。"
+node_vanished_voice = "目标节点 {node} 已从历史中消失。记录员归档。"
+causal_downstream_appear = "→ {target} 【出现】"
+causal_downstream_vanish = "→ {target} 【消失】"
+consecutive_critical_note = "（世界线持续震荡，演出已压缩以减负。）"
