@@ -88,6 +88,7 @@ func _init_flow() -> void:
 	if not EventBus.node_resolved.is_connected(_on_node_resolved):
 		EventBus.node_resolved.connect(_on_node_resolved)
 	_enter_state(State.EXPLORING)
+	AudioManager.play_music("choice")
 	if debug_log:
 		print("[RewriteNodeDirector] flow=%s clues=%d threshold=%d total_intel=%.2f quest=%s engine=%s" %
 			[flow_data.flow_id, flow_data.clue_pois.size(), flow_data.required_clue_count,

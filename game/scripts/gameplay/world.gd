@@ -51,6 +51,7 @@ func _ready() -> void:
 	if not EventBus.encounter_cleared.is_connected(_on_encounter_cleared):
 		EventBus.encounter_cleared.connect(_on_encounter_cleared)
 	_refresh_hud()
+	AudioManager.play_music("explore")
 
 
 func _exit_tree() -> void:

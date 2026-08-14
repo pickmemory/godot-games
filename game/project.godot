@@ -20,6 +20,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 EventBus="*res://scripts/autoload/event_bus.gd"
 DynastyLoader="*res://scripts/autoload/dynasty_loader.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
+AudioManager="*res://scripts/autoload/audio_manager.gd"
 
 [display]
 

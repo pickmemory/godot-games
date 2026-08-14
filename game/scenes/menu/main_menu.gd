@@ -58,6 +58,7 @@ func _ready() -> void:
 	_setup_settings()
 	_refresh_status()
 	_apply_default_focus()
+	AudioManager.play_music("menu")
 
 
 func _unhandled_input(event: InputEvent) -> void:
