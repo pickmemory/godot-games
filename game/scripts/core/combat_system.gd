@@ -290,6 +290,29 @@ func _scan_alert() -> void:
 
 # ───────────────────────── 资源池（combat §4.2 / §3.1） ─────────────────────────
 
+## 闪避（combat §2.4 dodge；解锁 mvp_enabled 后可用）：扣 BF + 进入 i_frames。
+## 位移表现（冲刺速度/距离/后摇）归玩法层 player.gd（本类只管资源与无敌帧权威）。
+func try_dodge() -> bool:
+	if _downed:
+		return false
+	if player_combat == null or player_combat.dodge == null or not player_combat.dodge.mvp_enabled:
+		return false
+	if _bf < player_combat.dodge.bf_cost:
+		return false
+	_bf = max(0, _bf - player_combat.dodge.bf_cost)
+	_emit_bf()
+	_i_frames_timer = player_combat.dodge.i_frames
+	return true
+
+## 掉落拾取（+BF/+HP；资源权威归 C4，玩法层拾获后调本入口）。
+func apply_pickup(bf_amount: int, hp_amount: int) -> void:
+	if _downed:
+		return
+	if bf_amount != 0:
+		_add_bf(bf_amount)
+	if hp_amount != 0:
+		_set_hp(clampi(_hp + hp_amount, 0, player_combat.hp_max))
+
 func _add_bf(amount: int) -> void:
 	if amount == 0:
 		return

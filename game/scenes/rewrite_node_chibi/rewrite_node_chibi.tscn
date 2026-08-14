@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=20 format=3]
 
 ; 改写节点场景 · 赤壁·借东风（issue #19 · Loop A 端到端整合 · 复用 P5-1..P5-6 全部系统）。
 ; 可独立运行：$GODOT_BIN --path game res://scenes/rewrite_node_chibi/rewrite_node_chibi.tscn
@@ -27,6 +27,7 @@
 [ext_resource type="PackedScene" path="res://ui/rewrite_panel/rewrite_panel.tscn" id="14_panel"]
 [ext_resource type="Resource" path="res://data/scenes/rewrite_node_chibi/east_wind_flow.tres" id="15_flow"]
 [ext_resource type="Resource" path="res://data/quests/chapters/ch_chibi_war.tres" id="16_chapter"]
+[ext_resource type="Script" path="res://scripts/gameplay/player_hud.gd" id="17_hud"]
 
 [sub_resource type="CircleShape2D" id="shaman_shape"]
 radius = 96.0
@@ -103,6 +104,9 @@ position = Vector2(256, -224)
 [node name="TimelineStage" parent="L5_SystemCanvas" instance=ExtResource("13_timeline")]
 
 [node name="HUDLayer" type="CanvasLayer" parent="."]
+
+[node name="PlayerHud" type="Control" parent="HUDLayer"]
+script = ExtResource("17_hud")
 
 [node name="ObjectiveLabel" type="Label" parent="HUDLayer"]
 unique_name_in_owner = true

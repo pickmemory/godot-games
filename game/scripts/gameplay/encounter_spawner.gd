@@ -15,6 +15,8 @@ extends Node
 ##   敌人 state/hurt/died 是场景内原生信号（由本生成器 connect），不塞 EventBus。
 
 @export var enemy_scene: PackedScene
+## 头目场景（可选）：Marker2D 带 metadata/enemy_kind="brute" 时用本场景生成。
+@export var brute_scene: PackedScene
 @export var encounter_id: StringName = &"enc_bandit_ambush_01"
 ## 实例化目标父节点（L3_Characters，做 Y 轴深度排序）；在 world.tscn 中以 NodePath 注入。
 @export var spawn_parent: NodePath = ^"../../L3_Characters"
@@ -36,7 +38,10 @@ func _spawn() -> void:
 	if parent == null:
 		parent = get_parent()
 	for sp in _collect_spawn_points():
-		var enemy: Node = enemy_scene.instantiate()
+		var scene: PackedScene = enemy_scene
+		if brute_scene != null and sp.has_meta("enemy_kind") and String(sp.get_meta("enemy_kind")) == "brute":
+			scene = brute_scene
+		var enemy: Node = scene.instantiate()
 		parent.add_child(enemy)
 		enemy.global_position = sp.global_position
 		# 巡逻路点：刷新点 ± 横向偏移往返（占位；正式路点由 S5 遭遇表给）。

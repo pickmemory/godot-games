@@ -55,6 +55,13 @@ var _took_damage_this_frame: bool = false
 # ── 击退（combat §4.4 击退方向/衰减）──
 var _knockback_vel: Vector2 = Vector2.ZERO
 
+# ── 闪避（combat §2.4；i_frames/BF 归 C4，位移/后摇表现归本层）──
+var _dodge_timer: float = 0.0          # 剩余冲刺时间（>0 = 闪避中）
+var _dodge_dir: Vector2 = Vector2.ZERO
+const _DODGE_DUR: float = 0.24         # 冲刺时长（位移≈ dodge_dist_px 96 → 速度 400）
+const _DODGE_RECOVER: float = 0.10     # 冲刺后小硬直（不可再闪/不可攻击，可被击——i_frames 可能仍在）
+var _dodge_recover_timer: float = 0.0
+
 # ── 已连接 attack_landed 的敌人集（防 .bind(e) Callable 不等导致每帧重复连接）──
 var _hit_signal_enemies: Array[Node] = []
 
@@ -111,16 +118,25 @@ func _physics_process(delta: float) -> void:
 	_consume_enemy_attack_signals()
 
 	# 位移：战斗锁定时目标速度 0（仍受击退影响）；否则按 stance 移动。
-	var locked: bool = _is_movement_locked()
-	var target_velocity: Vector2 = Vector2.ZERO
-	if not locked:
-		_dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
-		_update_stance()
-		target_velocity = _dir * _target_speed()
+	if _dodge_timer > 0.0:
+		_dodge_timer -= delta
+		velocity = velocity.move_toward(_dodge_dir * 400.0, 3600.0 * delta)
+	elif _dodge_recover_timer > 0.0:
+		_dodge_recover_timer -= delta
+		velocity = velocity.move_toward(Vector2.ZERO, movement_globals.friction * delta)
+		if _dodge_recover_timer <= 0.0 and _combat_state == CombatState.ATTACKING and _attack_phase == AttackPhase.WINDUP:
+			pass  # 闪避后摇结束；攻击中起手的闪避不做取消（MVP 简化：闪避仅 FREE 可用）
 	else:
-		_dir = Vector2.ZERO
-	var rate: float = _accel_rate_locked() if locked else _accel_rate()
-	velocity = velocity.move_toward(target_velocity, rate * delta)
+		var locked: bool = _is_movement_locked()
+		var target_velocity: Vector2 = Vector2.ZERO
+		if not locked:
+			_dir = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+			_update_stance()
+			target_velocity = _dir * _target_speed()
+		else:
+			_dir = Vector2.ZERO
+		var rate: float = _accel_rate_locked() if locked else _accel_rate()
+		velocity = velocity.move_toward(target_velocity, rate * delta)
 	_apply_knockback(delta)
 	move_and_slide()
 
@@ -181,6 +197,21 @@ func _is_movement_locked() -> bool:
 	return _combat_state == CombatState.ATTACKING or _combat_state == CombatState.CASTING
 
 
+## 闪避（FREE 态起手；combat §2.4）：优先当前输入方向，无输入则用朝向。
+func _try_dodge() -> void:
+	if _combat_state != CombatState.FREE or _dodge_timer > 0.0 or _dodge_recover_timer > 0.0:
+		return
+	if _combat_system == null:
+		return
+	if not _combat_system.try_dodge():
+		return
+	var d: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	_dodge_dir = d if d.length_squared() > 0.01 else _facing
+	_dodge_timer = _DODGE_DUR
+	_dodge_recover_timer = 0.0
+	if _sprite != null:
+		_sprite.flip_h = _dodge_dir.x < -0.05
+
 # ───────────────────────── 战斗输入转发 ─────────────────────────
 
 func _handle_combat_input() -> void:
@@ -192,6 +223,9 @@ func _handle_combat_input() -> void:
 	# 系统术法（skill_1；combat §2.6）。MVP 绑定 primary_ability_id。
 	if Input.is_action_just_pressed("skill_1"):
 		_try_cast(primary_ability_id)
+	# 闪避（Space / 手柄B，combat §2.4 dodge；i_frames 归 C4，位移表现归本层）。
+	if Input.is_action_just_pressed("dodge"):
+		_try_dodge()
 
 
 func _try_basic_attack() -> void:
@@ -538,6 +572,13 @@ func _draw_cone(color: Color, radius_px: float, half_deg: float) -> void:
 func _update_visual(delta: float) -> void:
 	if _sprite == null:
 		return
+	# 闪避中：半透明闪烁（无敌帧可读性，combat §7.6 多通道）
+	if _dodge_timer > 0.0:
+		_sprite.modulate = Color(1, 1, 1, 0.45 + 0.3 * sin(_bob_phase * 30.0))
+		_bob_phase += delta * 12.0
+		_sprite.offset = _sprite_base_offset + Vector2(0.0, -3.0)
+		return
+	_sprite.modulate = Color(1, 1, 1, 1)
 	_sprite.flip_h = _facing.x < -0.05
 	var moving: bool = velocity.length() > 12.0
 	var want: Texture2D = _tex_walk if moving else _tex_idle

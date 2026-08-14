@@ -69,6 +69,7 @@ var _dead_clean_timer: float = 0.6
 const _ACCEL: float = 1200.0
 const _KNOCKBACK_DECAY: float = 2400.0  # 击退衰减（px/s²）
 const _DEAD_CLEAN_DELAY: float = 0.6    # 倒地到清理（秒）
+const _PICKUP_SCRIPT := preload("res://scripts/gameplay/pickup.gd")
 
 @onready var _attack_hitbox: Area2D = $AttackHitbox
 @onready var _attack_shape_node: CollisionShape2D = $AttackHitbox/CollisionShape2D
@@ -290,6 +291,21 @@ func take_hit(amount: int, from_dir: Vector2, knockback_px: float = 24.0, _damag
 		_enter_hurt()
 
 
+## 死亡掉落：1 颗战意珠；精英（hp_max≥90，如头目）加 1 颗回复珠（奖励反馈，combat §4.2 资源循环）。
+func _spawn_drops() -> void:
+	_spawn_drop(Pickup.Kind.BF, 10, Vector2(0, 0))
+	if enemy_data != null and enemy_data.hp_max >= 90:
+		_spawn_drop(Pickup.Kind.HP, 25, Vector2(26, 10))
+		_spawn_drop(Pickup.Kind.BF, 10, Vector2(-26, 12))
+
+func _spawn_drop(kind: int, amount: int, offset_px: Vector2) -> void:
+	var p: Pickup = _PICKUP_SCRIPT.new()
+	p.kind = kind
+	p.amount = amount
+	get_parent().add_child(p)
+	p.global_position = global_position + offset_px
+
+
 func _enter_hurt() -> void:
 	if _state == State.HURT:
 		return
@@ -311,6 +327,7 @@ func _flash_sprite() -> void:
 func _die() -> void:
 	_change_state(State.DEAD)
 	queue_redraw()
+	_spawn_drops()
 	_disable_attack_hitbox()
 	_dead_clean_timer = _DEAD_CLEAN_DELAY  # 倒地表现后清理
 	if _flash_tween != null and _flash_tween.is_valid():

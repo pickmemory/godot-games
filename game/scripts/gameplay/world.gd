@@ -51,7 +51,19 @@ func _ready() -> void:
 	if not EventBus.encounter_cleared.is_connected(_on_encounter_cleared):
 		EventBus.encounter_cleared.connect(_on_encounter_cleared)
 	_refresh_hud()
+	_play_intro()
 	AudioManager.play_music("explore")
+
+
+## 开场白：淡入 → 停留 3.5s → 淡出（钩住玩家 + 给出目标；Loop A 前奏仪式感）。
+func _play_intro() -> void:
+	var intro: Label = get_node_or_null("%IntroLabel")
+	if intro == null:
+		return
+	var tw := create_tween()
+	tw.tween_property(intro, "modulate:a", 1.0, 0.8).set_delay(0.3)
+	tw.tween_interval(3.5)
+	tw.tween_property(intro, "modulate:a", 0.0, 1.0)
 
 
 func _exit_tree() -> void:
@@ -99,6 +111,10 @@ func _goto_rewrite_node(reason: String) -> void:
 		return
 	_transitioning = true
 	print("[WorldDirector] Loop A → 改写节点场景（%s）" % reason)
+	# 清场喘息：先告知玩家胜利，再转场（避免「杀完最后一个敌人瞬间黑屏」的突兀）。
+	if _hint_label != null:
+		_hint_label.text = "山贼营地已清剿 —— 历史的焦点正向你聚拢……"
+	await get_tree().create_timer(1.6).timeout
 	# call_deferred：避开 _ready/信号回调中直接 change_scene 的「busy set」错误（同 boot.gd 范式）。
 	get_tree().call_deferred("change_scene_to_file", _REWRITE_NODE_SCENE)
 
@@ -132,4 +148,4 @@ func _refresh_hud() -> void:
 		if done:
 			_hint_label.text = "闭环已达成。关闭窗口退出；或退出后「继续游戏」复查历史偏差存档。"
 		else:
-			_hint_label.text = "操作：WASD 移动 · 鼠标左键普攻（连段）· 右键系统术法 · E 交互 · （烟雾自测：R 跳过战斗直达改写节点）"
+			_hint_label.text = "操作：WASD 移动 · 左键三段普攻 · 空格闪避（无敌帧，耗战意）· Shift 疾跑 · 击杀拾取战意珠（烟雾自测：R 跳过战斗）"

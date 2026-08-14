@@ -46,7 +46,7 @@ bf_cost = 18
 i_frames = 0.35
 dodge_dist_px = 96.0
 recover = 0.15
-mvp_enabled = false
+mvp_enabled = true
 
 [sub_resource type="Resource" id="stagger" script_class="PlayerStaggerData"]
 script = ExtResource("4_stagger")
@@ -60,13 +60,13 @@ script = ExtResource("1_main")
 entity_id = &"char_player_traveler"
 dynasty = &"dyn_threekingdoms_chibi"
 hp_max = 100
-hp_regen_ooc = 4.0
+hp_regen_ooc = 2.0
 bf_max = 100
 regen_bf_passive = 6.0
 regen_bf_on_hit = 3
 atk_base = 18
 def_base = 5
-crit_chance = 0.0
+crit_chance = 0.05
 crit_mult = 1.5
 basic_attack_stages = [SubResource("stage1"), SubResource("stage2"), SubResource("stage3")]
 hitbox_shape = "arc_front"
