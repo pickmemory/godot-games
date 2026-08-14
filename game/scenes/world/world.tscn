@@ -1,10 +1,12 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 ; world 主场景 · 叠层对齐 architecture §8.2（P3-2 最小可走动子集 + 占位节点保留结构）。
 ; 实测确认（§13）：L3 用 Node2D.y_sort_enabled（YSort 独立节点在 Godot 4.7 已移除，K3）；
 ; Camera2D 用 position_smoothing_enabled/speed（K9）；地面用 TileMapLayer（K2）。
 ; P5-1（#13）：EncounterSpawner 接入 enemy_scene + Marker2D 刷新点；玩家移动/相机/地面保持不变。
 ; P5-2（#14）：Systems/CombatSystem 挂 C4 核心脚本 + player_combat/detection_globals 数据资源（combat §3.1/§3.4）。
+; P5-5（#17）：Systems/RewriteCausalityEngine 挂 C1 核心脚本（改写/因果引擎·系统心脏，rewrite-causality.md）；
+;   class_name Node（K10：非 Autoload），_ready 加 group "rewrite_engine"，挂 Systems/ 与 C2/C4 同范式。
 
 [ext_resource type="Script" path="res://scripts/gameplay/world.gd" id="world_script"]
 [ext_resource type="Script" path="res://scripts/foundation/test_ground.gd" id="ground_script"]
@@ -17,6 +19,7 @@
 [ext_resource type="Resource" path="res://data/globals/detection_globals.tres" id="detection_globals_data"]
 [ext_resource type="Script" path="res://scripts/core/quest_system.gd" id="quest_system_script"]
 [ext_resource type="Resource" path="res://data/quests/chapters/ch_chibi_war.tres" id="chapter_data"]
+[ext_resource type="Script" path="res://systems/rewrite/rewrite_causality_engine.gd" id="rewrite_engine_script"]
 [ext_resource type="PackedScene" path="res://ui/system_panel/system_panel.tscn" id="system_panel_scene"]
 
 [node name="World" type="Node2D"]
@@ -51,6 +54,10 @@ detection_globals = ExtResource("detection_globals_data")
 [node name="QuestSystem" type="Node" parent="Systems"]
 script = ExtResource("quest_system_script")
 chapter_data = ExtResource("chapter_data")
+
+[node name="RewriteCausalityEngine" type="Node" parent="Systems"]
+script = ExtResource("rewrite_engine_script")
+causal_links_path = "res://data/causal_links/causal_links_chibi.tres"
 
 [node name="EncounterSpawner" type="Node" parent="Systems"]
 script = ExtResource("encounter_spawner_script")

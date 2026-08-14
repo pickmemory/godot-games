@@ -1,0 +1,34 @@
+; 改写蓝图 · 玩家自借东风（意图声明 · 数据驱动 · S1 · rewrite-causality §2.4/§3.3）。
+; blueprint_id: bp_player_self_wind —— N2 分支 C（玩家自借东风，game-concept §6.2 分支 C）。
+;
+; target_vars：v_wind=southeast（玩家以系统术法亲自借到东南风）+ v_altar=intact（坛完好）。
+;   注：v_wind=southeast 恰为史实 baseline 值 → 该分支 Δ(v_wind)=0（MVP：玩家「替代」孔明的叙事
+;   偏差由 special_flag 承载，不入 v_wind 数值；完整态可加 v_actor 变量丈量「谁借的风」）。
+; m_weights：v_wind=0.7, v_altar=0.3（蓝图内 Σ=1.0）。
+; unlock_intel_cov=0.6：需探索达 60% 情报覆盖才可见（§2.4 门控，探索→改写回路）。
+; special_flags：triggers_self_replacement_voice（系统旁白「功劳归于玩家」，§3.3）。
+[gd_resource type="Resource" script_class="RewriteBlueprintData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/rewrite_blueprint_data.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/blueprint_var_entry.gd" id="2_entry"]
+
+[sub_resource type="Resource" id="bp_wind" script_class="BlueprintVarEntry"]
+script = ExtResource("2_entry")
+var_id = &"v_wind"
+target_value = "southeast"
+m_weight = 0.7
+
+[sub_resource type="Resource" id="bp_altar" script_class="BlueprintVarEntry"]
+script = ExtResource("2_entry")
+var_id = &"v_altar"
+target_value = "intact"
+m_weight = 0.3
+
+[resource]
+script = ExtResource("1_main")
+blueprint_id = &"bp_player_self_wind"
+dynasty = &"dyn_threekingdoms_chibi"
+intent_label = "由你之手，借这阵东风"
+vars = [SubResource("bp_wind"), SubResource("bp_altar")]
+unlock_intel_cov = 0.6
+special_flags = PackedStringArray("triggers_self_replacement_voice")

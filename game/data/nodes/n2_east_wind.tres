@@ -1,0 +1,46 @@
+; 改写节点（数值模型）· N2 借东风（数据驱动 · S1 唯一所有者 · rewrite-causality §3.2 / architecture §6.2）。
+; node_id: n2_east_wind —— 与 S2 派发数据 data/quests/nodes/n2_east_wind.tres（QuestNodeDispatchData）
+; 按 node_id 关联、各管各的（mainline §3.4 两段式）。本文件只存 S1 拥有的内部数值态字段。
+;
+; vars：v_wind(w=0.6) + v_altar(w=0.2) + v_kong(w=0.2)，Σw=1.0（§4.1 归一化）。
+; blueprints：bp_player_self_wind（分支C 玩家自借）+ bp_baseline_keep（维持原线，§3.3 隐含蓝图显式化）。
+; verbs：verb_smash_altar / verb_block_kongming / verb_self_borrow_wind（§3.5）。
+; causal_out：link_wind_to_n3（value）+ link_fire_power_to_n3_existence（existence）→ N3 派发决策（§2.5）。
+; existence_dep：空（N2 是 3 节点最小链的链首，无存在性依赖）。
+; 平衡参数对齐 rewrite-causality §3.2 示例（Δ_critical=80 / cp_node=120 / diff_base=1.2 / max_attempts=3）。
+[gd_resource type="Resource" script_class="RewriteNodeData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/rewrite_node_data.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/node_var_entry_data.gd" id="2_var"]
+
+[sub_resource type="Resource" id="var_wind" script_class="NodeVarEntryData"]
+script = ExtResource("2_var")
+var_id = &"v_wind"
+weight = 0.6
+
+[sub_resource type="Resource" id="var_altar" script_class="NodeVarEntryData"]
+script = ExtResource("2_var")
+var_id = &"v_altar"
+weight = 0.2
+
+[sub_resource type="Resource" id="var_kong" script_class="NodeVarEntryData"]
+script = ExtResource("2_var")
+var_id = &"v_kong"
+weight = 0.2
+
+[resource]
+script = ExtResource("1_main")
+node_id = &"n2_east_wind"
+dynasty = &"dyn_threekingdoms_chibi"
+display_title = "借东风"
+vars = [SubResource("var_wind"), SubResource("var_altar"), SubResource("var_kong")]
+blueprint_ids = [&"bp_player_self_wind", &"bp_baseline_keep"]
+verb_ids = [&"verb_smash_altar", &"verb_block_kongming", &"verb_self_borrow_wind"]
+causal_out_link_ids = [&"link_wind_to_n3", &"link_fire_power_to_n3_existence"]
+existence_dep_link_id = &""
+delta_critical = 80.0
+cp_node = 120
+diff_base = 1.2
+max_attempts = 3
+re_max = 100
+system_intro = "已锁定目标：借东风。当前节点偏差归零。记录员就位。"

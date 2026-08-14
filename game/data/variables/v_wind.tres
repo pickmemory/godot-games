@@ -1,0 +1,48 @@
+; 关键变量 v_wind · 风向（数据驱动 · S1 唯一所有者 · rewrite-causality §3.1 / architecture §6.2）。
+; var_id: v_wind —— N2 借东风节点的核心变量（权重 w=0.6，data/nodes/n2_east_wind.tres）。
+;
+; 取值（ENUM）+ 偏离度 d_i（§3.1 逐值手调）：
+;   - southeast（东南风）：baseline（史实：诸葛亮借到东南风 → 火攻成功 → 曹操败走华容），d=0.0
+;   - none（无风）：借风失败，火攻哑火，d=1.0（大偏差）
+;   - northwest（西北风）：反风（火烧己方），d=0.7（显著偏差，但仍是「火攻」语义所以略低于无风）
+;
+; world_visual_token 是给 S5 的只读契约（art-bible §9.5 风向视觉映射）；占位由 S5/P6 落地。
+; baseline 严格 = entries 中 deviation=0 的取值（§4.1 d 恒为 0）。
+[gd_resource type="Resource" script_class="RewriteVariableData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/rewrite_variable_data.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/rewrite_enum_value_data.gd" id="2_entry"]
+
+[sub_resource type="Resource" id="v_none" script_class="RewriteEnumValueData"]
+script = ExtResource("2_entry")
+key = &"none"
+display = "无风"
+deviation = 1.0
+world_visual_token = &"prop_dyn_threekingdoms_chibi_wind_none"
+
+[sub_resource type="Resource" id="v_northwest" script_class="RewriteEnumValueData"]
+script = ExtResource("2_entry")
+key = &"northwest"
+display = "西北风（反风）"
+deviation = 0.7
+world_visual_token = &"prop_dyn_threekingdoms_chibi_wind_northwest"
+
+[sub_resource type="Resource" id="v_southeast" script_class="RewriteEnumValueData"]
+script = ExtResource("2_entry")
+key = &"southeast"
+display = "东南风"
+deviation = 0.0
+world_visual_token = &"prop_dyn_threekingdoms_chibi_wind_southeast"
+
+[resource]
+script = ExtResource("1_main")
+var_id = &"v_wind"
+display_name = "风向"
+dynasty = &"dyn_threekingdoms_chibi"
+type = 0
+entries = [SubResource("v_none"), SubResource("v_northwest"), SubResource("v_southeast")]
+value_min = 0.0
+value_max = 1.0
+value_step = 1.0
+baseline_numeric = 0.0
+baseline = &"southeast"

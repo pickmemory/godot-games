@@ -45,10 +45,12 @@ const _STATE_NAMES := {
 	LifecycleState.VANISHED: "已消失",
 }
 
-## existence 满足性判定 token（MVP 约定 [待 p5-5 联合确认]：condition 评估方归属，§2.3 [待程基岩确认]）。
-## S1 未落地，C2 无法读 S1 的 condition 表达式（且不可重定义，control-manifest DAG）；故用规范化满足性 token。
-## S1 落地后由联合确认替换为 condition 精确评估。
-const _EXISTENCE_SATISFYING_TOKENS := ["met", "true", "satisfied", "high", "yes", "1"]
+## existence 满足性判定 token（P5-5 联合确认已落地：condition 精确评估归 S1/C1，rewrite-causality §7.1 两段式）。
+## C1(RewriteCausalityEngine, issue #17) 已落地 existence condition 精确评估：节点确认后 C1 据
+## causal_links 的 condition 表达式（如 "fire_power==high"）评估，发 canonical token "met"/"unmet"。
+## C2 不重定义 condition（control-manifest DAG 守护），只读 C1 给的 canonical token 做派发/消失决策。
+## 故本 token 集精简为 ["met"]（C1 canonical 满足输出）；"unmet"/其余 → 不满足 → 消失决策。
+const _EXISTENCE_SATISFYING_TOKENS := ["met"]
 
 @export var chapter_data: ChapterData
 @export var debug_log: bool = false
@@ -316,9 +318,9 @@ func _set_node_vanished(node_id: StringName) -> void:
 
 # ───────────────────────── existence 满足性判定（MVP 约定，[待 p5-5 联合确认]） ─────────────────────────
 
-## MVP 约定：S1 未落地，无法读 S1 的 condition 表达式（且 C2 不可重定义 existence condition）。
-## 故 C2 用规范化满足性 token 判定 resolved_value；S1 落地后由联合确认替换为 condition 精确评估。
-## bool 直传；字符串命中 _EXISTENCE_SATISFYING_TOKENS 视为满足，其余（"unmet"/"none"/"low"/""...）视为不满足。
+## P5-5 联合确认（issue #17 落地）：C1 已做 existence condition 精确评估，发 canonical token "met"/"unmet"。
+## C2 只读该 token 做派发/消失决策（不重定义 condition，control-manifest DAG 守护 / rewrite-causality §7.1）。
+## bool 直传（C1 评估结果）也接受；字符串命中 _EXISTENCE_SATISFYING_TOKENS("met") 视为满足，其余视为不满足。
 func _is_existence_satisfied(resolved_value: String) -> bool:
 	var s := resolved_value.to_lower()
 	return _EXISTENCE_SATISFYING_TOKENS.has(s)
@@ -527,8 +529,11 @@ func deserialize(data: Dictionary) -> void:
 		if st == LifecycleState.REWRITABLE or st == LifecycleState.EXECUTING:
 			_current_tracked_node = nid
 			break
-	# TODO(p5-5): C2 已确认集 == C1 resolved_nodes 一致性校验（mainline §3.3/§5.5）。
-	# C1(S1) 未落地，不臆造其 API；SaveManager 落地后在此对账，不一致即拒读档报错（control-manifest 存档节）。
+	# P5-5 联合确认已落地（issue #17）：C2 已确认集 == C1 resolved_nodes 一致性校验。
+	# C1(RewriteCausalityEngine) 已暴露 get_resolved_node_ids() + static check_save_consistency(rewrite_snap, quest_snap)。
+	# 一致性校验由 SaveManager(X4) 在读档编排时调用：读 C1/C2 快照 → check_save_consistency →
+	# 不一致即拒读档报错（control-manifest 存档节 / architecture §9.2 / mainline §3.3）。
+	# SaveManager 仍为占位（autoload 已注册）；本类不直接调 C1（守 DAG：跨系统经 EventBus/存档编排，非直接引用）。
 	_resync_ui_after_load()
 
 

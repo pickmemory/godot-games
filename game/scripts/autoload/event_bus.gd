@@ -114,5 +114,41 @@ signal quest_node_vanished_voiced(node_id: StringName, system_vanish_voice: Stri
 ## 载荷：node_id、quest_reward_mult（倍率 [1.0,2.0]）、quest_cp_flat_bonus（固定 CP 点 ≥0）。
 signal quest_reward_declared(node_id: StringName, quest_reward_mult: float, quest_cp_flat_bonus: int)
 
-# TODO(p-followup): 其余 §7.2 跨系统信号（cp_awarded/intent_match_computed/feedback_tier/
-# critical_deviation_triggered/blueprint_declared/...）随对应核心层（C1/C3/C5）issue 落地登记。
+# ── 以下为 issue #17（P5-5 改写/因果引擎 C1/S1）登记的 §7.2 契约信号（按总表实现，非私加；
+# control-manifest 信号节：新增跨系统信号须 ADR/issue 评审，本 issue 即评审载体）。
+# 信号名/载荷逐条对齐 rewrite-causality §6.1/§6.2 + architecture §7.2，零新增、零改名。
+# **C1(RewriteCausalityEngine) 为本批信号的 S1 侧所有者**：S1→S2/S3/S5 信号由 C1 emit；
+# S5→S1 的 intel_updated 由 C5 emit、C1 connect（emit 侧归 C5，待 C5 issue 落地）。
+
+## S1→S3(S3)/HUD/X1：蓝图声明（rewrite-causality §6.1 / panel-progression §6.1）。
+## 玩家进改写面板选蓝图 = 显式声明意图（§2.4）。载荷：node_id、blueprint_id。
+signal blueprint_declared(node_id: StringName, blueprint_id: StringName)
+
+## S1→S3/S5：关键变量改变（rewrite-causality §6.1 / open-world §6.5 world_visual 切换）。
+## 载荷：var_id、old_value、new_value（枚举键字符串；NUMERIC 字符串化）、is_preview（true=改写预览，false=锁定结算）。
+## **DAG 硬契约**：v_i 真值唯一所有者 C1；S4/S5 不直写 v_i，必经 verb_executed 由 C1 自改（§5.3）。
+signal variable_changed(var_id: StringName, old_value: String, new_value: String, is_preview: bool)
+
+## S1→S3(S3)：意图匹配度（rewrite-causality §6.1 / §4.2）。锁定时算 M。载荷：node_id、m（∈[0,1]）。
+signal intent_match_computed(node_id: StringName, m: float)
+
+## S1→S3（CP 账户入账，两段式）：因果点产出（rewrite-causality §6.1 / §4.2 / systems-index §6）。
+## **CP 两段式**：产出归 C1（§4.2 公式），账户/兑换归 C3；C1 发完即放手，不持余额。
+## 载荷：amount（本次产出 CP，点，≥0）、node_id、reason（committed/max_attempts_exhausted/...）。
+signal cp_awarded(amount: int, node_id: StringName, reason: String)
+
+## S1→S3/X1：反馈档位（rewrite-causality §6.1 / §4.4 / art-bible §2.5 Δ 视觉三档）。
+## 载荷：node_id、tier（int 枚举：0=minor / 1=notable / 2=critical，见 RewriteCausalityEngine.FeedbackTier）。
+## 演出资产/脚本归 S3+X1（systems-index §6 历史线两段式）；本信号只触发，不含资产引用。
+signal feedback_tier(node_id: StringName, tier: int)
+
+## S1→S3/S2：重大偏差 / 世界线震荡（rewrite-causality §6.1 / §4.5）。
+## 触发：Δ_node ≥ Δ_critical 且 tier=critical。**不双倍 CP**（防「震荡=高收益」反激励），风险转嫁下游。
+## 载荷：node_id、delta_node（历史偏差分 [0,100]）。
+signal critical_deviation_triggered(node_id: StringName, delta_node: int)
+
+## S5→S1：情报更新（rewrite-causality §6.2 / §7.4 / open-world §6.1）。
+## C5 探索产出情报 → C1 更新 intel_cov（降 diff、门控蓝图可见性，§2.4/§4.3）。
+## 载荷：intel_cov（覆盖率 ∈[0,1]）、new_intels（新情报条目 id 数组）。
+## **emit 侧归 C5(S5)，待 C5 issue 落地**；C1 仅 connect，测试用手动 emit 驱动（不写 C5 桩，知识诚实红线）。
+signal intel_updated(intel_cov: float, new_intels: Array)

@@ -1,0 +1,37 @@
+; 改写蓝图 · 维持原线（意图声明 · 数据驱动 · S1 · rewrite-causality §2.4/§3.3）。
+; blueprint_id: bp_baseline_keep —— §3.3「每节点隐含一条维持原线蓝图」的显式实例。
+;
+; target_vars = 全 baseline（v_wind=southeast/v_altar=intact/v_kong=alive）。选它 + 不介入 → M 高、
+; Δ≈0、CP 最低（防「躺平最优」，§4.2/§5.1）。m_weights 三等分（Σ=1.0）。
+; unlock_intel_cov=0.0：无需探索即可见（最朴素的「不动」选项）。
+[gd_resource type="Resource" script_class="RewriteBlueprintData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/rewrite_blueprint_data.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/blueprint_var_entry.gd" id="2_entry"]
+
+[sub_resource type="Resource" id="bp_wind" script_class="BlueprintVarEntry"]
+script = ExtResource("2_entry")
+var_id = &"v_wind"
+target_value = "southeast"
+m_weight = 0.34
+
+[sub_resource type="Resource" id="bp_altar" script_class="BlueprintVarEntry"]
+script = ExtResource("2_entry")
+var_id = &"v_altar"
+target_value = "intact"
+m_weight = 0.33
+
+[sub_resource type="Resource" id="bp_kong" script_class="BlueprintVarEntry"]
+script = ExtResource("2_entry")
+var_id = &"v_kong"
+target_value = "alive"
+m_weight = 0.33
+
+[resource]
+script = ExtResource("1_main")
+blueprint_id = &"bp_baseline_keep"
+dynasty = &"dyn_threekingdoms_chibi"
+intent_label = "袖手旁观，让历史自行发生"
+vars = [SubResource("bp_wind"), SubResource("bp_altar"), SubResource("bp_kong")]
+unlock_intel_cov = 0.0
+special_flags = PackedStringArray()

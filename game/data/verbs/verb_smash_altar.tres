@@ -1,0 +1,23 @@
+; 改写动词 · 破坏七星坛（数据驱动 · S1 · rewrite-causality §3.5 / §1.2 物理破坏类）。
+; verb_id: verb_smash_altar —— N2 节点可用动词。物理执行归 S4（潜行破坏）/S5（交互），成功后发
+; verb_executed(verb_smash_altar, target, true) → C1 据本表 effect.set 改 v_altar=smashed（§5.3 DAG）。
+[gd_resource type="Resource" script_class="RewriteVerbData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/rewrite_verb_data.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/foundation/data_resources/verb_effect_set.gd" id="2_eff"]
+
+[sub_resource type="Resource" id="eff_altar" script_class="VerbEffectSet"]
+script = ExtResource("2_eff")
+var_id = &"v_altar"
+value = "smashed"
+
+[resource]
+script = ExtResource("1_main")
+verb_id = &"verb_smash_altar"
+dynasty = &"dyn_threekingdoms_chibi"
+display_name = "破坏七星坛"
+cost_base = 25
+effect_sets = [SubResource("eff_altar")]
+effect_flags = PackedStringArray()
+requires_ability = &""
+requires_scene = &"scene_altar"
