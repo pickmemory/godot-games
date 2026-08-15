@@ -15,6 +15,7 @@ import { HeldItem } from './helditem.js';
 import { FALLBACK_MINING, dropOf, toolDefOf } from './mining.js';
 import { SFX } from './sfx.js';
 import { DropManager } from './drops.js';
+import { loadChapter, normalizeChapter, ChapterTimeline, FALLBACK_CHAPTER } from './chapter.js';
 
 /* ---------- 启动 ---------- */
 const canvas = document.getElementById('game');
@@ -39,7 +40,7 @@ sun.position.set(60, 100, 35);
 scene.add(ambient, sun, camera);   // camera 入场景：手持模型挂在 camera 上（helditem.js）
 
 const SEED = Number(new URLSearchParams(location.search).get('seed')) || 1337;
-const DAY_LEN = 180; // 秒/昼夜
+let DAY_LEN = 180; // 秒/昼夜（章节数据 dayLengthSeconds 可覆盖，见 MC-3a）
 
 /* ---------- 世界与玩家 ---------- */
 const atlas = buildAtlas();
@@ -68,6 +69,13 @@ try {
   const res = await fetch('data/recipes.json');
   if (res.ok) recipeData = await res.json();
 } catch (e) { /* 同上 */ }
+
+/* ---------- MC-3a 章节时间轴：data/chapters/*.json（数据驱动编年；缺文件/离线→兜底章节） ---------- */
+const chapterLoaded = await loadChapter('data/chapters/184-yellow-turban.json');
+const chapterResult = chapterLoaded.ok ? chapterLoaded : normalizeChapter(FALLBACK_CHAPTER);
+if (!chapterLoaded.ok) console.warn('[chapter] 章节数据加载失败，用兜底：', chapterLoaded.warnings);
+else if (chapterResult.warnings.length) console.warn('[chapter] 章节数据告警：', chapterResult.warnings);
+if (chapterResult.chapter.dayLengthSeconds) DAY_LEN = chapterResult.chapter.dayLengthSeconds;
 
 /* ---------- MC-2 生存：血量 + 夜间敌对生物（数值数据驱动 web/data/mobs.json） ---------- */
 let mobConfig = FALLBACK_MOB_CONFIG;
@@ -112,6 +120,45 @@ const mobManager = new MobManager(scene, world, mobConfig, {
 /* ---------- WebAudio 合成音效（sfx.js 模块；零外部文件，MC-2c 全覆盖） ---------- */
 const sfx = new SFX();
 function ensureAudio() { sfx.ensure(); }
+
+/* ---------- MC-3a 章节时间轴引擎装配：时间数学在 chapter.js，世界迁移处理器在此注册 ---------- */
+const skyOverrides = {};   // sky 效果覆盖（雾距等；空值 = 不覆盖，见 updateDayNight）
+const timeline = new ChapterTimeline(chapterResult.chapter, {
+  dayLength: DAY_LEN,
+  onEvent(ev) {
+    console.log(`[chapter] ${timeline.formatDate()} 「${ev.title}」${ev.narration}`);
+  },
+  onDayChange() { ui.setDate(`${timeline.formatDate()} · ${timeline.season.label}`); },
+  onSeasonChange(s) { console.log(`[chapter] 季节流转 → ${s.label}`); },
+  onChapterEnd() { console.log('[chapter] 章末：越过章节 end 日期，等待下一章（MC-3c 充实迁移）'); },
+});
+
+timeline.registerEffect('notify', (eff) => { if (eff.text) ui.showPickup(eff.text); });
+timeline.registerEffect('setFlag', (eff) => timeline.setFlag(eff.flag, eff.value !== false));
+timeline.registerEffect('mobs', (eff) => {
+  if (eff.spawn) Object.assign(mobManager.cfg.spawn, eff.spawn);
+});
+timeline.registerEffect('sky', (eff) => {
+  if (eff.fogNear != null) skyOverrides.fogNear = eff.fogNear;
+  if (eff.fogFar != null) skyOverrides.fogFar = eff.fogFar;
+});
+// 方块替换（圆柱区域，玩家或指定坐标为心）：dirty chunk 由 world.update 每帧限重建，自然分帧
+timeline.registerEffect('blockReplace', (eff) => {
+  const r = eff.radius ?? 16, [lo, hi] = eff.yRange ?? [-2, 1];
+  const c = !eff.center || eff.center === 'player'
+    ? { x: Math.floor(player.pos.x), y: Math.floor(player.pos.y), z: Math.floor(player.pos.z) }
+    : eff.center;
+  let n = 0;
+  for (let dy = lo; dy <= hi; dy++)
+    for (let dz = -r; dz <= r; dz++)
+      for (let dx = -r; dx <= r; dx++) {
+        if (dx * dx + dz * dz > r * r) continue;
+        const x = c.x + dx, y = c.y + dy, z = c.z + dz;
+        if (world.getBlock(x, y, z) === eff.from) { world.setBlock(x, y, z, eff.to); n++; }
+      }
+  console.log(`[chapter] blockReplace ${eff.from}→${eff.to}：${n} 格`);
+});
+ui.setDate(`${timeline.formatDate()} · ${timeline.season.label}`);
 
 /* ---------- 挖掘粒子（手感包） ---------- */
 const bursts = [];
@@ -171,6 +218,7 @@ function onDropPickup(itemId, count) {
 
 /* ---------- 交互 ---------- */
 let lastTickPct = 0;
+let blocksPlaced = 0, blocksMined = 0;   // MC-3a：章节条件触发消费的玩家统计（ctx.stats）
 const interaction = new Interaction(camera, world, scene, player, {
   onDigProgress(pct) {
     ui.setDigProgress(pct);
@@ -179,6 +227,7 @@ const interaction = new Interaction(camera, world, scene, player, {
     lastTickPct = pct;
   },
   onDigComplete(blockId, pos) {
+    blocksMined++;
     sfx.blockBreak();
     spawnBurst(pos, BLOCK_DEFS[blockId].tiles.side);
     // 掉落 → 掉落物实体（mining.js：drop 字段 + 掉落等级门槛；拾取在 drops.js/update）
@@ -191,6 +240,7 @@ const interaction = new Interaction(camera, world, scene, player, {
   },
   onPlace() {
     sfx.place();
+    blocksPlaced++;
     inventory.takeFromSelected(1);   // 生存模式：放置即消耗
   },
 });
@@ -359,8 +409,11 @@ function updateDayNight(dt) {
   else                { const k = (c - 0.92) / 0.08; sky = _sky.lerpColors(SKY_NIGHT, SKY_DAY, k); sunI = 0.12 + 0.78 * k; ambI = 0.16 + 0.39 * k; nightK = 1 - k; } // 破晓
   renderer.setClearColor(sky);
   scene.fog.color.copy(sky);
-  scene.fog.near = FOG_DAY.near + (FOG_NIGHT.near - FOG_DAY.near) * nightK;
-  scene.fog.far = FOG_DAY.far + (FOG_NIGHT.far - FOG_DAY.far) * nightK;
+  // MC-3a 雾距优先级：章节 sky 效果覆盖 > 季节参数（fogFar 作白日基准）> 默认昼夜雾
+  const seasonFogFar = timeline.season.params.fogFar;
+  const baseFar = seasonFogFar != null ? Math.min(seasonFogFar, FOG_DAY.far) : FOG_DAY.far;
+  scene.fog.near = skyOverrides.fogNear ?? (FOG_DAY.near + (FOG_NIGHT.near - FOG_DAY.near) * nightK);
+  scene.fog.far = skyOverrides.fogFar ?? (baseFar + (FOG_NIGHT.far - FOG_DAY.far) * nightK);
   sun.intensity = sunI;
   sun.color.copy(SUN_DAY).lerp(SUN_NIGHT, nightK);
   ambient.intensity = ambI;
@@ -436,6 +489,7 @@ function loop(now) {
   updateBursts(dt);
   dropManager.update(dt, player.pos, locked && !dead, onDropPickup);
   updateDayNight(dt);
+  timeline.update(dt, { isNight, playerPos: player.pos, stats: { blocksPlaced, blocksMined } });
 
   // 第一人称手持模型（MC-2b）：随选中物品切换，挖掘挥动
   heldItem.setItem(inventory.heldId());

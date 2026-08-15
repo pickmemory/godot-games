@@ -80,6 +80,11 @@
     text-align: right; pointer-events: none; }
   #fps .t { color: rgba(255,255,255,.5); }
 
+  /* MC-3a 编年日期/季节（章节时间轴 HUD） */
+  #date { position: fixed; left: 10px; top: 8px; color: rgba(232,217,176,.9);
+    font-size: 12px; letter-spacing: 2px; text-shadow: 0 1px 2px #000; z-index: 10;
+    pointer-events: none; }
+
   /* MC-2 血量红心条（每颗 = 2 点血） */
   #hearts { position: fixed; left: 50%; bottom: 74px; transform: translateX(-50%);
     display: flex; gap: 3px; z-index: 10; pointer-events: none; }
@@ -138,6 +143,7 @@
 <div id="hotbar"></div>
 <div id="pickup"></div>
 <div id="blockName"></div>
+<div id="date"></div>
 <div id="fps">-- fps<br><span class="t">chunks --</span></div>
 <div id="vignette"></div>
 <div id="hearts"></div>

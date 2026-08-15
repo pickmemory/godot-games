@@ -1,0 +1,75 @@
+{
+  "_comment": "MC-3a 第一章「184 黄巾」占位编年数据（schema 见本目录 README.md；具体内容 MC-3c 设计文档充实）。日期为简化格里历序数（引擎用 Date.UTC 记序数日），史实农历对照由 MC-3c 校订。",
+  "id": "184-yellow-turban",
+  "title": "第一章 · 黄巾",
+  "subtitle": "中平元年",
+  "start": { "year": 184, "month": 2, "day": 1 },
+  "end": { "year": 184, "month": 11, "day": 30 },
+  "dayLengthSeconds": 180,
+
+  "seasons": {
+    "spring": { "label": "春", "months": [2, 3, 4], "params": { "skyTint": "#87ceeb", "fogFar": null } },
+    "summer": { "label": "夏", "months": [5, 6, 7], "params": { "skyTint": "#8fd4e8", "fogFar": 140 } },
+    "autumn": { "label": "秋", "months": [8, 9, 10], "params": { "skyTint": "#c8c0a0", "fogFar": 110 } },
+    "winter": { "label": "冬", "months": [11, 12, 1], "params": { "skyTint": "#b8c4d8", "fogFar": 90 } }
+  },
+
+  "worldState": {
+    "onEnter": [
+      { "type": "notify", "text": "中平元年 · 春。钜鹿张角，遣弟子奔走四方，以符水咒说天下。" }
+    ]
+  },
+
+  "events": [
+    {
+      "id": "yellow-turban-rises",
+      "title": "黄巾起事",
+      "date": { "year": 184, "month": 3, "day": 5 },
+      "narration": "二月末，唐周告变，马元义车裂于洛阳。张角仓促举兵：皆着黄巾为标帜，七州二十八郡，一时俱起。",
+      "effects": [
+        { "type": "notify", "text": "黄巾起事！七州二十八郡，一时俱起——你的村子也听得见远处的烟了。" },
+        { "type": "mobs", "spawn": { "maxCount": 6, "interval": 5 } },
+        { "type": "setFlag", "flag": "war-begun" }
+      ]
+    },
+    {
+      "id": "army-marches-through",
+      "title": "官军过境",
+      "date": { "year": 184, "month": 4, "day": 12 },
+      "narration": "朝廷发兵讨贼，皇甫嵩、朱儁各领一军。大军过处，田垄践为尘土，道旁的青苗全没了。",
+      "effects": [
+        { "type": "notify", "text": "官军过境，田垄践为尘土……" },
+        { "type": "blockReplace", "center": "player", "radius": 16, "yRange": [-2, 1], "from": 1, "to": 2 }
+      ]
+    },
+    {
+      "id": "autumn-smoke",
+      "title": "战火烟尘",
+      "date": { "year": 184, "month": 8, "day": 20 },
+      "narration": "入秋，兵燹连绵，四野的烟压低了天。看得见的日子，也短了。",
+      "effects": [
+        { "type": "notify", "text": "入秋，兵燹连绵，四野的烟压低了天。" },
+        { "type": "sky", "fogFar": 95, "fogNear": 28 }
+      ]
+    },
+    {
+      "id": "guangzong-falls",
+      "title": "广宗城破",
+      "date": { "year": 184, "month": 11, "day": 25 },
+      "narration": "皇甫嵩破广宗，张梁战死。首乱平了，可散落各州的黄巾，才刚刚开始流散四方——你也是其中一个名字。",
+      "effects": [
+        { "type": "notify", "text": "广宗城破，张梁败亡。首乱平了，乱世才刚开始。" }
+      ]
+    },
+    {
+      "id": "first-shelter",
+      "title": "栖身之所",
+      "when": { "kind": "minStat", "stat": "blocksPlaced", "count": 20 },
+      "narration": "你亲手垒起了二十块砖石。在这条长卷里，你给自己挣出了一个能睡觉的地方。",
+      "effects": [
+        { "type": "notify", "text": "你垒起了自己的栖身之所。乱世里，这是一个名字立起来的方式。" },
+        { "type": "setFlag", "flag": "settled" }
+      ]
+    }
+  ]
+}

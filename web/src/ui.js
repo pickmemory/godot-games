@@ -26,6 +26,7 @@ export class UI {
     this.heartsEl = document.getElementById('hearts');
     this.vignetteEl = document.getElementById('vignette');
     this.deathEl = document.getElementById('death');
+    this.dateEl = document.getElementById('date');
     this._nameTimer = null;
     this._slots = [];
     this._heartFills = null;
@@ -95,6 +96,11 @@ export class UI {
     el.style.opacity = '1';
     clearTimeout(this._pickupTimer);
     this._pickupTimer = setTimeout(() => { el.style.opacity = '0'; }, 1400);
+  }
+
+  /** MC-3a 编年日期/季节 HUD（左上角；空串隐藏） */
+  setDate(text) {
+    if (this.dateEl) this.dateEl.textContent = text ?? '';
   }
 
   setStats(fps, chunks) {
