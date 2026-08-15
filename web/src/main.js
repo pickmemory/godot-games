@@ -24,6 +24,7 @@ import { DialogUI, FALLBACK_DIALOGS } from './dialog.js';
 import { QuestSystem, FALLBACK_QUESTS } from './quests.js';
 import { Cutscene } from './cutscene.js';
 import { SaveSystem, LocalStorageSaveAdapter } from './save.js';
+import { pickSaveAdapter, platformUnlock, STEAM_ACHIEVEMENTS } from './steam-adapter.js';
 
 /* ---------- 启动 ---------- */
 const canvas = document.getElementById('game');
@@ -47,8 +48,9 @@ const sun = new THREE.DirectionalLight(0xffffff, 0.9);
 sun.position.set(60, 100, 35);
 scene.add(ambient, sun, camera);   // camera 入场景：手持模型挂在 camera 上（helditem.js）
 
-/* ---------- MC-4c 存档抽象层：ISaveAdapter → SaveSystem（发布期换 SteamCloudSaveAdapter 只改此处装配，业务码零改动） ---------- */
-const saveAdapter = new LocalStorageSaveAdapter('sgsc-save-v1');
+/* ---------- MC-4c 存档抽象层：ISaveAdapter → SaveSystem（MC-5e 起装配点经 pickSaveAdapter：
+   Electron 壳注入 window.sgsc 桥时自动切 SteamCloudSaveAdapter，浏览器仍 localStorage，业务码零改动） ---------- */
+const saveAdapter = pickSaveAdapter(new LocalStorageSaveAdapter('sgsc-save-v1'));
 const saveSystem = new SaveSystem(saveAdapter, {
   interval: 30,   // 定时自动存档（秒）
   onWarn: (msg) => { console.warn('[save]', msg); ui.showPickup(msg); },
@@ -634,6 +636,7 @@ const _sky = new THREE.Color();
 const _tint = new THREE.Color();   // MC-5b 章节氛围色（美术圣经 §2.4）
 let dayTime = DAY_LEN * 0.15; // 从清晨开始
 let isNight = false;
+let nightsSurvived = 0; // MC-5e：夜→昼翻转计数（=1 时解锁 Steam 成就「活过第一夜」；随 stats 分节持久化）
 
 /** 推进昼夜；返回 nightK∈[0,1]（>0.9 为夜间生物窗口） */
 function updateDayNight(dt) {
@@ -670,6 +673,10 @@ function updateDayNight(dt) {
   if (nowNight !== isNight) {
     isNight = nowNight;
     sfx.setNight(isNight);
+    // MC-5e：夜→昼翻转 = 活过一夜；首夜解锁成就（浏览器 no-op，Steam 侧幂等去重）
+    if (!isNight && ++nightsSurvived === 1) {
+      platformUnlock(STEAM_ACHIEVEMENTS.SURVIVE_FIRST_NIGHT);
+    }
   }
   return nightK;
 }
@@ -743,12 +750,13 @@ saveSystem.registerProvider('building', {
   },
 });
 saveSystem.registerProvider('stats', {
-  capture: () => ({ blocksPlaced, blocksMined, deaths, dayTime }),
+  capture: () => ({ blocksPlaced, blocksMined, deaths, dayTime, nightsSurvived }),
   restore: (d) => {
     if (!d || typeof d !== 'object') return;
     blocksPlaced = Math.max(0, Math.round(Number(d.blocksPlaced) || 0));
     blocksMined = Math.max(0, Math.round(Number(d.blocksMined) || 0));
     deaths = Math.max(0, Math.round(Number(d.deaths) || 0));
+    nightsSurvived = Math.max(0, Math.round(Number(d.nightsSurvived) || 0));
     if (Number.isFinite(d.dayTime)) dayTime = ((d.dayTime % DAY_LEN) + DAY_LEN) % DAY_LEN;
   },
 });

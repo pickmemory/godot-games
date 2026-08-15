@@ -1,0 +1,59 @@
+{
+  "name": "sgsc-electron-shell",
+  "productName": "三国长卷",
+  "version": "0.1.0",
+  "description": "《三国长卷》Electron 发布壳（Steam 打包；npm 依赖隔离在本目录，不污染 web/ 零构建基线）",
+  "main": "main.js",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "stage": "node build.mjs",
+    "stage:offline": "node build.mjs --offline",
+    "dist:win": "npm run stage && electron-builder --win --x64",
+    "dist:win:offline": "npm run stage:offline && electron-builder --win --x64"
+  },
+  "dependencies": {
+    "steamworks.js": "^0.3.0"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.sanGuoChangJuan.game",
+    "productName": "三国长卷",
+    "copyright": "© 三国长卷制作组",
+    "directories": {
+      "output": "dist/package",
+      "buildResources": "buildres"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json",
+      "README.md"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/stage/web",
+        "to": "web",
+        "filter": ["**/*"]
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "三国长卷"
+    }
+  }
+}

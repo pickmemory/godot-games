@@ -1,0 +1,4 @@
+# MC-5e Electron 壳构建产物与依赖（npm 依赖隔离在本目录，不入库）
+node_modules/
+dist/
+steam_appid.txt

@@ -82,7 +82,7 @@ function buildVillager(model = {}) {
     // 斗笠：扁圆锥（CylinderGeometry topR≈0 即锥）
     const hat = new THREE.Mesh(
       new THREE.CylinderGeometry(0.06, 0.42, 0.16, 8),
-      new THREE.MeshLambertMaterial({ color: '#b09455 }),
+      new THREE.MeshLambertMaterial({ color: '#b09455' }),
     );
     hat.position.y = 1.65 + 0.44 + 0.07;
     g.add(hat);
