@@ -8,6 +8,12 @@ import { BLOCK_DEFS } from './blocks.js';
 
 const HANDLE_COLOR = 0x6b4a2b;
 const HEAD_COLORS = { [ITEM.PICK_WOOD]: 0x9a7b4f, [ITEM.PICK_STONE]: 0x8f8f8f, [ITEM.PICK_IRON]: 0xd9d9d9 };
+const HOE_COLORS = { [ITEM.HOE_WOOD]: 0x9a7b4f, [ITEM.HOE_STONE]: 0x8f8f8f };
+const MAT_COLORS = {
+  [ITEM.COAL]: 0x2a2a2a, [ITEM.STICK]: 0x8a6d3b,
+  [ITEM.MILLET]: 0xd8b23a, [ITEM.MILLET_SEED]: 0xb59a4a,
+  [ITEM.GREENS]: 0x4e9c3a, [ITEM.GREENS_SEED]: 0x6d8f3a,
+};
 
 export class HeldItem {
   /** @param {THREE.PerspectiveCamera} camera */
@@ -79,12 +85,23 @@ export class HeldItem {
       tipR.position.x = 0.22; tipR.rotation.z = -0.65;
       g.add(tipR);
       g.rotation.z = -0.55;   // 手持斜握
+    } else if (HOE_COLORS[itemId] !== undefined) {
+      // 锄：长柄 + 底端宽刃（MC-4a）
+      const wood = new THREE.MeshLambertMaterial({ color: HANDLE_COLOR });
+      const blade = new THREE.MeshLambertMaterial({ color: HOE_COLORS[itemId] });
+      const handle = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.56, 0.05), wood);
+      handle.position.y = -0.02;
+      g.add(handle);
+      const bladeMesh = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.06, 0.12), blade);
+      bladeMesh.position.set(0.08, -0.27, 0);
+      bladeMesh.rotation.z = -0.35;
+      g.add(bladeMesh);
+      g.rotation.z = -0.55;
     } else {
-      // 材料：小方锭
-      const colors = { [ITEM.COAL]: 0x2a2a2a, [ITEM.STICK]: 0x8a6d3b };
+      // 材料/食物/种子：小方锭
       const mesh = new THREE.Mesh(
         new THREE.BoxGeometry(0.16, 0.16, 0.16),
-        new THREE.MeshLambertMaterial({ color: colors[itemId] ?? 0xcccccc }),
+        new THREE.MeshLambertMaterial({ color: MAT_COLORS[itemId] ?? 0xcccccc }),
       );
       mesh.rotation.y = 0.6;
       g.add(mesh);

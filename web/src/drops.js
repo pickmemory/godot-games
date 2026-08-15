@@ -18,6 +18,12 @@ const MAX_DROPS = 128;      // 上限（超出丢弃最旧的，防刷怪机式�
 const ITEM_COLORS = {
   [ITEM.COAL]: 0x232323,
   [ITEM.STICK]: 0x8a6d3b,
+  [ITEM.HOE_WOOD]: 0x9a7b4f,
+  [ITEM.HOE_STONE]: 0x8f8f8f,
+  [ITEM.MILLET]: 0xd8b23a,
+  [ITEM.MILLET_SEED]: 0xb59a4a,
+  [ITEM.GREENS]: 0x4e9c3a,
+  [ITEM.GREENS_SEED]: 0x6d8f3a,
 };
 
 export class DropManager {

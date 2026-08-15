@@ -15,6 +15,7 @@ import { HeldItem } from './helditem.js';
 import { FALLBACK_MINING, dropOf, toolDefOf } from './mining.js';
 import { SFX } from './sfx.js';
 import { DropManager } from './drops.js';
+import { Farming } from './farming.js';
 import { loadChapter, normalizeChapter, ChapterTimeline, FALLBACK_CHAPTER } from './chapter.js';
 import { NPCManager, FALLBACK_NPC_DATA } from './npc.js';
 import { DialogUI, FALLBACK_DIALOGS } from './dialog.js';
@@ -106,6 +107,13 @@ let questData = FALLBACK_QUESTS;
 try {
   const res = await fetch('data/quests.json');
   if (res.ok) questData = await res.json();
+} catch (e) { /* 同上 */ }
+
+/* ---------- MC-4a 农耕数据（数据驱动；缺文件/离线 → farming.js 同构兑底） ---------- */
+let farmingData = null;
+try {
+  const res = await fetch('data/farming.json');
+  if (res.ok) farmingData = await res.json();
 } catch (e) { /* 同上 */ }
 
 const PLAYER_MAX_HP = 20;
@@ -289,6 +297,26 @@ function onDropPickup(itemId, count) {
   return got; // 0 = 一个都没收下（满），掉落物保留原地稍后再试
 }
 
+/* ---------- MC-4a 农耕系统：开垦/播种/生长/收获，季节联动 MC-3a 时间轴 ---------- */
+const farming = new Farming(world, {
+  dayLength: DAY_LEN,
+  season: () => timeline.season.name,          // MC-3a：seasonGrowth 按 season.name 取系数
+  elapsedDays: () => timeline.elapsed,          // 水分计时与开卷游戏日历同源
+  notify: (t) => ui.showPickup(t),
+  drop: (pos, id, n) => dropManager.spawn(id, pos, n),
+  consumeHeld: () => inventory.takeFromSelected(1),
+  eat: (crop, itemId) => {
+    if (dead || health.dead) return false;
+    if (health.hp >= health.maxHp) { ui.showPickup('血气充盈，吃不下了'); return false; }
+    if (!inventory.takeFromSelected(1)) return false;
+    health.heal(crop.foodHp);
+    sfx.pickup();
+    ui.showPickup(`吃下${itemName(itemId)}，缓过一口气（+${crop.foodHp}）`);
+    return true;
+  },
+});
+if (farmingData) farming.setData(farmingData);
+
 /* ---------- 交互 ---------- */
 let lastTickPct = 0;
 let blocksPlaced = 0, blocksMined = 0;   // MC-3a：章节条件触发消费的玩家统计（ctx.stats）
@@ -304,13 +332,20 @@ const interaction = new Interaction(camera, world, scene, player, {
     quests.notify('blocksMined', 1);   // MC-3b：玩家行为 → 任务事件（与 chapter ctx.stats 同名）
     sfx.blockBreak();
     spawnBurst(pos, BLOCK_DEFS[blockId].tiles.side);
-    // 掉落 → 掉落物实体（mining.js：drop 字段 + 掉落等级门槛；拾取在 drops.js/update）
-    const drop = dropOf(BLOCK_DEFS[blockId], toolDefOf(inventory.heldId()), blockId);
-    if (drop) {
-      dropManager.spawn(drop, pos);
-    } else if (BLOCK_DEFS[blockId].minDropTier) {
-      ui.showPickup('镐的等级不够，什么也没挖下来…');
+    // MC-4a：作物掉落由农耕系统特判（成熟=产出+种子；未熟颗粒无收），其余走 mining.js dropOf
+    const cropDrops = farming.breakDrops(blockId);
+    if (cropDrops) {
+      for (const d of cropDrops) dropManager.spawn(d.id, pos, d.n);
+    } else {
+      // 掉落 → 掉落物实体（mining.js：drop 字段 + 掉落等级门槛；拾取在 drops.js/update）
+      const drop = dropOf(BLOCK_DEFS[blockId], toolDefOf(inventory.heldId()), blockId);
+      if (drop) {
+        dropManager.spawn(drop, pos);
+      } else if (BLOCK_DEFS[blockId].minDropTier) {
+        ui.showPickup('镐的等级不够，什么也没挖下来…');
+      }
     }
+    farming.afterDig(pos, blockId);   // 耕地被挖 → 连带顶上作物弹出；作物被挖 → 清生长记录
   },
   onPlace() {
     sfx.place();
@@ -318,6 +353,8 @@ const interaction = new Interaction(camera, world, scene, player, {
     quests.notify('blocksPlaced', 1);  // MC-3b：同上
     inventory.takeFromSelected(1);   // 生存模式：放置即消耗
   },
+  // 右键物品用法（锄地/播种/收获/进食）：interaction 在放置前优先问询，返回 true 则消费本次右键
+  onUse: (hit, heldId) => farming.useOn(hit, heldId),
 });
 interaction.miningCfg = miningCfg;
 
@@ -588,6 +625,7 @@ function loop(now) {
   if (started && !cutscene.isActive) {
     updateDayNight(dt);
     timeline.update(dt, { isNight, playerPos: player.pos, stats: { blocksPlaced, blocksMined } });
+    farming.update(dt);   // MC-4a：作物生长/水分与编年时间同源同门控（演出中不偷长）
   }
 
   // 第一人称手持模型（MC-2b）：随选中物品切换，挖掘挥动

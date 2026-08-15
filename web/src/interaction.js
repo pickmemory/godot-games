@@ -1,6 +1,6 @@
 // interaction.js — DDA 体素射线选块 + 线框高亮 + 按住挖掘进度 + 放置
 import * as THREE from 'three';
-import { isSolid, BLOCK_DEFS } from './blocks.js';
+import { isSolid, isInteractable, BLOCK_DEFS } from './blocks.js';
 import { digTime, toolDefOf, FALLBACK_MINING } from './mining.js';
 import { buildCrackTextures } from './textures.js';
 
@@ -16,7 +16,10 @@ export class Interaction {
    * @param {import('./player.js').Player} player  放置时做 AABB 相交拒绝
    * @param {{onDigProgress:(pct:number)=>void,
    *          onDigComplete:(blockId:number,pos:[number,number,number])=>void,
-   *          onPlace:(pos:[number,number,number])=>void}} callbacks
+   *          onPlace:(pos:[number,number,number])=>void,
+   *          onUse?:(hit:{pos:[number,number,number],normal:[number,number,number]}|null,
+   *                  heldItemId:number)=>boolean}} callbacks
+   *          onUse：右键物品用法（锄地/播种/收获/进食等，farming.js）；返回 true = 已消费本次右键
    */
   constructor(camera, world, scene, player, callbacks) {
     this.camera = camera;
@@ -71,7 +74,7 @@ export class Interaction {
     let nx = 0, ny = 0, nz = 0;
     let t = 0;
     while (t <= REACH) {
-      if (isSolid(this.world.getBlock(x, y, z))) {
+      if (isInteractable(this.world.getBlock(x, y, z))) {
         return { pos: [x, y, z], normal: [nx, ny, nz] };
       }
       if (tMX < tMY && tMX < tMZ) { x += stepX; t = tMX; tMX += tDX; nx = -stepX; ny = 0; nz = 0; }
@@ -94,6 +97,8 @@ export class Interaction {
     if (!hit) {
       this.highlight.visible = false;
       this._resetDig();
+      // 空挥右键仍可触物品用法（进食等不依赖准星目标）
+      if (placeHeld && this._placeCd === 0 && this.cb.onUse?.(null, heldItemId)) this._placeCd = PLACE_CD;
       return;
     }
 
@@ -124,13 +129,21 @@ export class Interaction {
       this._resetDig();
     }
 
-    // 放置（仅手持方块物品；面邻接 + 冷却 + 不与玩家重叠 + 不覆盖实块）
+    // 右键：优先物品用法（锄地/播种/收获/进食，main 注入 onUse → farming.js）；未消费再走放置
+    if (placeHeld && this._placeCd === 0) {
+      if (this.cb.onUse?.(hit, heldItemId)) {
+        this._placeCd = PLACE_CD;
+        return;
+      }
+    }
+
+    // 放置（仅手持方块物品；面邻接 + 冷却 + 不与玩家重叠 + 不覆盖实块/作物）
     const placeId = heldItemId > 0 && heldItemId < 100 ? heldItemId : 0;
     if (placeHeld && placeId > 0 && this._placeCd === 0) {
       const tx = hit.pos[0] + hit.normal[0];
       const ty = hit.pos[1] + hit.normal[1];
       const tz = hit.pos[2] + hit.normal[2];
-      if (ty >= 0 && ty < 64 && !isSolid(this.world.getBlock(tx, ty, tz))) {
+      if (ty >= 0 && ty < 64 && !isInteractable(this.world.getBlock(tx, ty, tz))) {
         const a = this.player.aabb;
         const overlap = tx + 1 > a.x0 && tx < a.x1
           && ty + 1 > a.y0 && ty < a.y1

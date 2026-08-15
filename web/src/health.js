@@ -57,6 +57,14 @@ export class Health {
     }
   }
 
+  /** 治疗（进食/道具）。满血或已死返回 false（不消费物品） */
+  heal(amount) {
+    if (this.dead || amount <= 0 || this.hp >= this.maxHp) return false;
+    this.hp = Math.min(this.maxHp, this.hp + Math.round(amount));
+    this.cb.onChange?.(this.hp, this.maxHp);
+    return true;
+  }
+
   /** 死亡后重生：回满血并清空计时 */
   respawn() {
     this.dead = false;

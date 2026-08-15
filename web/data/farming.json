@@ -1,0 +1,47 @@
+{
+  "_comment": "MC-4a 农耕数据（farming.js 消费）。生长按游戏日累积：growth += dt/dayLength × seasonGrowth[季节] × 湿度系数（湿=1，干=dryGrowth）。阶段序 = min(stages.length-1, floor(growth/growDays × stages.length))，末段即成熟。方块 id 见 src/blocks.js，物品 id 见 src/items.js。seasonGrowth 键 = 章节数据 seasons 的季节名（web/data/chapters/*.json），冬季 0.05 = 近乎休眠。wetBlockIds 预留水方块（引入后邻水恒湿）；当前水分 = 开垦后湿润 wetDaysAfterTill 个游戏日，到期转干。",
+  "seasonGrowth": {
+    "spring": 1.0,
+    "summer": 1.2,
+    "autumn": 0.5,
+    "winter": 0.05
+  },
+  "till": {
+    "tool": "hoe",
+    "blocks": [1, 2],
+    "farmland": 12,
+    "farmlandWet": 13
+  },
+  "moisture": {
+    "searchRadius": 3,
+    "refreshSeconds": 2,
+    "scanBudget": 16,
+    "wetDaysAfterTill": 0.5,
+    "dryGrowth": 0.6,
+    "wetBlockIds": []
+  },
+  "crops": [
+    {
+      "id": "millet",
+      "name": "粟",
+      "stages": [14, 15, 16],
+      "seed": 108,
+      "produce": 107,
+      "yield": 2,
+      "seedYield": 2,
+      "growDays": 4,
+      "foodHp": 3
+    },
+    {
+      "id": "greens",
+      "name": "葵菜",
+      "stages": [17, 18, 19],
+      "seed": 110,
+      "produce": 109,
+      "yield": 2,
+      "seedYield": 2,
+      "growDays": 3,
+      "foodHp": 2
+    }
+  ]
+}

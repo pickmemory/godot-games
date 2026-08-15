@@ -11,6 +11,8 @@ export const FALLBACK_RECIPES = [
   { id: 'pick_wood',   out: { id: ITEM.PICK_WOOD, n: 1 },    in: [{ id: BLOCK.PLANK, n: 3 }, { id: ITEM.STICK, n: 2 }], station: true },
   { id: 'pick_stone',  out: { id: ITEM.PICK_STONE, n: 1 },   in: [{ id: BLOCK.COBBLE, n: 3 }, { id: ITEM.STICK, n: 2 }], station: true },
   { id: 'pick_iron',   out: { id: ITEM.PICK_IRON, n: 1 },    in: [{ id: BLOCK.IRON_ORE, n: 3 }, { id: ITEM.STICK, n: 2 }], station: true },
+  { id: 'hoe_wood',    out: { id: ITEM.HOE_WOOD, n: 1 },     in: [{ id: BLOCK.PLANK, n: 2 }, { id: ITEM.STICK, n: 2 }], station: true },   // MC-4a 农耕：锄
+  { id: 'hoe_stone',   out: { id: ITEM.HOE_STONE, n: 1 },    in: [{ id: BLOCK.COBBLE, n: 2 }, { id: ITEM.STICK, n: 2 }], station: true },
 ];
 
 export class Crafting {

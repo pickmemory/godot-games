@@ -5,7 +5,10 @@ import { TILE } from './blocks.js';
 
 const TILE_PX = 16;          // 每瓦片像素
 const TILES_PER_ROW = 4;     // atlas 一行 4 瓦片
+const TILE_TOTAL = Math.max(...Object.values(TILE)) + 1;   // 瓦片总数（atlas 高度随之伸缩）
+const ATLAS_ROWS = Math.ceil(TILE_TOTAL / TILES_PER_ROW);
 const ATLAS_PX = TILE_PX * TILES_PER_ROW;
+const ATLAS_H = TILE_PX * ATLAS_ROWS;
 
 // 确定性伪随机（每次刷新纹理一致）
 function mulberry32(seed) {
@@ -159,6 +162,89 @@ const PAINTERS = {
       ctx.fillRect(ox + x, oy + y, 1, 1);
     }
   },
+  /* ---------- MC-4a 农耕瓦片 ---------- */
+  [TILE.FARMLAND]: (ctx, ox, oy, rnd) => {
+    // 泥土底 + 竖向犁沟（深色差沟垄）
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const furrow = (x % 4 === 1) ? -0.2 : (x % 4 === 3 ? 0.06 : 0);
+      ctx.fillStyle = shade('#6e4a2e', furrow + (rnd() - 0.5) * 0.14);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+  },
+  [TILE.FARMLAND_WET]: (ctx, ox, oy, rnd) => {
+    // 同犁沟但整体深湿（近黑褐）
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const furrow = (x % 4 === 1) ? -0.18 : (x % 4 === 3 ? 0.05 : 0);
+      ctx.fillStyle = shade('#4a3018', furrow + (rnd() - 0.5) * 0.12);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+  },
+  // 作物：透明底 + 植株像素（alphaTest 材质雔空）；阶段递进 = 变高变密，成熟换色
+  [TILE.MILLET_0]: (ctx, ox, oy, rnd) => {   // 粟·发芽：两三撮小绿尖
+    const sprouts = [[3, 12], [7, 11], [11, 12]];
+    for (const [sx, sy] of sprouts) {
+      ctx.fillStyle = shade('#6cbb52', (rnd() - 0.5) * 0.2);
+      ctx.fillRect(ox + sx, oy + sy, 1, 1);
+      ctx.fillRect(ox + sx + 1, oy + sy, 1, 1);
+      ctx.fillStyle = '#4e9c3a';
+      ctx.fillRect(ox + sx, oy + sy - 1, 1, 1);
+    }
+  },
+  [TILE.MILLET_1]: (ctx, ox, oy, rnd) => {   // 粟·抽穗：细长绿叶丛
+    const stalks = [[2, 8], [5, 7], [8, 8], [11, 7], [13, 9]];
+    for (const [sx, sy] of stalks) {
+      for (let y = sy; y < 15; y++) {
+        ctx.fillStyle = shade((y - sy) % 3 === 0 ? '#6cbb52' : '#4e9c3a', (rnd() - 0.5) * 0.18);
+        ctx.fillRect(ox + sx + (y % 2 === 0 ? 0 : 0), oy + y, 1, 1);
+      }
+    }
+  },
+  [TILE.MILLET_2]: (ctx, ox, oy, rnd) => {   // 粟·成熟：金黄穗头压弯
+    const stalks = [[2, 7], [5, 6], [8, 7], [11, 6]];
+    for (const [sx, sy] of stalks) {
+      for (let y = sy; y < 15; y++) {
+        ctx.fillStyle = shade('#8a8f3a', (rnd() - 0.5) * 0.15);  // 秆微黄
+        ctx.fillRect(ox + sx, oy + y, 1, 1);
+      }
+      // 穗头：饱满下垂的金粒
+      ctx.fillStyle = '#d8a835';
+      ctx.fillRect(ox + sx, oy + sy, 2, 2);
+      ctx.fillStyle = '#e8c454';
+      ctx.fillRect(ox + sx + 1, oy + sy + 1, 2, 2);
+      ctx.fillStyle = '#b8922a';
+      ctx.fillRect(ox + sx, oy + sy + 2, 1, 1);
+    }
+  },
+  [TILE.GREENS_0]: (ctx, ox, oy, rnd) => {   // 葵菜·发芽：两片子叶
+    ctx.fillStyle = '#5cab45';
+    ctx.fillRect(ox + 6, oy + 11, 1, 1); ctx.fillRect(ox + 9, oy + 11, 1, 1);
+    ctx.fillStyle = '#4e9c3a';
+    ctx.fillRect(ox + 7, oy + 12, 2, 1); ctx.fillRect(ox + 7, oy + 11, 2, 1);
+  },
+  [TILE.GREENS_1]: (ctx, ox, oy, rnd) => {   // 葵菜·展叶：莲座状圆叶
+    for (let y = 8; y < 15; y++) for (let x = 3; x < 13; x++) {
+      const dx = x - 7.5, dy = y - 12;
+      const ring = Math.hypot(dx, dy * 1.4);
+      if (ring < 4.4 && rnd() > 0.18) {
+        ctx.fillStyle = shade(ring < 2 ? '#6cbb52' : '#4e9c3a', (rnd() - 0.5) * 0.2);
+        ctx.fillRect(ox + x, oy + y, 1, 1);
+      }
+    }
+  },
+  [TILE.GREENS_2]: (ctx, ox, oy, rnd) => {   // 葵菜·成熟：大叶片 + 白梗
+    for (let y = 6; y < 16; y++) for (let x = 2; x < 14; x++) {
+      const dx = x - 7.5, dy = y - 13;
+      const ring = Math.hypot(dx, dy * 1.15);
+      if (ring < 5.6 && rnd() > 0.14) {
+        ctx.fillStyle = shade(ring < 2.5 ? '#6cbb52' : '#3f8a30', (rnd() - 0.5) * 0.22);
+        ctx.fillRect(ox + x, oy + y, 1, 1);
+      }
+    }
+    // 中心白梗（葵菜特征）
+    ctx.fillStyle = '#cfe0c0';
+    ctx.fillRect(ox + 7, oy + 12, 2, 4);
+    ctx.fillRect(ox + 5, oy + 11, 2, 1); ctx.fillRect(ox + 9, oy + 11, 2, 1);
+  },
 };
 
 let cached = null;
@@ -172,7 +258,7 @@ export function buildAtlas() {
   if (cached) return cached;
 
   const canvas = document.createElement('canvas');
-  canvas.width = ATLAS_PX; canvas.height = ATLAS_PX;
+  canvas.width = ATLAS_PX; canvas.height = ATLAS_H;
   const ctx = canvas.getContext('2d');
 
   for (const [key, paint] of Object.entries(PAINTERS)) {
@@ -185,7 +271,7 @@ export function buildAtlas() {
 
   // 每瓦片平均色（供粒子/缩略图底色）
   const tileColors = [];
-  for (let t = 0; t < Object.keys(TILE).length; t++) {
+  for (let t = 0; t < TILE_TOTAL; t++) {
     const ox = (t % TILES_PER_ROW) * TILE_PX, oy = Math.floor(t / TILES_PER_ROW) * TILE_PX;
     const d = ctx.getImageData(ox, oy, TILE_PX, TILE_PX).data;
     let r = 0, g = 0, b = 0, n = 0;

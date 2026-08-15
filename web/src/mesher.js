@@ -62,6 +62,30 @@ const FACES = [
 
 const PAD = 1 / 512; // atlas 采样内缩，防边缘渗色
 
+/** 十字面片：两条对角竖面（内缩 0.15 格），各 emitted 正反两份；法线统一朝上保光照均匀 */
+function addCross(x, y, z, tile, tilesPerRow, positions, normals, uvs, indices) {
+  const lo = 0.15, hi = 0.85;
+  const tc = tile % tilesPerRow;
+  const tr = Math.floor(tile / tilesPerRow);
+  const u0 = tc / tilesPerRow + PAD, u1 = (tc + 1) / tilesPerRow - PAD;
+  const v1 = 1 - tr / tilesPerRow - PAD;
+  const v0 = 1 - (tr + 1) / tilesPerRow + PAD;
+  // 两面：A 从 (lo,lo)→(hi,hi)，B 从 (hi,lo)→(lo,hi)；每面四顶点，反向复用同一组顶点换绕序
+  const planes = [
+    [[lo, lo], [hi, hi]],
+    [[hi, lo], [lo, hi]],
+  ];
+  for (const [[ax, az], [bx, bz]] of planes) {
+    const base = positions.length / 3;
+    // 顶点：底a、底b、顶a、顶b（uv：底=瓦片下缘，顶=瓦片上缘）
+    positions.push(x + ax, y, z + az, x + bx, y, z + bz, x + ax, y + 1, z + az, x + bx, y + 1, z + bz);
+    for (let i = 0; i < 4; i++) normals.push(0, 1, 0);
+    uvs.push(u0, v0, u1, v0, u0, v1, u1, v1);
+    indices.push(base, base + 1, base + 2, base + 2, base + 1, base + 3);   // 正面
+    indices.push(base, base + 2, base + 1, base + 2, base + 3, base + 1);   // 背面（反绕）
+  }
+}
+
 /**
  * 构建一个 chunk 的几何。
  * @param {Uint8Array} data   列主序方块数据（idx = x + z*16 + y*256）
@@ -85,6 +109,12 @@ export function buildChunkGeometry(data, world, cx, cz, tilesPerRow) {
         const id = data[idx(x, y, z)];
         if (id === 0) continue;
         const def = BLOCK_DEFS[id];
+
+        // 十字面片（作物）：两条对角竖面 ×正反两次（单面材质，双面可见），不参与邻面剔除
+        if (def.cross) {
+          addCross(x, y, z, def.tiles.side, tilesPerRow, positions, normals, uvs, indices);
+          continue;
+        }
 
         for (const face of FACES) {
           const nb = world.getBlock(ox + x + face.dir[0], y + face.dir[1], oz + z + face.dir[2]);
