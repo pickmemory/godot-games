@@ -1,55 +1,34 @@
 # 开发路线图（主理人据此派单）
-
-> P1–P4 全部交付物均已合入 main（git log feat(#1)…feat(#12) 可证）。
-> Phase 5–7（制作/打磨/发布）已展开为 `- [ ]` 项，流水线已重启。
->
-> 2026-08-14 主理人修正：上轮头部误标「全部完成」，实际 Phase 5 已列 9 项 `- [ ]`；本轮派发 P5-1（#13），流水线恢复自上而下派单。
->
-> 对账修复（2026-08-13，主理人·游承峰）：#5–#12 交付物均已合入 main 且文件充实，
-> 但 workflow 的 `- [~]→- [x]` 自动翻转再次失效（与 #4 同类 bug），故本轮一次性手动回填完成态。
-
+> 2026-08-15 项目转向：原 Godot 三国 ARPG 切片已废弃（git 历史可查），现为 Web 体素沙盒「三国长卷」。
+> 概念与技术方案见 `docs/superpowers/specs/2026-08-15-minecraft-pivot-design.md`；模块接口见 `docs/superpowers/plans/2026-08-15-minecraft-pivot.md`。
 > 主理人每轮读本文件，为**第一个 `- [ ]` 未完成项**创建 `agent-build` issue（带角色标签），
-> 并在本文件把该项标记为 `- [~] #N 已派发`；专家完成后改 `- [x]`。
+> 并在本文件把该项标记 `- [~] #N 已派发`；专家完成后由 workflow 翻 `- [x]`。
 > 全部 `- [x]` 则路线图耗尽，流水线退出等主创扩展。
 > 格式：`- [ ] <id> <名称> → <输出路径> (<角色标签>)`
 > 执行顺序 = 自上而下；勿越阶段派发。
 
-## Phase 1 · 概念孵化
-- [x] #1 ✓ 已派发 P1-1 游戏概念文档（设计支柱 / MDA / 范围分层 / 核心循环细化 / 赤壁改写节点示例×3） → docs/design/gdd/game-concept.md (design-strategist)
-- [x] #2 ✓ 已派发 P1-2 美术圣经（九节视觉身份规范） → docs/design/art/art-bible.md (art-director)
+## MC-1 · 体素骨架（已完成 · 主创本地会话直接交付）
+- [x] MC-1 体素骨架 + 挖掘手感包（Three.js 零构建：地形/挖放/hotbar/昼夜天空/碰撞飞行 + 裂纹·粒子·合成音反馈；`node --check` 全绿）→ web/ (engineering-lead)
 
-## Phase 2 · 系统设计（依赖 Phase 1 产出）
-- [x] #3 ✓ 已派发 P2-1 系统索引 → docs/design/gdd/systems-index.md (design-strategist)
-- [x] #4 ✓ 已派发 P2-2 改写/因果引擎 GDD（专家已产出并合入 main，issue #4 agent-done；本轮主理人对账修复：创建 #4 时漏翻 - [~]，致 workflow 的 [~]→[x] 匹配落空，故手动回填完成态） → docs/design/gdd/systems/rewrite-causality.md (design-strategist)
-- [x] #5 ✓ 已派发 P2-3 主线任务系统 GDD → docs/design/gdd/systems/mainline-quest.md (design-strategist)
-- [x] #6 ✓ 已派发 P2-4 面板/成长系统 GDD → docs/design/gdd/systems/panel-progression.md (design-strategist)
-- [x] #7 ✓ 已派发 P2-5 实时战斗系统 GDD → docs/design/gdd/systems/combat.md (design-strategist)
-- [x] #8 ✓ 已派发 P2-6 开放世界/朝代地图系统 GDD → docs/design/gdd/systems/open-world.md (design-strategist)
+## MC-2 · 生存弧线（给恐惧，给"挖矿的为什么"）
+- [ ] MC-2a 第一夜弧线（昼夜加速至 dayLength 180s 保留 + 夜间敌对生物×1：僵尸型 AI 寻路追击 + 玩家血量/受伤/死亡重生 + 夜晚天空与恐惧氛围）→ web/src/ (engineering-lead)
+- [ ] MC-2b 工具天梯（木/石/铁镐三级：硬度×效率数据表 + 矿石方块生成（煤/铁深层分布）+ 合成最小集：工作台+木镐配方 + 手持工具模型）→ web/src/ (engineering-lead)
+- [ ] MC-2c 手感打磨（挖掘裂纹 overlay 分段贴图 + 掉落物实体拾取 + 受击屏幕反馈 + WebAudio 脚步/挖掘/受击 SFX 全覆盖）→ web/src/ (engineering-lead)
 
-## Phase 3 · 技术搭建（依赖 Phase 1/2）
-- [x] #9 ✓ 已派发 P3-1 主架构文档 + ≥3 条基础层 ADR → docs/architecture/architecture.md + docs/architecture/adr-*.md (engineering-lead)
-- [x] #10 ✓ 已派发 P3-2 Godot 4.7 工程骨架 + 玩家可移动最小场景（TileMap 测试图 + 角色 + 键鼠/手柄移动） → game/ (engineering-lead)
+## MC-3 · 历史长卷引擎（差异化核心）
+- [ ] MC-3a 章节时间轴引擎（数据驱动 `web/data/chapters/*.json`：编年事件/世界状态迁移/季节流转/触发器；读 AGENTS.md 基线）→ web/src/ + web/data/ (engineering-lead)
+- [ ] MC-3b NPC 系统（低模角色 + 漫游/对话/任务接口；历史人物在编年时刻出场；Quaternius 角色适配）→ web/src/ (engineering-lead)
+- [ ] MC-3c 第一章「184·黄巾」设计文档（平民流民开场→第一夜→生计→黄巾过境事件弧；MC 骨架与历史事件如何咬合；散文级体验脚本）→ docs/design/mc3-chapter1.md (design-strategist)
+- [ ] MC-3d 第一章可玩切片（按 MC-3c 落地：黄巾村落世界状态 + 3 个编年事件 + 2 个 NPC + 章节开场/结尾演出）→ web/src/ + web/data/ (engineering-lead)
 
-## Phase 4 · 预制作（依赖 Phase 2/3）
-- [x] #11 ✓ 已派发 P4-1 关键屏幕 UX 规格（主菜单 / 核心 HUD / 系统面板 / 暂停） → docs/design/gdd/ux-spec.md (design-strategist)
-- [x] #12 ✓ 已派发 P4-2 垂直切片资产清单 + 规格（赤壁 TileSet 占位 / 角色 / 系统面板 UI） → docs/design/art/asset-manifest.md (art-director)
+## MC-4 · 生计与定居
+- [ ] MC-4a 农耕（开垦/播种/生长周期/收获，季节联动）→ web/src/ (engineering-lead)
+- [ ] MC-4b 建造扩展（门/窗/楼梯/栅栏方块 + 简易村民 + 房屋判定）→ web/src/ (engineering-lead)
+- [ ] MC-4c 存档抽象层（ISaveAdapter 接口：localStorage 实现 + chunk 差分 + 章节进度；为 Steam Cloud 预留同构替换）→ web/src/ (engineering-lead)
 
-## Phase 5 · 制作（可玩原型 · 依赖 Phase 1-4，逐项实现 Loop A 闭环）
-- [~] #13 已派发 P5-1 敌人与遭遇原型（1 种山贼/妖异：巡逻 + 追击 + 受击；读 combat.md / open-world.md） → game/scenes/enemies/ (engineering-lead)
-- [~] #14 已派发 P5-2 实时战斗实现（普攻连段 + 1 个系统术法，命中盒 / 伤害 / 无敌帧 / 击退；读 combat.md） → game/systems/combat/ (engineering-lead)
-- [~] #15 已派发 P5-3 系统面板 UI（呼出/关闭，显示 等级 / 因果点 CP / 当前任务 / 历史偏差 Δ；读 panel-progression.md + ux-spec.md） → game/ui/system_panel/ (engineering-lead)
-- [~] #16 已派发 P5-4 主线任务系统（接取 / 追踪 / 完成 + 任务日志；生命周期状态机 + 派发决策 + 数据驱动章节/节点 + 任务日志只读 API + 存档态契约；读 mainline-quest.md §2.1/§2.3/§3/§4/§6 + rewrite-causality §7.1） → game/systems/quest/ (engineering-lead)
-- [~] #17 已派发 P5-5 改写/因果引擎（C1/S1 核心层；关键变量 + 历史偏差 Δ 计算 + 因果点 CP 发放 + 历史线分支判定；读 rewrite-causality.md） → game/systems/rewrite/ (engineering-lead)
-- [~] #18 已派发 P5-6 抉择与历史线反馈（改写节点抉择 UI RewritePanel + 系统旁白 X1 + 历史线分叉演出 STG/结算屏；消费 #17 引擎全套信号，读 rewrite-causality §6.1/§6.3/§2.7/§4.4 + ux-spec §6.3/§6.4/§9.2/§10.2） → game/systems/rewrite/ + game/ui/rewrite_panel/ (engineering-lead)
-- [~] #19 已派发 P5-7 第一个改写节点可玩内容（赤壁·借东风：村落探索 → 收集气象线索 / 求术士 → 触发抉择 → 系统反馈；串联 P5-1..6） → game/scenes/rewrite_node_chibi/ (engineering-lead)
-- [~] #20 已派发 P5-8 主菜单 + 简易存档（新游戏 / 继续 / 设置；进入垂直切片；落地 SaveManager X4 原子写/多槽/读档重同步 + boot→MainMenu→world 开场链路；读 ux-spec §3/§4 + architecture §8.4/§9 + control-manifest 存档节） → game/scenes/menu/ + game/scripts/autoload/save_manager.gd (engineering-lead)
-- [~] #21 已派发 P5-9 垂直切片整合 + 烟雾自测（主菜单 → 新游戏 → 探索 → 战斗 → 完成 1 个改写节点闭环；复用 P5-1..8 已落地产出接线；Godot headless import 自测通过；附 playtest 说明 docs/playtests/smoke-test.md） → game/ + docs/playtests/smoke-test.md (engineering-lead)
-- [~] #22 已派发 P5-10 核心可玩美术资产 AI 生成（玩家精灵 / 山贼敌人 / 赤壁村落 TileSet / 系统面板背景，用 mmx image 按 art-bible 生成，替换 greybox） → game/assets/sprites/ + game/assets/tilesets/ + game/assets/ui/ (art-director)
-
-## Phase 6 · 打磨（依赖 Phase 5 可玩原型）
-- [~] #23 已派发 P6-1 音频方向文档 + 占位音效/BGM（菜单 / 探索 / 战斗 / 抉择；音乐方向 + 调色板 + 四态 BGM + SFX 事件清单 + 系统旁白 VO + 混音/实现/可访问性；读 art-bible.md §1.2/§2/§2.4/§5.1/§6/§9 情绪 + combat §2.7/§3/§6.4/§6.6 + mainline-quest §3.2/§6 + rewrite-causality 旁白 + game-concept §6.2/§9①；mmx music/speech 出真实占位） → docs/design/audio/sound-design.md + game/assets/audio/ (audio-director)
-- [~] #24 已派发 P6-2 视觉打磨与 juice（占位美术风格化：玩家 / 敌人 / 赤壁村落 TileSet 配色对齐 art-bible；屏幕震屏 / 命中停顿 / 拖尾） → game/assets/ + game/shaders/ (art-director)
-- [~] #25 已派发 P6-3 Playtest 自测报告 + 已知问题清单（跑垂直切片，记新玩家体验 / 难度曲线 / 卡点，开 follow-up issues；对照 game-concept §2 支柱 / §5 Loop A / §7.1 MVP + ux-spec § + 既有 GDD，区别于 P5-9 #21 冒烟级） → docs/playtests/round-1.md (design-strategist)
-
-## Phase 7 · 发布（待 Phase 5-6 完成后细化）
-发布清单 / 本地化 / 构建 / 补丁说明。当前不展开。
+## MC-5 · 第二章 + 打磨 + 发布
+- [ ] MC-5a 美术圣经 v2（体素三国视觉规范：色板/方块变体/UI 书法风/角色比例；Kenney+Quaternius 接入规范）→ docs/design/art-bible.md (art-director)
+- [ ] MC-5b 第二章选段「190·讨董」（设计 + 可玩：迁都焚洛阳事件弧 + 世界状态迁移实例）→ web/src/ + docs/design/ (design-strategist + engineering-lead)
+- [ ] MC-5c 音频方向（中式乐器 BGM 四态 + 环境音 + 历史事件旁白；mmx 生成真实资产）→ docs/design/audio/ + web/assets/audio/ (audio-director)
+- [ ] MC-5d Playtest 报告 + 已知问题（对照设计信条：恐惧/天梯/沙盒三层动机是否成立）→ docs/playtests/round-1.md (quality-lead)
+- [ ] MC-5e Steam 打包（Electron 壳 + steamworks.js 成就/云存档接入 + 构建脚本 + 商店素材清单）→ tools/ + docs/release/ (release-ops)

@@ -8,7 +8,7 @@
 |----------|------|--------|------|
 | `game-development-studio-team-lead` | 游承峰（Yoan Summit） | 统筹主理人：阶段诊断、任务路由、质量门、汇编交付 | [team-lead.md](team-lead.md) |
 | `design-strategist` | 文策渊（Vince Coyer） | 设计 + 叙事：概念、GDD、关卡、经济、世界观、UX | [design-strategist.md](design-strategist.md) |
-| `engineering-lead` | 程基岩（Cheng Jiyan） | 技术 + 引擎：架构、ADR、Godot/Unity/Unreal、性能、DevOps | [engineering-lead.md](engineering-lead.md) |
+| `engineering-lead` | 程基岩（Cheng Jiyan） | 技术 + 引擎：架构、ADR、Web(Three.js)/Godot/Unity/Unreal、性能、DevOps | [engineering-lead.md](engineering-lead.md) |
 | `art-director` | 林绘澄（Lin Wayson） | 美术 + 视觉 + 可访问性：美术圣经、资产规格、着色器/VFX | [art-director.md](art-director.md) |
 | `audio-director` | 阮和鸣（Ruan Hemo） | 音频 + 声效：音乐方向、音效设计、混音、实现策略 | [audio-director.md](audio-director.md) |
 | `quality-lead` | 严守真（Yan Soujin） | 质量保障 + 测试：QA 计划、测试用例、烟雾门控、Playtest | [quality-lead.md](quality-lead.md) |
@@ -201,6 +201,6 @@ Agent 工具参数：
 | `docs/architecture/` | `docs/architecture.md` + `docs/decisions/` |
 | `docs/architecture/adr-*.md` | `docs/decisions/ADR-*.md` |
 | `production/` | 待建 |
-| `tests/` | `server/tests/` + Godot `--autoplay`/`--click-test` |
+| `tests/` | `tools/smoke-web.mjs`（Playwright 无头冒烟：加载渲染 + 错误捕获 + 截图） |
 | `src/` | `client/` + `server/` |
 | `CLAUDE.md` | `AGENTS.md` |

@@ -29,7 +29,7 @@ jobs:
       GH_REPO: ${{ github.repository }}
       ZAI_CODING_CN_API_KEY: ${{ secrets.ZAI_CODING_CN_API_KEY }}
       PI_PROVIDER: zai-coding-cn
-      PI_MODEL: ${{ vars.PI_MODEL || 'glm-5.2' }}
+      PI_MODEL: ${{ vars.PI_MODEL || 'glm-5.3' }}
       PI_CALL_TIMEOUT: '2700'   # 单次 pi 调用上限 45min（防挂死）
       PI_CODING_AGENT_DIR: /home/runner/.pi-cfg   # 显式指定配置目录，确保读到注入的 models.json
       MINIMAX_API_KEY: ${{ secrets.MINIMAX_API_KEY }}   # MiniMax Token Plan 订阅 Key（多模态资产生成；未配则 mmx 调用失败、自动降级纯文档）
@@ -59,16 +59,5 @@ jobs:
           mmx auth login --api-key "$MINIMAX_API_KEY" 2>&1 | head -8
           echo "=== mmx quota（验证鉴权 + 额度）==="
           mmx quota 2>&1 | head -25
-      - name: 安装 Godot 4.7（headless 校验用，失败不阻断）
-        continue-on-error: true
-        run: |
-          mkdir -p /tmp/godot
-          if curl -fsSL -o /tmp/godot/godot.zip https://github.com/godotengine/godot/releases/download/4.7.1-stable/Godot_v4.7.1-stable_linux.x86_64.zip; then
-            (cd /tmp/godot && unzip -o godot.zip && rm -f godot.zip)
-            BIN=$(ls /tmp/godot/Godot_v4.7* 2>/dev/null | head -1)
-            if [ -n "$BIN" ]; then chmod +x "$BIN"; echo "GODOT_BIN=$BIN" >> "$GITHUB_ENV"; fi
-          else
-            echo "warn: Godot 下载失败，本轮代码自验证将降级（文档交付不受影响）"
-          fi
       - name: 接力循环
         run: bash .github/agent-build-loop.sh "${{ inputs.issue_number || '' }}" || true

@@ -1,9 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-; tests/unit/test_quest.tscn —— 主线任务系统 S2/C2 测试场景（issue #16）。
-; 运行：$GODOT_BIN --headless --path game res://tests/unit/test_quest.tscn
-
-[ext_resource type="Script" path="res://tests/unit/test_quest.gd" id="1_script"]
-
-[node name="TestQuest" type="Node"]
-script = ExtResource("1_script")

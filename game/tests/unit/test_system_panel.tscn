@@ -1,9 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-; tests/unit/test_system_panel.tscn —— 系统面板 UI 测试场景（issue #15）。
-; 运行：$GODOT_BIN --headless --path game res://tests/unit/test_system_panel.tscn
-
-[ext_resource type="Script" path="res://tests/unit/test_system_panel.gd" id="1_script"]
-
-[node name="TestSystemPanel" type="Node"]
-script = ExtResource("1_script")

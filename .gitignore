@@ -1,13 +1,6 @@
-# Godot 4+ specific ignores
-.godot/
-/android/
-/builds/
-
-# Godot Mono / C# (if added later)
-# 锚定到 Godot 工程根（game/）：Mono 生成的 game/data_<project>/ 目录。
-# ⚠️ 勿用未锚定的 `data_*/` —— 它会误伤 game/scripts/foundation/data_resources/
-# （曾导致改写/战斗/任务数据资源脚本被 git 忽略、workflow git add 漏提交，引发 #26 P6-Blocker 回归）。
-game/data_*/
+# Web 开发（游戏根 web/，零构建；node_modules 仅本地冒烟工具用）
+node_modules/
+tools/smoke-web.png
 
 # OS
 .DS_Store
@@ -23,7 +16,7 @@ desktop.ini
 .run-logs/
 /tmp/
 
-# Secrets / 本地密钥（mmx 等）—— 绝勿提交
+# Secrets / 本地密钥（mmx 等）— 绝勿提交
 .env
 .env.local
 .env.*.local

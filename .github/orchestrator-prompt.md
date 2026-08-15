@@ -17,7 +17,7 @@
 4. 找**第一个 `- [ ]`**（且无对应 open issue），用 `gh issue create` 创建**恰好一个** issue：
    - 标题：`[<阶段>] <交付物名称>`（如 `[P2] 改写/因果引擎 GDD rewrite-causality.md`）
    - 正文：交付物描述 + 执行角色 + **输出路径**（取自 roadmap 的 `→ <路径>`）+ 验收要点（引用 `team/<角色>.md` 输出规范 + `AGENTS.md` 基线 + 已落地的前置产出路径）
-   - 标签：`agent-build` + 角色标签（`design-strategist` / `engineering-lead` / `art-director`）
+   - 标签：`agent-build` + 角色标签（`design-strategist` / `engineering-lead` / `art-director` / `audio-director` / `quality-lead` / `release-ops`）
 5. 在 `docs/roadmap.md` 把该项从 `- [ ]` 改为 `- [~] #<issue号> 已派发`（issue 号从 `gh issue create` 输出取）。
 6. **只创建一个 issue**（防堆积），然后停止——专家步骤接力。
 7. 若 roadmap **全部 `- [x]`**（真的没有 `- [ ]` 了）：不创建任何 issue，在 roadmap 顶部写一行 `> 路线图已全部完成（YYYY-MM-DD）`，结束。**只有这种情况才允许空队列退出。**
@@ -26,7 +26,7 @@
 - 只创建**一个** issue。
 - 不做 git 操作（workflow 管 git；你只改 `docs/roadmap.md` + 调 `gh issue create`）。
 - 不执行专家的活（不写 GDD / 代码 / 美术）——你只派单。
-- 角色标签只能从 `design-strategist` / `engineering-lead` / `art-director` 选（与 roadmap 项标注一致）。
+- 角色标签只能从 `design-strategist` / `engineering-lead` / `art-director` / `audio-director` / `quality-lead` / `release-ops` 选（与 roadmap 项标注一致；一项多角色取第一角色）。
 
 ## 完成后报告（最终消息）
 - 派发的 issue 号 + 标题 + 角色 + 输出路径。

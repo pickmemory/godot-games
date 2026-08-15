@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://tests/build/generate_project.gd" id="1_gen"]
-
-[node name="Setup" type="Node"]
-script = ExtResource("1_gen")

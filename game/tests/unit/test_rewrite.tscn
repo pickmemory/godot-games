@@ -1,9 +1,0 @@
-[gd_scene load_steps=2 format=3]
-
-; tests/unit/test_rewrite.tscn —— 改写/因果引擎 S1/C1 测试场景（issue #17）。
-; 运行：$GODOT_BIN --headless --path game res://tests/unit/test_rewrite.tscn
-
-[ext_resource type="Script" path="res://tests/unit/test_rewrite.gd" id="1_script"]
-
-[node name="TestRewrite" type="Node"]
-script = ExtResource("1_script")

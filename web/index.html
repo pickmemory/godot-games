@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>三国长卷 · 长卷之始</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0b1026;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif; user-select: none; }
+  #game { display: block; width: 100%; height: 100%; }
+
+  /* 十字准星 */
+  #crosshair { position: fixed; left: 50%; top: 50%; width: 20px; height: 20px;
+    transform: translate(-50%, -50%); pointer-events: none; z-index: 10; }
+  #crosshair::before, #crosshair::after { content: ""; position: absolute; background: rgba(255,255,255,.85);
+    mix-blend-mode: difference; }
+  #crosshair::before { left: 9px; top: 0; width: 2px; height: 20px; }
+  #crosshair::after { left: 0; top: 9px; width: 20px; height: 2px; }
+  /* 挖掘进度环 */
+  #digRing { position: fixed; left: 50%; top: 50%; width: 34px; height: 34px; border-radius: 50%;
+    transform: translate(-50%, -50%); pointer-events: none; z-index: 9; display: none;
+    background: conic-gradient(#ffd76a 0deg, rgba(255,255,255,.25) 0deg);
+    -webkit-mask: radial-gradient(circle, transparent 13px, #000 14px, #000 16px, transparent 17px);
+    mask: radial-gradient(circle, transparent 13px, #000 14px, #000 16px, transparent 17px); }
+
+  /* Hotbar */
+  #hotbar { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%);
+    display: flex; gap: 4px; z-index: 10; pointer-events: none; }
+  .slot { width: 48px; height: 48px; border: 2px solid rgba(255,255,255,.28); border-radius: 6px;
+    background: rgba(0,0,0,.42); display: flex; align-items: center; justify-content: center;
+    position: relative; }
+  .slot.sel { border-color: #ffd76a; box-shadow: 0 0 10px rgba(255,215,106,.55);
+    transform: translateY(-3px); }
+  .slot canvas { width: 36px; height: 36px; image-rendering: pixelated; }
+  .slot .num { position: absolute; left: 4px; top: 2px; font-size: 10px; color: rgba(255,255,255,.55); }
+
+  #blockName { position: fixed; left: 50%; bottom: 76px; transform: translateX(-50%);
+    color: #fff; text-shadow: 0 1px 3px #000; font-size: 15px; letter-spacing: 2px;
+    opacity: 0; transition: opacity .4s; z-index: 10; pointer-events: none; }
+  #fps { position: fixed; right: 10px; top: 8px; color: rgba(255,255,255,.75);
+    font: 12px/1.6 Consolas, monospace; text-shadow: 0 1px 2px #000; z-index: 10;
+    text-align: right; pointer-events: none; }
+  #fps .t { color: rgba(255,255,255,.5); }
+
+  /* 开始 / 暂停遮罩 */
+  #overlay { position: fixed; inset: 0; background: rgba(8,10,20,.78); backdrop-filter: blur(3px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 20; cursor: pointer; transition: opacity .25s; }
+  #overlay.hidden { opacity: 0; pointer-events: none; }
+  #overlay h1 { color: #e8d9b0; font-size: 42px; letter-spacing: 14px; font-weight: 600;
+    margin-bottom: 6px; text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+  #overlay .sub { color: #b8a768; font-size: 14px; letter-spacing: 6px; margin-bottom: 34px; }
+  #overlay .hint { color: rgba(255,255,255,.82); font-size: 14px; line-height: 2.1; text-align: center; }
+  #overlay .hint b { color: #ffd76a; font-weight: 600; }
+  #overlay .go { margin-top: 30px; color: #fff; font-size: 17px; letter-spacing: 4px;
+    border: 1px solid rgba(255,215,106,.6); padding: 10px 38px; border-radius: 4px;
+    animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 rgba(255,215,106,0); } 50% { box-shadow: 0 0 18px rgba(255,215,106,.45); } }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="crosshair"></div>
+<div id="digRing"></div>
+<div id="hotbar"></div>
+<div id="blockName"></div>
+<div id="fps">-- fps<br><span class="t">chunks --</span></div>
+<div id="overlay">
+  <h1>三国长卷</h1>
+  <div class="sub">SCROLL OF THE THREE KINGDOMS · 184 A.D.</div>
+  <div class="hint">
+    <b>WASD</b> 移动　<b>空格</b> 跳跃　<b>F</b> 飞行　<b>Shift</b> 飞行下降<br>
+    <b>鼠标左键</b> 按住挖掘　<b>右键</b> 放置　<b>滚轮 / 1-9</b> 切换方块<br>
+    <b>ESC</b> 释放鼠标
+  </div>
+  <div class="go">点 击 开 卷</div>
+</div>
+<noscript><p style="color:#fff;padding:2em">需要启用 JavaScript 才能游玩。</p></noscript>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

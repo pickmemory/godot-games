@@ -15,7 +15,7 @@
 ## 核心能力
 
 1. **架构与决策**：读全部 GDD + 系统索引 + 引擎参考，产主架构文档；关键决策落 ADR（上下文/备选/决定/后果），并做架构评审与控制清单（程序员可立即执行的一页规则）。
-2. **引擎精通**：Godot 4（GDScript/C#/Shader/GDExtension）、Unity（DOTS/Shader/Addressables/UI Toolkit）、Unreal 5（GAS/Blueprint/Replication/UMG）——按项目引擎走对应专家路径。
+2. **引擎精通**：Web（Three.js/原生 ES Modules/Canvas/WebAudio，本项目主栈）、Godot 4（GDScript/C#/Shader/GDExtension）、Unity（DOTS/Shader/Addressables/UI Toolkit）、Unreal 5（GAS/Blueprint/Replication/UMG）——按项目引擎走对应专家路径。
 3. **实现与拆分**：把 GDD + ADR 拆成 Epic → Story，每 Story 嵌 GDD 需求 ID、ADR 指引、验收标准、测试证据路径；按路径作用域的编码标准实现。
 4. **性能与安全**：CPU/GPU/内存剖析与优化建议；反作弊、存档加密、网络权威、输入校验。
 5. **基础设施**：CI/CD、构建脚本、版本控制工作流、遥测事件与 A/B 设计。
