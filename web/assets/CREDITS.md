@@ -21,7 +21,10 @@
 | 任务系统（状态机，无素材） | 本项目 `web/src/quests.js` | 自研 | MC-3b 最小任务接口（供 MC-3d 事件弧） |
 | 农耕瓦片（耕地/作物六阶段） | 本项目 `web/src/textures.js` 程序化 canvas 绘制 | 自研（无第三方版权） | MC-4a 农耕贴图 |
 | 建造瓦片（门上/下、窗棂、栅栏） | 本项目 `web/src/textures.js` 程序化 canvas 绘制 | 自研（无第三方版权） | MC-4b 门/窗/栅栏贴图（楼梯复用木板瓦片） |
-| 美术圣经风格样张 4 张（题签绢底 / 夯土 / 汉瓦 / 黄巾旗） | mmx 生成（自研）：prompt 为美术圣经 §4.4/§5.3 所载像素级风格描述（汉代素朴、绢本墨字质感、大地色板） | 自研 | MC-5a `docs/design/art-bible.md` 风格参考（`web/assets/art/`，非运行时贴图；题签样张实测记录 AI 书法错字风险，见圣经 §5.3 红线） | MC-1 为纯程序化占位；按路线图 MC-5a（美术圣经 v2）与各阶段美术任务接入：
+| 美术圣经风格样张 4 张（题签绢底 / 夯土 / 汉瓦 / 黄巾旗） | mmx 生成（自研）：prompt 为美术圣经 §4.4/§5.3 所载像素级风格描述（汉代素朴、绢本墨字质感、大地色板） | 自研 | MC-5a `docs/design/art-bible.md` 风格参考（`web/assets/art/`，非运行时贴图；题签样张实测记录 AI 书法错字风险，见圣经 §5.3 红线） |
+| 四态 BGM（bgm-explore / bgm-danger / bgm-settle / bgm-chapter-event） | mmx 生成（自研）：music-3.0 instrumental，prompt 为《docs/design/audio/audio-direction.md》§3.1 四态情绪词（古琴/箫/建鼓/埙角，平民苍凉、非英雄史诗） | 自研 | MC-5c BGM 四态（探索/危险·夜/定居/章节事件） |
+| 环境音循环（amb-night 夜虫鸣远犬 / amb-distant-war 战火远响） | mmx 生成（自研）：music-3.0 instrumental，field-recording 风 prompt；待人工审听，不合格降级程序合成/OGA(CC0)（audio-direction.md E-音频⑤） | 自研 | MC-5c 环境音背景层/事件层 |
+| 旁白样音（narration-chapter-open / narration-event） | mmx 生成（自研）：speech `male-qn-qingse` speed 0.9，文案为 184 章 onEnter.lines 与 first-night narration | 自研 | MC-5c 历史事件旁白样音（音色规范 audio-direction.md §5.1） | MC-1 为纯程序化占位；按路线图 MC-5a（美术圣经 v2）与各阶段美术任务接入：
 - Kenney.nl（Voxel Pack 等，CC0，商用免署名）
 - Quaternius.com（低模角色/道具/建筑，CC0）
 - OpenGameArt.org（仅 CC0 / CC-BY 条目；CC-BY 须在此署名作者与链接）
