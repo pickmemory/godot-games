@@ -1,5 +1,5 @@
 {
-  "_comment": "MC-3d 第一章任务名册（依据 docs/design/mc3-chapter1.md §4.2；schema 见 npc/README.md）。objective.event 对应 main.js 推送的玩家行为事件：blocksPlaced/blocksMined（交互回调）与 talk:<npcId>（openDialog 时推送）。first-fuel 由章节事件 first-night（gameDaysElapsed 18）自动开启；settle-down 由陈叟对话开启；share-the-loaf 由吕嫂对话开启、对话即完成（交谈计 1）。存档持久化留 MC-4。",
+  "_comment": "MC-3d 第一章任务名册（依据 docs/design/mc3-chapter1.md §4.2；schema 见 npc/README.md）。objective.event 对应 main.js 推送的玩家行为事件：blocksPlaced/blocksMined（交互回调）与 talk:<npcId>（openDialog 时推送）。first-fuel 由章节事件 first-night（gameDaysElapsed 18）自动开启；settle-down 由陈叟对话开启；share-the-loaf 由吕嫂对话开启、对话即完成（交谈计 1）。存档持久化留 MC-4。MC-5b 追加第二章「190·讨董」任务（rammed-wall/share-the-grain/pick-the-ruins，见 docs/design/mc5-chapter2.md §4.2）：全项目共用一份任务注册表，未开启的任务不生效，跨章互不干扰。",
   "quests": [
     {
       "id": "settle-down",
@@ -18,6 +18,24 @@
       "title": "分她一半",
       "desc": "吕嫂带着孩子逃到村里——和她说话，看她需要什么。",
       "objective": { "event": "talk:refugee-lu", "count": 1 }
+    },
+    {
+      "id": "rammed-wall",
+      "title": "版筑",
+      "desc": "郑伯教了版筑：泥土夯实成墙，垒起三十块。草顶最先着，木顶烧得快，土墙瓦顶烧不动。",
+      "objective": { "event": "blocksPlaced", "count": 30 }
+    },
+    {
+      "id": "share-the-grain",
+      "title": "半袋粟",
+      "desc": "唐氏三日内就要被驱西迁，怀里的娃还发着热——和她说话。",
+      "objective": { "event": "talk:tang-shi", "count": 1 }
+    },
+    {
+      "id": "pick-the-ruins",
+      "title": "灰里刨食",
+      "desc": "石奴说：烧塌的梁木垫墙基最稳，灰和了泥就是墙皮。从废墟里挖出一百五十块料。",
+      "objective": { "event": "blocksMined", "count": 150 }
     }
   ]
 }

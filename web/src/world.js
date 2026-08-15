@@ -74,6 +74,9 @@ export class World {
         this._generate(pcx + dx, pcz + dz);
   }
 
+  /** 确保指定 chunk 已生成（MC-5b 结构落成等同步批量写入前的装载保障；幂等） */
+  ensureChunk(cx, cz) { this._generate(cx, cz); }
+
   _generate(cx, cz) {
     const k = this.key(cx, cz);
     if (this.chunks.has(k)) return;

@@ -12,6 +12,9 @@
     { "id": "door",        "out": { "id": 20,  "n": 3 }, "in": [{ "id": 7,   "n": 6 }], "station": true },
     { "id": "window",      "out": { "id": 28,  "n": 2 }, "in": [{ "id": 7,   "n": 2 }, { "id": 104, "n": 1 }], "station": true },
     { "id": "fence",       "out": { "id": 29,  "n": 3 }, "in": [{ "id": 7,   "n": 4 }, { "id": 104, "n": 2 }], "station": true },
-    { "id": "stairs",      "out": { "id": 30,  "n": 4 }, "in": [{ "id": 7,   "n": 6 }], "station": true }
+    { "id": "stairs",      "out": { "id": 30,  "n": 4 }, "in": [{ "id": 7,   "n": 6 }], "station": true },
+    { "id": "rammed_earth", "out": { "id": 34,  "n": 4 }, "in": [{ "id": 2,   "n": 4 }], "station": false },
+    { "id": "han_tile",    "out": { "id": 35,  "n": 4 }, "in": [{ "id": 8,   "n": 2 }, { "id": 6, "n": 1 }], "station": true },
+    { "id": "thatch",      "out": { "id": 36,  "n": 4 }, "in": [{ "id": 107, "n": 4 }], "station": false }
   ]
 }

@@ -1,0 +1,39 @@
+{
+  "_comment": "MC-5b 第二章「190·讨董」NPC 名册（schema 同 data/npc/README.md；本章专属，经 main.js 的 data/npc/<章节 id>/ 路径加载）。出场区间对齐章节事件：郑伯（瓦匠坊主，教版筑/汉瓦=可焚性天梯的口）开卷在场、3-12 随迁都令被驱西去（disappear）；唐氏（洛阳坊户）3-06 入场、3-15 随西迁队伍离场——焚城之前就走，玩家只有九天的窗口分她半袋粟；石奴（城北拾荒少年）3-20 焚城后从废墟爬出来，留到章末。锚点均设在坊墙外（结构整平区内 surfaceHeight 与坊内地坪不一致，避免 NPC 埋地）。",
+  "npcs": [
+    {
+      "id": "zheng-bo",
+      "name": "郑伯",
+      "title": "南市瓦匠坊主",
+      "model": { "type": "procedural", "robe": "#7a6a58", "skin": "#d9b38c", "hat": true },
+      "portrait": { "bg": "#3d3226", "fg": "#e8d9b0" },
+      "spawn": { "x": 22, "z": 26 },
+      "wander": { "radius": 8, "speed": 1.4 },
+      "disappear": { "date": { "year": 190, "month": 3, "day": 12 } },
+      "dialog": "zheng-01"
+    },
+    {
+      "id": "tang-shi",
+      "name": "唐氏",
+      "title": "洛阳坊户",
+      "model": { "type": "procedural", "robe": "#9c8358", "skin": "#d9b38c" },
+      "portrait": { "bg": "#2f3526", "fg": "#dfe8c8" },
+      "spawn": { "x": 2, "z": 44 },
+      "wander": { "radius": 5, "speed": 1.1 },
+      "appear": { "date": { "year": 190, "month": 3, "day": 6 } },
+      "disappear": { "date": { "year": 190, "month": 3, "day": 15 } },
+      "dialog": "tang-01"
+    },
+    {
+      "id": "shi-nu",
+      "name": "石奴",
+      "title": "城北拾荒少年",
+      "model": { "type": "procedural", "robe": "#5f544a", "skin": "#d9b38c" },
+      "portrait": { "bg": "#33302a", "fg": "#cfc8b8" },
+      "spawn": { "x": -20, "z": 30 },
+      "wander": { "radius": 10, "speed": 1.7 },
+      "appear": { "date": { "year": 190, "month": 3, "day": 20 } },
+      "dialog": "shi-01"
+    }
+  ]
+}

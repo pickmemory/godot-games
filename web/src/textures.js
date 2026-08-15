@@ -285,6 +285,77 @@ const PAINTERS = {
       ctx.fillRect(ox + x, oy + y, 1, 1);
     }
   },
+  /* ---------- MC-5b 第二章瓦片（美术规范 docs/design/art-bible.md §4.4） ---------- */
+  [TILE.RAMMED_EARTH]: (ctx, ox, oy, rnd) => { // 夯土：水平版筑层理，每 4px 一条暗线，无垂直结构
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const course = (y % 4 === 3) ? -0.14 : 0;
+      ctx.fillStyle = shade('#b39b6f', course + (rnd() - 0.5) * 0.2);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+    // 版筑接缝错位：每层随机 1~2 处短竖缝
+    for (let y = 3; y < 16; y += 4) {
+      const sx = 2 + Math.floor(rnd() * 12);
+      ctx.fillStyle = shade('#9c8358', -0.08);
+      ctx.fillRect(ox + sx, oy + y, 1, 1);
+      ctx.fillRect(ox + Math.min(15, sx + 4), oy + y, 1, 1);
+    }
+  },
+  [TILE.HAN_TILE]: (ctx, ox, oy, rnd) => {    // 汉瓦：横向瓦垄（每 4px 一垄），垄脊亮垄谷暗 + 苔斑
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const m = y % 4;
+      const ridge = m === 1 ? 0.08 : m === 3 ? -0.12 : 0;
+      ctx.fillStyle = shade('#5a6360', ridge + (rnd() - 0.5) * 0.08);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+    for (let i = 0; i < 3; i++) {              // 随机苔斑
+      const mx = Math.floor(rnd() * 14), my = Math.floor(rnd() * 14);
+      ctx.fillStyle = shade('#7a8a6a', (rnd() - 0.5) * 0.1);
+      ctx.fillRect(ox + mx, oy + my, 2, 2);
+    }
+  },
+  [TILE.THATCH]: (ctx, ox, oy, rnd) => {      // 茅草：干黄竖向束纹，每 3px 一束，束尖下垂
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const bundle = (x % 3 === 0) ? -0.1 : (rnd() - 0.5) * 0.14;
+      ctx.fillStyle = shade('#c9b06a', bundle);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+    for (let x = 0; x < 16; x += 3) {          // 束根暗 + 束尖下垂 1px
+      ctx.fillStyle = '#a58f52';
+      ctx.fillRect(ox + x, oy + 13, 1, 3);
+      ctx.fillRect(ox + Math.min(15, x + 1), oy + 15, 1, 1);
+    }
+  },
+  [TILE.CHARRED_WOOD]: (ctx, ox, oy, rnd) => { // 焦木：黑碳基色 + 纵向裂纹露出内层 + 余烬橙点
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const crack = ((x + (y % 3)) % 5 === 0) ? 0.06 : 0;
+      ctx.fillStyle = shade('#26211c', crack + (rnd() - 0.5) * 0.1);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+    for (let x = 1; x < 16; x += 5) {          // 纵向裂纹
+      for (let y = 0; y < 16; y++) {
+        if ((y + x) % 4 < 2) {
+          ctx.fillStyle = '#3a322a';
+          ctx.fillRect(ox + x, oy + y, 1, 1);
+        }
+      }
+    }
+    for (let i = 0; i < 3; i++) {              // 余烬橙点
+      const ex = 1 + Math.floor(rnd() * 14), ey = 1 + Math.floor(rnd() * 14);
+      ctx.fillStyle = '#d4622a';
+      ctx.fillRect(ox + ex, oy + ey, 1, 1);
+    }
+  },
+  [TILE.ASH]: (ctx, ox, oy, rnd) => {         // 灰烬：大噪点灰白 + 未燃尽黑斑
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      ctx.fillStyle = shade('#9a938a', (rnd() - 0.5) * 0.28);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+    for (let i = 0; i < 2; i++) {
+      const bx = Math.floor(rnd() * 13), by = Math.floor(rnd() * 13);
+      ctx.fillStyle = shade('#3a352e', (rnd() - 0.5) * 0.15);
+      ctx.fillRect(ox + bx, oy + by, 3, 2);
+    }
+  },
 };
 
 let cached = null;

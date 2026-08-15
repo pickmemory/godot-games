@@ -18,7 +18,11 @@
 | `worldState.onExit` | effect[] | — | 章末（越过 end）一次性执行的收束迁移（结尾演出等；MC-3d） |
 | `events` | event[] | — | 编年事件（见下） |
 
-**日历约定**：`{year,month,day}` 为简化格里历，引擎以 `Date.UTC` 折算序数日排序比较；史实农历→公历的校订由 MC-3c 设计文档提供，数据只落换算后的日期。
+**日历约定**：`{year,month,day}` 为简化格里历，引擎以 `Date.UTC` 折算序数日排序比较；史实农历→公历的校订由各章设计文档提供，数据只落换算后的日期。
+
+**选章（MC-5b）**：`web/index.html?chapter=<章节 id>` 加载指定章（默认 `184-yellow-turban`）；
+章节专属 NPC/对话名册放 `web/data/npc/<章节 id>/{npcs,dialogs}.json`（缺失则兑底第一章通用名册）。
+跨章换档建议配 `&new`（旧档章节 id 不匹配时时间轴进度不恢复，见 chapter.js restore）。
 
 ## seasons
 
@@ -27,7 +31,7 @@
 ```
 
 - `months`：归入该季的月份（1–12，须互斥；未覆盖的月份引擎按默认四季兑底并 console.warn）。
-- `params`：季节参数包，引擎原样暴露给 main.js（当前消费 `skyTint`/`fogFar`；`grassTint` 等留给 MC-3c）。
+- `params`：季节参数包，引擎原样暴露给 main.js（当前消费 `skyTint`/`fogFar`，MC-5b 起含天空色；`grassTint` 等留给后续）。
 - 季节随游戏日历月份自动流转，切换时回调 `onSeasonChange({name,label,params})`。
 
 ## events
@@ -58,9 +62,10 @@
 |---|---|---|
 | `notify` | `text` | 屏幕短旁白 + console 日志 |
 | `setFlag` | `flag, value=true` | 置/清旗标（剧情记忆 + 条件触发链） |
-| `blockReplace` | `center:'player'｜{x,y,z}, radius, yRange:[lo,hi], from, to` | 圆柱区域内 `from` 方块批量替换为 `to`（方块 id 见 `blocks.js`） |
+| `blockReplace` | `center:'player'｜{x,y,z}｜'structure:<id>'（MC-5b）, radius, yRange:[lo,hi], from, to` | 圆柱区域内 `from` 方块批量替换为 `to`（方块 id 见 `blocks.js`；to:0=清除）。锚点心引用已落成结构，与 seed 解耦 |
 | `mobs` | `spawn: {maxCount, interval, ...}` | 合并覆盖生物生成参数（`data/mobs.json` 同构） |
-| `sky` | `fogNear, fogFar, ...` | 天光/雾参数覆盖（后续扩充 `sunDim`/`skyTint`） |
+| `sky` | `fogNear, fogFar, skyTint`（MC-5b） | 天光/雾参数覆盖：skyTint 为章节×情绪氛围色（美术圣经 §2.4；null 清除回季节默认），白昼混入 55%、深夜余 14% |
+| `stampStructure` | `src`（MC-5b） | 结构模板 JSON → 整平地基 + 逐层落方块（structure.js）；落成锚点登记供 `blockReplace` 的 `structure:<id>` 引用。模板示例：`190-dong-zhuo/luoyang-fang.json` |
 | `cutscene` | `title, subtitle, lines[], epilogue?` | MC-3d 章节开场/结尾演出：全屏黑底题签 + 旁白逐行淡入（cutscene.js），演出期间冻结玩家/AI/时间轴；任意键跳过；`epilogue` 在演出结束后作 HUD 短旁白弹出 |
 | `startQuest` | `id` | MC-3d 开启任务（quests.js `begin`；与对话效果同构，幂等） |
 | `setDialog` | `npc, dialog` | MC-3d 运行期切换 NPC 对话树（npc.js `NPCManager.setDialog`；用于旗标后台词切换，免 disappear/reappear 闪场） |

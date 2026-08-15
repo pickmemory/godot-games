@@ -1,0 +1,83 @@
+{
+  "_comment": "MC-5b 第二章对话树（schema 同 data/npc/dialogs.json；本章专属）。zheng-01 的 teach/roof 节点把「可焚性天梯」（茅草<木板<夯土/汉瓦，美术圣经 §1.1）讲成瓦匠的行话——玩家在焚洛阳事件前就听过答案，火来时才懂。zheng-01-war 由章节事件 guandong-rises 的 setDialog 切换。",
+  "zheng-01": {
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "text": "后生，手上有茧吗？南市不养闲人。……嗯，你这双手挖过土。来，我教你一手版筑——乱世里，这是比刀有用的手艺。",
+        "choices": [
+          { "text": "版筑是什么？", "next": "teach" },
+          { "text": "改日再说", "next": null }
+        ]
+      },
+      "teach": {
+        "text": "模板夹土，一层一层夯实。四块泥，夯出一块墙——不怕火，不怕潮，比你那木板房结实十倍。垒它三十块，你就有个家了。",
+        "effects": [ { "type": "startQuest", "id": "rammed-wall" } ],
+        "choices": [
+          { "text": "墙有了，屋顶呢？", "next": "roof" },
+          { "text": "（记下了）", "next": null }
+        ]
+      },
+      "roof": {
+        "text": "穷家铺草，富家挂瓦。圆石混沙，烧出青瓦，火来了也只是熏黑一层。记住这句行话：草顶最先着，木顶烧得快，土墙瓦顶，烧不动。",
+        "choices": [ { "text": "土墙瓦顶，烧不动。", "next": null } ]
+      }
+    }
+  },
+  "zheng-01-war": {
+    "_comment": "郑伯战后台（war-190 置位后由 guandong-rises 事件 setDialog 切换）",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "text": "起兵了，起兵了。关东几十万人在酸枣喝酒……后生，坊墙加高了吗？洛阳的火气，我在这城里活了六十年，闻得出来。",
+        "choices": [
+          { "text": "要紧吗？", "next": "warn" },
+          { "text": "（告辞）", "next": null }
+        ]
+      },
+      "warn": {
+        "text": "当年赤眉烧长安，烧了三个月。你要是还没把墙换成夯土——今天就去。手艺我教过你了，别等我人不在了才想起。",
+        "effects": [ { "type": "startQuest", "id": "rammed-wall" } ],
+        "choices": [ { "text": "……我这就去。", "next": null } ]
+      }
+    }
+  },
+  "tang-01": {
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "text": "官爷说……我们坊在册的人，三日内都要西去长安。娃还发着热，车叫郑伯家让给老人了。……这一去，不知道还有没有回来的人。",
+        "effects": [ { "type": "startQuest", "id": "share-the-grain" } ],
+        "choices": [
+          { "text": "西迁……什么时候走？", "next": "west" },
+          { "text": "（把行囊里的粟米分她一半）", "next": "thanks", "effects": [ { "type": "setFlag", "flag": "helped-tang" } ] }
+        ]
+      },
+      "west": {
+        "text": "十五之前。官爷说长安有粮，路上发给口粮——可路上要走一个月，发的是三天的。你别送了，你也是苦人。",
+        "choices": [ { "text": "（沉默）", "next": null } ]
+      },
+      "thanks": {
+        "text": "（她把粟米贴身收好，抱着娃朝你深深一拜。）你也是苦人。老天爷看着呢……若还能见，我给你缝双鞋。",
+        "choices": [ { "text": "（扶住她）", "next": null } ]
+      }
+    }
+  },
+  "shi-01": {
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "text": "……火起那晚，我从城北的水沟里爬出来的。全家就剩我。（他望着废墟）这儿还有一整座城的椽子、砖和井。你要活，跟我学——灰里刨食。",
+        "effects": [ { "type": "startQuest", "id": "pick-the-ruins" } ],
+        "choices": [
+          { "text": "灰里刨食？", "next": "dig" },
+          { "text": "……", "next": null }
+        ]
+      },
+      "dig": {
+        "text": "烧塌的梁木别嫌黑，垫墙基最稳；灰别嫌脏，和了泥就是墙皮。这城里死的死了，走的走了——咱们算活着的。活着的，就得吃饭。",
+        "choices": [ { "text": "活着的，就得吃饭。", "next": null } ]
+      }
+    }
+  }
+}

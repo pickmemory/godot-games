@@ -18,6 +18,7 @@ import { DropManager } from './drops.js';
 import { Farming } from './farming.js';
 import { Building } from './building.js';
 import { loadChapter, normalizeChapter, ChapterTimeline, FALLBACK_CHAPTER } from './chapter.js';
+import { stampStructure } from './structure.js';
 import { NPCManager, FALLBACK_NPC_DATA } from './npc.js';
 import { DialogUI, FALLBACK_DIALOGS } from './dialog.js';
 import { QuestSystem, FALLBACK_QUESTS } from './quests.js';
@@ -111,8 +112,10 @@ try {
   if (res.ok) recipeData = await res.json();
 } catch (e) { /* 同上 */ }
 
-/* ---------- MC-3a 章节时间轴：data/chapters/*.json（数据驱动编年；缺文件/离线→兜底章节） ---------- */
-const chapterLoaded = await loadChapter('data/chapters/184-yellow-turban.json');
+/* ---------- MC-3a 章节时间轴：data/chapters/*.json（数据驱动编年；缺文件/离线→兜底章节） ----------
+   MC-5b：?chapter=<章节 id> 选章（默认第一章；第二章：?chapter=190-dong-zhuo，建议配 &new 开新档） */
+const CHAPTER_ID = urlParams.get('chapter') || '184-yellow-turban';
+const chapterLoaded = await loadChapter(`data/chapters/${CHAPTER_ID}.json`);
 const chapterResult = chapterLoaded.ok ? chapterLoaded : normalizeChapter(FALLBACK_CHAPTER);
 if (!chapterLoaded.ok) console.warn('[chapter] 章节数据加载失败，用兜底：', chapterLoaded.warnings);
 else if (chapterResult.warnings.length) console.warn('[chapter] 章节数据告警：', chapterResult.warnings);
@@ -125,18 +128,21 @@ try {
   if (res.ok) mobConfig = await res.json();
 } catch (e) { /* 文件缺失/离线 → 用模块内同构兜底 */ }
 
-/* ---------- MC-3b NPC/对话/任务数据（数据驱动；缺文件/离线 → 模块内同构兜底） ---------- */
-let npcData = FALLBACK_NPC_DATA;
-try {
-  const res = await fetch('data/npc/npcs.json');
-  if (res.ok) npcData = await res.json();
-} catch (e) { /* 同上 */ }
+/* ---------- MC-3b NPC/对话/任务数据（数据驱动；缺文件/离线 → 模块内同构兜底） ----------
+   MC-5b：优先取章节专属名册 data/npc/<章节 id>/{npcs,dialogs}.json（第二章南市人物），
+   缺失则兑底到第一章通用名册 data/npc/*.json，再兑底到模块内 FALLBACK */
+async function fetchFirst(urls) {
+  for (const u of urls) {
+    try { const r = await fetch(u); if (r.ok) return await r.json(); } catch (e) { /* 试下一个 */ }
+  }
+  return null;
+}
 
-let dialogs = FALLBACK_DIALOGS;
-try {
-  const res = await fetch('data/npc/dialogs.json');
-  if (res.ok) dialogs = await res.json();
-} catch (e) { /* 同上 */ }
+let npcData = await fetchFirst([`data/npc/${CHAPTER_ID}/npcs.json`, 'data/npc/npcs.json']);
+if (!npcData) npcData = FALLBACK_NPC_DATA;
+
+let dialogs = await fetchFirst([`data/npc/${CHAPTER_ID}/dialogs.json`, 'data/npc/dialogs.json']);
+if (!dialogs) dialogs = FALLBACK_DIALOGS;
 
 let questData = FALLBACK_QUESTS;
 try {
@@ -224,13 +230,39 @@ timeline.registerEffect('mobs', (eff) => {
 timeline.registerEffect('sky', (eff) => {
   if (eff.fogNear != null) skyOverrides.fogNear = eff.fogNear;
   if (eff.fogFar != null) skyOverrides.fogFar = eff.fogFar;
+  // MC-5b：事件天空色覆盖（焚洛阳的橙灰/烟期）；null 可清除回季节默认
+  if ('skyTint' in eff) skyOverrides.skyTint = eff.skyTint ?? null;
 });
-// 方块替换（圆柱区域，玩家或指定坐标为心）：dirty chunk 由 world.update 每帧限重建，自然分帧
+// MC-5b 结构落成：章节数据的 stampStructure 效果 → 模板 JSON 写入世界，锚点登记供 blockReplace 引用
+//   幂等（同 id 已落成则跳过）；开卷即预落一次——读档时 onEnter 不重放，锚点登记表仍需重建
+//   （结构本体在存档差分里，重写同值方块不产生新差分）
+const structureAnchors = new Map();   // 结构 id → {x,y,z}（坊中心地表；center:"structure:<id>" 用）
+const stampedSrcs = new Set();         // 已处理的模板 src（幂等判定；锚点表以模板内 id 为键）
+async function stampStructureEffect(eff) {
+  if (!eff.src) return;
+  if (stampedSrcs.has(eff.src)) return;
+  stampedSrcs.add(eff.src);
+  try {
+    const res = await fetch(eff.src);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const anchor = stampStructure(world, await res.json());
+    structureAnchors.set(anchor.id, anchor);
+    console.log(`[chapter] 结构落成「${anchor.id}」于 (${anchor.x},${anchor.y},${anchor.z})，写入 ${anchor.placed} 格`);
+  } catch (e) { console.warn('[chapter] 结构落成失败：', e); }
+}
+timeline.registerEffect('stampStructure', (eff) => { stampStructureEffect(eff); });
+for (const eff of chapterResult.chapter.worldState.onEnter)
+  if (eff?.type === 'stampStructure') stampStructureEffect(eff);   // 读档兑底：重建锚点登记表
+// 方块替换（圆柱区域，玩家/指定坐标/已落成结构锚点为心）：dirty chunk 由 world.update 每帧限重建，自然分帧
 timeline.registerEffect('blockReplace', (eff) => {
   const r = eff.radius ?? 16, [lo, hi] = eff.yRange ?? [-2, 1];
-  const c = !eff.center || eff.center === 'player'
-    ? { x: Math.floor(player.pos.x), y: Math.floor(player.pos.y), z: Math.floor(player.pos.z) }
-    : eff.center;
+  let c;
+  if (!eff.center || eff.center === 'player') {
+    c = { x: Math.floor(player.pos.x), y: Math.floor(player.pos.y), z: Math.floor(player.pos.z) };
+  } else if (typeof eff.center === 'string' && eff.center.startsWith('structure:')) {
+    c = structureAnchors.get(eff.center.slice('structure:'.length));   // MC-5b：焚洛阳对坊区的确定性替换，与 seed 解耦
+    if (!c) { console.warn(`[chapter] blockReplace 引用了未落成的结构: ${eff.center}`); return; }
+  } else c = eff.center;
   let n = 0;
   for (let dy = lo; dy <= hi; dy++)
     for (let dz = -r; dz <= r; dz++)
@@ -599,6 +631,7 @@ const AMB_NIGHT = new THREE.Color(0x9aa8d0);
 const FOG_DAY = { near: 40, far: 130 };
 const FOG_NIGHT = { near: 12, far: 52 };        // 夜间浓雾压近：看得见的范围就是你的安全区
 const _sky = new THREE.Color();
+const _tint = new THREE.Color();   // MC-5b 章节氛围色（美术圣经 §2.4）
 let dayTime = DAY_LEN * 0.15; // 从清晨开始
 let isNight = false;
 
@@ -614,6 +647,15 @@ function updateDayNight(dt) {
   else                { const k = (c - 0.92) / 0.08; sky = _sky.lerpColors(SKY_NIGHT, SKY_DAY, k); sunI = 0.12 + 0.78 * k; ambI = 0.16 + 0.39 * k; nightK = 1 - k; } // 破晓
   renderer.setClearColor(sky);
   scene.fog.color.copy(sky);
+  // MC-5b 章节×情绪天空色：事件 sky 效果的 skyTint 覆盖 > 季节 params.skyTint（美术圣经 §2.4）
+  //   混入比例随夜色衰减（白天 55%，深夜余 14% —— 焚城期的夜晚天际线留一线火光橙）
+  const tintHex = skyOverrides.skyTint ?? timeline.season.params.skyTint;
+  if (tintHex) {
+    _tint.set(tintHex);
+    sky.lerp(_tint, 0.55 * (1 - 0.75 * nightK));
+    renderer.setClearColor(sky);
+    scene.fog.color.copy(sky);
+  }
   // MC-3a 雾距优先级：章节 sky 效果覆盖 > 季节参数（fogFar 作白日基准）> 默认昼夜雾
   const seasonFogFar = timeline.season.params.fogFar;
   const baseFar = seasonFogFar != null ? Math.min(seasonFogFar, FOG_DAY.far) : FOG_DAY.far;
@@ -641,6 +683,8 @@ const STEP_MAT = new Map([
   [BLOCK.COAL_ORE, 'stone'], [BLOCK.IRON_ORE, 'stone'],
   [BLOCK.SAND, 'sand'],
   [BLOCK.WOOD_LOG, 'wood'], [BLOCK.PLANK, 'wood'], [BLOCK.CRAFT_TABLE, 'wood'],
+  [BLOCK.CHARRED_WOOD, 'wood'], [BLOCK.THATCH, 'grass'],   // MC-5b 新材质脚步
+  [BLOCK.RAMMED_EARTH, 'grass'], [BLOCK.HAN_TILE, 'stone'], [BLOCK.ASH, 'sand'],
 ]);
 
 /* ---------- MC-4c 存档：状态分节注册（capture/restore 闭包）+ 读档恢复 + 事件触发点 ---------- */

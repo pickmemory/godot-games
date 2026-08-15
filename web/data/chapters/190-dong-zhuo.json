@@ -1,0 +1,246 @@
+{
+  "_comment": "MC-5b 第二章「190·讨董」选段编年数据（依据 docs/design/mc5-chapter2.md 设计文档落地；schema 见本目录 README.md）。日期为简化格里历，农历（初平元年）→公历换算见设计文档 §3.1（误差 ±3 日）。核心弧：关东起兵 → 董卓迁都 → 焚洛阳三日 → 留守废墟喘息。世界状态迁移（结构落成/焚毁方块替换/天空色）全部走既有 effect 类型（stampStructure/blockReplace/sky），代码零章节内容。启动：web/index.html?chapter=190-dong-zhuo&new。",
+  "id": "190-dong-zhuo",
+  "title": "第二章 · 讨董",
+  "subtitle": "初平元年",
+  "start": { "year": 190, "month": 1, "day": 5 },
+  "end": { "year": 190, "month": 7, "day": 31 },
+  "dayLengthSeconds": 180,
+
+  "seasons": {
+    "spring": { "label": "春", "months": [1, 2, 3],  "params": { "skyTint": "#a8b8b0", "fogFar": 130 } },
+    "summer": { "label": "夏", "months": [4, 5, 6],  "params": { "skyTint": "#b8a890", "fogFar": 90 } },
+    "autumn": { "label": "秋", "months": [7, 8, 9],  "params": { "skyTint": "#c0b49a", "fogFar": 100 } },
+    "winter": { "label": "冬", "months": [10, 11, 12], "params": { "skyTint": "#b8c4d8", "fogFar": 90 } }
+  },
+
+  "worldState": {
+    "onEnter": [
+      { "type": "stampStructure", "src": "data/chapters/190-dong-zhuo/luoyang-fang.json" },
+      {
+        "type": "cutscene",
+        "title": "三国长卷 · 第二章",
+        "subtitle": "初平元年 · 讨董",
+        "lines": [
+          "中平六年，凉州董卓入了洛阳。皇帝换了一个，年号改成初平。",
+          "六年间你辗转南下——京畿有粮，京畿有工。你在洛阳城南、南市外郭的坊墙边落了脚。",
+          "挖矿、筑屋，还是你的生计。只是这一次，烽火不在远处——它就烧在你门前的天。"
+        ]
+      }
+    ],
+    "onExit": [
+      {
+        "type": "cutscene",
+        "title": "长卷未完待续",
+        "subtitle": "第三章（未启）",
+        "lines": [
+          "初平元年，过去了。",
+          "皇帝在长安，联军在河内置酒。洛阳二百里内，无复鸡犬。",
+          "你没有西去，也没有死。你的墙，从灰烬里又长了出来。",
+          "长安来的诏书越来越轻——轻得像那枚买不到一斗谷的小钱。"
+        ],
+        "epilogue": "第二章「讨董」已收卷。长卷未完待续——焦土上的营生继续。"
+      }
+    ]
+  },
+
+  "events": [
+    {
+      "id": "south-market-days",
+      "title": "南市的日子",
+      "when": { "kind": "gameDaysElapsed", "days": 1 },
+      "narration": "南市的日子比乡下好过：坊墙替你挡了一半的风，市棚下换得到盐和针线。可郑伯说，今年的年成，悬。",
+      "effects": [
+        { "type": "notify", "text": "南市的日子比乡下好过。可郑伯说，今年的年成，悬——先去搭个能睡觉的地方。" },
+        { "type": "startQuest", "id": "rammed-wall" }
+      ]
+    },
+    {
+      "id": "first-night-190",
+      "title": "京畿的第一夜",
+      "when": { "kind": "gameDaysElapsed", "days": 12 },
+      "narration": "你在京畿数过了头一个安稳夜——只是安稳。夜里墙外的东西，这里也有，不比冀州少。",
+      "effects": [
+        { "type": "notify", "text": "天黑了。京畿的夜里，墙外的东西一点也不比冀州少。" },
+        { "type": "setFlag", "flag": "first-night-190" }
+      ]
+    },
+    {
+      "id": "liangzhou-troops",
+      "title": "凉州兵入畿",
+      "date": { "year": 190, "month": 1, "day": 20 },
+      "narration": "城里的凉州兵一天比一天多。他们不大买粮——他们直接牵牛。",
+      "effects": [
+        { "type": "notify", "text": "凉州兵一天比一天多。他们不大买粮——他们直接牵牛。坊里家家开始把粮往地下埋。" },
+        { "type": "setFlag", "flag": "qiang-near" }
+      ]
+    },
+    {
+      "id": "guandong-rises",
+      "title": "关东起兵",
+      "date": { "year": 190, "month": 2, "day": 14 },
+      "narration": "正月，关东州郡俱起兵讨董，众数十万，推袁绍为盟主。兵锋未至，粮价先翻了三倍。夜里的东西，也多了。",
+      "effects": [
+        { "type": "notify", "text": "关东起兵！州郡俱反，众数十万，推袁绍为盟主。兵还没到，粮价先翻了三倍。" },
+        { "type": "mobs", "spawn": { "maxCount": 6, "interval": 5 } },
+        { "type": "setFlag", "flag": "war-190" },
+        { "type": "setDialog", "npc": "zheng-bo", "dialog": "zheng-01-war" }
+      ]
+    },
+    {
+      "id": "yangcheng-raid",
+      "title": "凉州兵掠粮",
+      "date": { "year": 190, "month": 2, "day": 28 },
+      "narration": "凉州兵出城「就粮」。正逢社祭，他们杀了祭社的男女，把车牛和妇女一并掳走。你的田，被马蹄翻成了道。",
+      "effects": [
+        { "type": "notify", "text": "凉州兵出城掠粮。你的田，被马蹄翻成了道——没有人赔你一粒种。" },
+        { "type": "blockReplace", "center": "player", "radius": 24, "yRange": [-2, 1], "from": 12, "to": 2 },
+        { "type": "blockReplace", "center": "player", "radius": 24, "yRange": [-2, 1], "from": 13, "to": 2 },
+        { "type": "setFlag", "flag": "foraged" }
+      ]
+    },
+    {
+      "id": "relocate-decree",
+      "title": "迁都令",
+      "date": { "year": 190, "month": 3, "day": 12 },
+      "narration": "二月，诏迁都长安。董卓尽驱洛阳数百万人西行——步骑在后驱蹙，一路饥饿寇掠，积尸盈路。郑伯一家也被点了名。",
+      "effects": [
+        { "type": "notify", "text": "诏迁都长安。洛阳数百万人被驱西行——郑伯一家也在册上。三日之内，坊要空了。" },
+        { "type": "setFlag", "flag": "relocate-decree" }
+      ]
+    },
+    {
+      "id": "burn-luoyang-1",
+      "title": "焚洛阳 · 初火",
+      "date": { "year": 190, "month": 3, "day": 16 },
+      "narration": "火起了。先是南宫，后是官署、府库，再后来，是坊、是市、是你邻居家的屋梁。没有人救火——放火的就是兵。",
+      "effects": [
+        { "type": "notify", "text": "洛阳起火了。烟从北边压过来——茅顶塌成了白灰，木楼烧成了黑炭。躲进土墙里，别出去。" },
+        { "type": "sky", "skyTint": "#c9a68a", "fogNear": 22, "fogFar": 80 },
+        { "type": "blockReplace", "center": "structure:luoyang-fang", "radius": 30, "yRange": [-4, 6], "from": 36, "to": 38 },
+        { "type": "blockReplace", "center": "structure:luoyang-fang", "radius": 30, "yRange": [-4, 6], "from": 7, "to": 37 },
+        { "type": "blockReplace", "center": "structure:luoyang-fang", "radius": 30, "yRange": [-4, 6], "from": 4, "to": 37 },
+        { "type": "blockReplace", "center": "structure:luoyang-fang", "radius": 30, "yRange": [-4, 6], "from": 28, "to": 37 },
+        { "type": "blockReplace", "center": "structure:luoyang-fang", "radius": 30, "yRange": [-4, 6], "from": 5, "to": 0 },
+        { "type": "setFlag", "flag": "burning-day1" }
+      ]
+    },
+    {
+      "id": "burn-luoyang-2",
+      "title": "焚洛阳 · 风助火势",
+      "date": { "year": 190, "month": 3, "day": 17 },
+      "narration": "第二日，风助火势。草木烧成了焦土，火也烧到了你的门——草顶最先着，木顶烧得快。夯土的墙还立着，墙里的人也还活着。",
+      "effects": [
+        { "type": "notify", "text": "第二日，火烧到了你的门。草顶最先着，木顶烧得快——如果你的墙是夯土的，它还立着。" },
+        { "type": "sky", "skyTint": "#c9a68a", "fogNear": 18, "fogFar": 70 },
+        { "type": "blockReplace", "center": "structure:luoyang-fang", "radius": 38, "yRange": [-2, 1], "from": 1, "to": 38 },
+        { "type": "blockReplace", "center": "player", "radius": 10, "yRange": [-3, 5], "from": 36, "to": 38 },
+        { "type": "blockReplace", "center": "player", "radius": 10, "yRange": [-3, 5], "from": 7, "to": 37 },
+        { "type": "blockReplace", "center": "player", "radius": 10, "yRange": [-3, 5], "from": 4, "to": 37 },
+        { "type": "blockReplace", "center": "player", "radius": 10, "yRange": [-3, 5], "from": 28, "to": 37 },
+        { "type": "setFlag", "flag": "burning-day2" }
+      ]
+    },
+    {
+      "id": "burn-luoyang-3",
+      "title": "焚洛阳 · 火烬",
+      "date": { "year": 190, "month": 3, "day": 18 },
+      "narration": "第三日，火自己灭了——因为没有剩下可烧的东西。二百里内，无复鸡犬。",
+      "effects": [
+        { "type": "notify", "text": "火自己灭了——因为没有剩下可烧的东西。二百里内，无复鸡犬。" },
+        { "type": "sky", "skyTint": "#a89880", "fogFar": 75 },
+        { "type": "mobs", "spawn": { "maxCount": 8, "interval": 4 } },
+        { "type": "setFlag", "flag": "luoyang-burned" }
+      ]
+    },
+    {
+      "id": "left-behind",
+      "title": "留下的人",
+      "date": { "year": 190, "month": 3, "day": 22 },
+      "narration": "西去的队伍看不见了。……你没有走。井还在，椽子还在，郑伯教的版筑还在。灰里也能活——这是南市教你的。",
+      "effects": [
+        { "type": "notify", "text": "西去的队伍看不见了。你没有走。井还在，椽子还在——灰里也能活。" },
+        { "type": "setFlag", "flag": "left-behind" }
+      ]
+    },
+    {
+      "id": "biansui-defeat",
+      "title": "汴水之败（远报）",
+      "date": { "year": 190, "month": 3, "day": 26 },
+      "narration": "有人追了上去——曹操，在荥阳汴水边被徐荣打得大败，几乎是走着回来的。联军几十万人，在酸枣日日置酒高会。",
+      "effects": [
+        { "type": "notify", "text": "远报：曹操在汴水边败了，几乎是走着回来的。联军几十万人，日日置酒高会——没人来洛阳。" },
+        { "type": "setFlag", "flag": "allies-stalled" }
+      ]
+    },
+    {
+      "id": "ashes-fall",
+      "title": "灰烬如雪",
+      "date": { "year": 190, "month": 4, "day": 10 },
+      "narration": "灰烬落了半个月，像一场不会化的雪。井水是苦的，柴是黑的，一碰就碎。",
+      "effects": [
+        { "type": "notify", "text": "灰烬落了半个月，像一场不会化的雪。井水是苦的，柴是黑的，一碰就碎。" },
+        { "type": "sky", "skyTint": "#b8a890", "fogFar": 85 },
+        { "type": "setFlag", "flag": "ashes-fall" }
+      ]
+    },
+    {
+      "id": "heso-stalemate",
+      "title": "河内对峙（远报）",
+      "date": { "year": 190, "month": 5, "day": 15 },
+      "narration": "关东的兵还在河内对峙。听说有人放粮，也有人纵兵——都是听说。废墟里的日子，只看自己的手。",
+      "effects": [
+        { "type": "notify", "text": "关东的兵还在河内对峙。都是听说——废墟里的日子，只看自己的手。" }
+      ]
+    },
+    {
+      "id": "small-coins",
+      "title": "小钱之令",
+      "date": { "year": 190, "month": 7, "day": 10 },
+      "narration": "长安来的新令：坏五铢，铸小钱。钱越来越轻，谷一斛卖到数十万。你把粮藏进了地窖——这年头，粮比钱金贵。",
+      "effects": [
+        { "type": "notify", "text": "长安来的新令：坏五铢，铸小钱。谷一斛卖到数十万——把粮藏进地窖，粮比钱金贵。" },
+        { "type": "setFlag", "flag": "small-coins" }
+      ]
+    },
+    {
+      "id": "summer-end",
+      "title": "焦土上的夏天",
+      "date": { "year": 190, "month": 7, "day": 25 },
+      "narration": "初平元年的夏天快过完了。洛阳还在冒烟，联军还在喝酒。你还活着——在一片焦土上，垒起了新的墙。",
+      "effects": [
+        { "type": "notify", "text": "初平元年的夏天快过完了。洛阳还在冒烟，联军还在喝酒。你还活着。" },
+        { "type": "setFlag", "flag": "chapter2-almost-end" }
+      ]
+    },
+    {
+      "id": "fireproof-home",
+      "title": "烧不动的墙",
+      "when": { "kind": "minStat", "stat": "blocksPlaced", "count": 40 },
+      "narration": "四十块砖石。火来的时候，你的墙站在原地，替你站在原地。这一夜之后，你信夯土，胜过信黄天。",
+      "effects": [
+        { "type": "notify", "text": "四十块砖石。火来的时候，你的墙站在原地，替你站在原地。" },
+        { "type": "setFlag", "flag": "fireproof-home" }
+      ]
+    },
+    {
+      "id": "ruin-scrapper",
+      "title": "灰里刨食",
+      "when": { "kind": "minStat", "stat": "blocksMined", "count": 250 },
+      "narration": "你从灰里刨出了几百块砖石瓦砾。废墟在养活你——这话说出来，你自己都觉得不对。可乱世里没有对错，只有活。",
+      "effects": [
+        { "type": "notify", "text": "你从灰里刨出了几百块砖石瓦砾。废墟在养活你——乱世里没有对错，只有活。" },
+        { "type": "setFlag", "flag": "ruin-scrapper" }
+      ]
+    },
+    {
+      "id": "helped-the-tang",
+      "title": "半袋粟",
+      "when": { "kind": "flag", "flag": "helped-tang" },
+      "narration": "你把半袋粟塞进了唐氏的襁褓里。西迁的路上，这一点粮，也许就是一条命。",
+      "effects": [
+        { "type": "notify", "text": "你把半袋粟塞进了唐氏的襁褓里。西迁的路上，这一点粮，也许就是一条命。" }
+      ]
+    }
+  ]
+}

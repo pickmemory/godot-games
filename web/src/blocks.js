@@ -22,6 +22,8 @@ export const TILE = {
   GREENS_0: 19, GREENS_1: 20, GREENS_2: 21,
   // MC-4b 建造扩展：门（下/上格面板）+ 窗棂 + 栅栏（楼梯复用 PLANK）
   DOOR_LOWER: 22, DOOR_UPPER: 23, WINDOW: 24, FENCE: 25,
+  // MC-5b 第二章「190·讨董」：汉代建材 + 焚洛阳世界状态残留（美术规范见 docs/design/art-bible.md §4）
+  RAMMED_EARTH: 26, HAN_TILE: 27, THATCH: 28, CHARRED_WOOD: 29, ASH: 30,
 };
 
 export const BLOCK = {
@@ -38,6 +40,8 @@ export const BLOCK = {
   DOOR_X_TOP: 24, DOOR_X_TOP_OPEN: 25, DOOR_Z_TOP: 26, DOOR_Z_TOP_OPEN: 27,
   WINDOW: 28, FENCE: 29,
   STAIRS_PZ: 30, STAIRS_NZ: 31, STAIRS_PX: 32, STAIRS_NX: 33,   // 升梯方向：+Z/-Z/+X/-X
+  // MC-5b 第二章方块（id 顺延；美术圣经 §4.2 变体表登记）
+  RAMMED_EARTH: 34, HAN_TILE: 35, THATCH: 36, CHARRED_WOOD: 37, ASH: 38,
 };
 
 // 索引 = 方块 id。hardness: 基础挖掘秒数（徒手）。
@@ -96,6 +100,18 @@ export const BLOCK_DEFS = [
     collision: [[0, 0, 0, 1, 0.5, 1], [0.5, 0.5, 0, 1, 1, 1]], tiles: { top: TILE.PLANK, side: TILE.PLANK, bottom: TILE.PLANK } },
   { name: '木梯阶', solid: true, transparent: true, hardness: 1.0, drop: BLOCK.STAIRS_PZ, shape: 'stairs', stairs: { dir: [-1, 0] },
     collision: [[0, 0, 0, 1, 0.5, 1], [0, 0.5, 0, 0.5, 1, 1]], tiles: { top: TILE.PLANK, side: TILE.PLANK, bottom: TILE.PLANK } },
+  // MC-5b 汉代建材（可焚性天梯：茅草 < 木板 < 夯土/汉瓦 —— 焚洛阳的生死由建材选择决定）
+  { name: '夯土', solid: true, transparent: false, hardness: 0.9,
+    tiles: { top: TILE.RAMMED_EARTH, side: TILE.RAMMED_EARTH, bottom: TILE.RAMMED_EARTH } },
+  { name: '汉瓦', solid: true, transparent: false, hardness: 1.8, tool: 'pickaxe', minTier: 1,
+    tiles: { top: TILE.HAN_TILE, side: TILE.HAN_TILE, bottom: TILE.PLANK } },
+  { name: '茅草顶', solid: true, transparent: false, hardness: 0.4,
+    tiles: { top: TILE.THATCH, side: TILE.THATCH, bottom: TILE.PLANK } },
+  // 焚洛阳世界状态残留：焦木=烧过的木料（无掉落——烧掉的就是没了）；灰烬层=茅草/草木烧尽的地表覆盖
+  { name: '焦木', solid: true, transparent: false, hardness: 0.7, drop: 0,
+    tiles: { top: TILE.CHARRED_WOOD, side: TILE.CHARRED_WOOD, bottom: TILE.CHARRED_WOOD } },
+  { name: '灰烬层', solid: true, transparent: false, hardness: 0.2,
+    tiles: { top: TILE.ASH, side: TILE.ASH, bottom: TILE.ASH } },
 ];
 
 // 说明：hotbar 自 MC-2b 起由 inventory（生存行囊）驱动，不再提供创造模式固定九宫。
