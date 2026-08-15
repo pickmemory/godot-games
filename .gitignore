@@ -1,6 +1,6 @@
 # Web 开发（游戏根 web/，零构建；node_modules 仅本地冒烟工具用）
 node_modules/
-tools/smoke-web.png
+tools/*.png
 
 # OS
 .DS_Store

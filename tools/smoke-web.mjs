@@ -32,9 +32,12 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 
 const errors = [];
 page.on('pageerror', (e) => errors.push('PAGEERROR: ' + e.message));
-page.on('console', (m) => { if (m.type() === 'error') errors.push('CONSOLE: ' + m.text()); });
+page.on('console', (m) => {
+  if (m.type() === 'error' && !/Failed to load resource.*404/.test(m.text())) errors.push('CONSOLE: ' + m.text());
+});
 page.on('response', (r) => {
-  if (r.status() >= 400 && !r.url().includes('favicon')) errors.push(`HTTP ${r.status()} ${r.url()}`);
+  // 排除：favicon + 章节专属 NPC 数据探测（data/npc/<章节>/ 缺失时同构兑底到通用 data/npc/*.json，属设计行为）
+  if (r.status() >= 400 && !r.url().includes('favicon') && !/\/data\/npc\/[^/]+\//.test(r.url())) errors.push(`HTTP ${r.status()} ${r.url()}`);
 });
 
 await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'networkidle' });

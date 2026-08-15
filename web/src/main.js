@@ -1,5 +1,8 @@
 // main.js — 装配：渲染器/场景/昼夜/输入/粒子/WebAudio 手感包/主循环
 import * as THREE from 'three';
+import { dlog, installDiag } from './diag.js';
+
+installDiag();   // F8 诊断面板（排查 E 交谈用，定位后可移除）
 import { BLOCK, BLOCK_DEFS } from './blocks.js';
 import { buildAtlas } from './textures.js';
 import { World } from './world.js';
@@ -135,7 +138,11 @@ try {
    缺失则兑底到第一章通用名册 data/npc/*.json，再兑底到模块内 FALLBACK */
 async function fetchFirst(urls) {
   for (const u of urls) {
-    try { const r = await fetch(u); if (r.ok) return await r.json(); } catch (e) { /* 试下一个 */ }
+    try {
+      const r = await fetch(u);
+      dlog('fetch', { url: u, ok: r.ok });
+      if (r.ok) return await r.json();
+    } catch (e) { dlog('fetch-err', { url: u, msg: String(e).slice(0, 80) }); /* 试下一个 */ }
   }
   return null;
 }
@@ -280,11 +287,13 @@ async function playCutscene(eff) {
   if (cutscene.isActive) return;   // 不叠加：上一场未收则忽略
   digHeld = placeHeld = false;
   Object.keys(input).forEach((k) => (input[k] = false));
+  dlog('cutscene-play', { title: eff.title ?? '' });
   await cutscene.play({
     title: eff.title ?? '',
     subtitle: eff.subtitle ?? '',
     lines: Array.isArray(eff.lines) ? eff.lines : [],
   });
+  dlog('cutscene-end', { skipped: cutscene._skipped === true });
   if (eff.epilogue) ui.showPickup(eff.epilogue);
 }
 timeline.registerEffect('cutscene', (eff) => { playCutscene(eff); });
@@ -313,6 +322,11 @@ const dialogUI = new DialogUI({
 
 const npcManager = new NPCManager(scene, world, npcData);
 npcManager.setChronicle(chapterResult.chapter.startSerial);   // 开卷即判（此后日翻页重判）
+
+// 调试钩子（?debug=1 才挂；供 tools/repro-e-talk.mjs 等自动化验证用，正常游玩不暴露）
+if (new URLSearchParams(location.search).get('debug') === '1') {
+  window.__dbg = { npcManager, player, get locked() { return locked; } };
+}
 
 /* ---------- MC-4b 建造扩展：门开合 + 房屋判定（判定成功 → 流民入住 + 定居反馈） ---------- */
 const building = new Building(world, {
@@ -348,6 +362,7 @@ const building = new Building(world, {
 if (buildingData) building.setData(buildingData);
 
 function openDialog(npc) {
+  dlog('dialog-open', { npc: npc.id, treeId: npc.dialogId, hasTree: !!dialogs?.[npc.dialogId] });
   document.exitPointerLock();
   ui.setTalkHint('');
   dialogUI.open(dialogs?.[npc.dialogId] ?? null, npc);   // 树缺失 → DialogUI 兑底树
@@ -504,11 +519,12 @@ function toggleCraft() {
 }
 
 /* ---------- 输入 ---------- */
+const TALK_RANGE = 4.5;   // 可交谈距离：与 NPC 迎客半径（approach 5.0 / 停止 1.8）对齐，NPC 停在玩家身旁时必可聊
 const input = { forward: false, back: false, left: false, right: false, jump: false, down: false };
 let digHeld = false, placeHeld = false, locked = false;
 
 addEventListener('keydown', (e) => {
-  if (cutscene.isActive) { cutscene.skip(); return; }   // MC-3d：演出中任意键跳过（不透传）
+  if (cutscene.isActive) { dlog('anykey:skip-cutscene', { key: e.code }); cutscene.skip(); return; }   // MC-3d：演出中任意键跳过（不透传）
   switch (e.code) {
     case 'KeyW': input.forward = true; break;
     case 'KeyS': input.back = true; break;
@@ -520,16 +536,30 @@ addEventListener('keydown', (e) => {
       player.flying = !player.flying;
       player.vel.y = 0;
       break;
-    case 'KeyE':
-      if (dead) break;
-      // 优先级：对话中关闭 > 附近 NPC 交谈 > 合成面板（对话/面板互斥，均需指针锁定态）
-      if (dialogUI.isOpen) { dialogUI.close(); lockPointer(); break; }
+    case 'KeyE': {
+      // 诊断快照：每次 E 键的完整分支上下文（含全部 NPC 在场/距离），定位「按了没反应」用
+      dlog('KeyE', {
+        dead, locked, cutscene: cutscene.isActive, craft: crafting.isOpen, dlg: dialogUI.isOpen,
+        pos: [player.pos.x.toFixed(1), player.pos.y.toFixed(1), player.pos.z.toFixed(1)],
+        npcs: npcManager.npcs.map((n) => ({
+          id: n.id, on: n.active, want: npcManager.wantsActive.get(n.id) ?? null,
+          d: n.active ? Math.round(Math.hypot(player.pos.x - n.pos.x, player.pos.z - n.pos.z) * 10) / 10 : null,
+        })),
+      });
+      if (dead) { dlog('E:dead'); break; }
+      // 优先级：对话中关闭 > 附近 NPC 交谈 > 稍远提示走近 > 合成面板
+      if (dialogUI.isOpen) { dlog('E:close-dialog'); dialogUI.close(); lockPointer(); break; }
       if (locked && !crafting.isOpen) {
-        const near = npcManager.nearestTalkable(player.pos, 3.2);
-        if (near) { openDialog(near); break; }
+        const near = npcManager.nearestTalkable(player.pos, TALK_RANGE);
+        if (near) { dlog('E:talk', { npc: near.id }); openDialog(near); break; }
+        // 4.5~8 格内有可交谈 NPC：不开合成台（E 语义优先=交谈），提示走近
+        const far = npcManager.nearestTalkable(player.pos, 8);
+        if (far) { dlog('E:too-far', { npc: far.id }); ui.showPickup(`再走近些，与 ${far.name} 搭话`); break; }
       }
+      dlog('E:craft');
       if (locked || crafting.isOpen) toggleCraft();
       break;
+    }
     case 'Escape':
       if (dialogUI.isOpen) { dialogUI.close(); lockPointer(); }
       else if (crafting.isOpen) { crafting.close(); lockPointer(); }
@@ -582,6 +612,7 @@ canvas.addEventListener('click', () => {
 });
 document.addEventListener('pointerlockchange', () => {
   locked = document.pointerLockElement === canvas;
+  dlog('lock', { locked, dead, craft: crafting.isOpen, dlg: dialogUI.isOpen });
   if (locked) { started = true; ui.hideOverlay(); }   // 首次锁定 = 开卷：时间轴/昼夜自此推进
   else {
     digHeld = placeHeld = false;
@@ -593,6 +624,7 @@ document.addEventListener('pointerlockchange', () => {
 /* ---------- MC-2 死亡 / 重生 ---------- */
 function die() {
   dead = true;
+  dlog('die', { pos: [player.pos.x.toFixed(1), player.pos.y.toFixed(1), player.pos.z.toFixed(1)] });
   deaths++;   // MC-3d：首次死亡特殊旁白（重生后弹，见下方重生点击处）
   digHeld = placeHeld = false;
   Object.keys(input).forEach((k) => (input[k] = false));
@@ -781,13 +813,17 @@ let last = performance.now();
 let frames = 0, fpsClock = 0;
 let groanT = 5; // 行尸呻吟随机计时
 let talkHintT = 0; // MC-3b：可交谈提示轮询计时（限频 0.15s）
+let lastHintNpc;   // 诊断：提示出现/消失转换记录
+let lastSimOn;     // 诊断：主循环 sim 门开关记录
 
 function loop(now) {
   requestAnimationFrame(loop);
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
 
-  if (locked && !dead && !cutscene.isActive) {   // MC-3d：演出中冻结玩家/AI/交互（世界渲染照常）
+  const simOn = locked && !dead && !cutscene.isActive;
+  if (simOn !== lastSimOn) { lastSimOn = simOn; dlog('sim', { on: simOn, locked, dead, cutscene: cutscene.isActive }); }
+  if (simOn) {   // MC-3d：演出中冻结玩家/AI/交互（世界渲染照常）
     player.update(dt, input);
     interaction.update(dt, digHeld, placeHeld, inventory.heldId());
     health.update(dt);
@@ -798,7 +834,12 @@ function loop(now) {
     talkHintT -= dt;
     if (talkHintT <= 0) {
       talkHintT = 0.15;
-      const near = npcManager.nearestTalkable(player.pos, 3.2);
+      const near = npcManager.nearestTalkable(player.pos, TALK_RANGE);
+      const nearId = near?.id ?? null;
+      if (nearId !== lastHintNpc) {
+        lastHintNpc = nearId;
+        dlog('hint', { npc: nearId, dist: near ? Math.round(Math.hypot(player.pos.x - near.pos.x, player.pos.z - near.pos.z) * 10) / 10 : null });
+      }
       ui.setTalkHint(near && !dialogUI.isOpen ? `按 E 与 ${near.name} 交谈` : '');
     }
     // 夜里有行尸在场 → 随机远处呻吟（恐惧氛围）
