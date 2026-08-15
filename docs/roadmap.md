@@ -18,7 +18,7 @@
 ## MC-3 · 历史长卷引擎（差异化核心）
 - [~] #30 已派发 MC-3a 章节时间轴引擎（数据驱动 `web/data/chapters/*.json`：编年事件/世界状态迁移/季节流转/触发器；读 AGENTS.md 基线）→ web/src/ + web/data/ (engineering-lead)
 - [~] #31 已派发 MC-3b NPC 系统（低模角色 + 漫游/对话/任务接口；历史人物在编年时刻出场；Quaternius 角色适配）→ web/src/ (engineering-lead)
-- [ ] MC-3c 第一章「184·黄巾」设计文档（平民流民开场→第一夜→生计→黄巾过境事件弧；MC 骨架与历史事件如何咬合；散文级体验脚本）→ docs/design/mc3-chapter1.md (design-strategist)
+- [~] #32 已派发 MC-3c 第一章「184·黄巾」设计文档（平民流民开场→第一夜→生计→黄巾过境事件弧；MC 骨架与历史事件如何咬合；散文级体验脚本）→ docs/design/mc3-chapter1.md (design-strategist)
 - [ ] MC-3d 第一章可玩切片（按 MC-3c 落地：黄巾村落世界状态 + 3 个编年事件 + 2 个 NPC + 章节开场/结尾演出）→ web/src/ + web/data/ (engineering-lead)
 
 ## MC-4 · 生计与定居
