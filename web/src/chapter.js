@@ -110,7 +110,10 @@ export function normalizeChapter(raw) {
     endSerial: endSerial !== null && endSerial >= startSerial ? endSerial : null,
     dayLengthSeconds: Number(raw.dayLengthSeconds) > 0 ? Number(raw.dayLengthSeconds) : 180,
     seasons, monthToSeason,
-    worldState: { onEnter: Array.isArray(raw.worldState?.onEnter) ? raw.worldState.onEnter : [] },
+    worldState: {
+      onEnter: Array.isArray(raw.worldState?.onEnter) ? raw.worldState.onEnter : [],
+      onExit: Array.isArray(raw.worldState?.onExit) ? raw.worldState.onExit : [],   // 章末演出/收束迁移（MC-3d）
+    },
     events,
   };
   return { ok: true, chapter, warnings };
@@ -209,6 +212,7 @@ export class ChapterTimeline {
 
     if (this.ch.endSerial !== null && currentSerial > this.ch.endSerial) {
       this.finished = true;
+      for (const eff of this.ch.worldState.onExit) this._runEffect(eff, ctx);   // 章末世界状态迁移（结尾演出等）
       this.onChapterEnd?.();
     }
   }

@@ -19,6 +19,7 @@ import { loadChapter, normalizeChapter, ChapterTimeline, FALLBACK_CHAPTER } from
 import { NPCManager, FALLBACK_NPC_DATA } from './npc.js';
 import { DialogUI, FALLBACK_DIALOGS } from './dialog.js';
 import { QuestSystem, FALLBACK_QUESTS } from './quests.js';
+import { Cutscene } from './cutscene.js';
 
 /* ---------- 启动 ---------- */
 const canvas = document.getElementById('game');
@@ -54,6 +55,7 @@ const player = new Player(camera, world);
 player.spawn(SPAWN_X, surfaceHeight(SPAWN_X, SPAWN_Z, SEED), SPAWN_Z);
 
 const ui = new UI();
+const cutscene = new Cutscene();   // MC-3d 章节开场/结尾演出层（数据驱动：章节 JSON 的 cutscene 效果）
 
 /* ---------- MC-2b 工具天梯：生存行囊 + 挖掘公式 + 合成 + 手持模型 ---------- */
 const inventory = new Inventory(9);              // 9 槽 = hotbar（最小集；背包扩容留 MC-4）
@@ -108,6 +110,8 @@ try {
 
 const PLAYER_MAX_HP = 20;
 let dead = false;
+let started = false;   // MC-3d：首次点击开卷（指针锁定）后才推进时间轴/昼夜——开场演出排在玩家点击之后
+let deaths = 0;        // MC-3d：死亡计数（首次死亡特殊旁白，设计 C4）
 
 /* 受击震屏（MC-2c）：受击时视角轻震，幅度随剩余时间衰减（与红晕/受击音联动） */
 let shakeT = 0;
@@ -184,6 +188,22 @@ timeline.registerEffect('blockReplace', (eff) => {
       }
   console.log(`[chapter] blockReplace ${eff.from}→${eff.to}：${n} 格`);
 });
+// MC-3d 章节开场/结尾演出：冻结输入，演出自走（任意键可跳过）；结束后可弹尾声提示（epilogue）
+async function playCutscene(eff) {
+  if (cutscene.isActive) return;   // 不叠加：上一场未收则忽略
+  digHeld = placeHeld = false;
+  Object.keys(input).forEach((k) => (input[k] = false));
+  await cutscene.play({
+    title: eff.title ?? '',
+    subtitle: eff.subtitle ?? '',
+    lines: Array.isArray(eff.lines) ? eff.lines : [],
+  });
+  if (eff.epilogue) ui.showPickup(eff.epilogue);
+}
+timeline.registerEffect('cutscene', (eff) => { playCutscene(eff); });
+// MC-3d：章节事件里也能开任务（first-night → 拾柴）与动态换对话树（war-begun → 陈叟战后树）
+timeline.registerEffect('startQuest', (eff) => { if (eff.id) quests.begin(eff.id); });
+timeline.registerEffect('setDialog', (eff) => { if (eff.npc && eff.dialog) npcManager.setDialog(eff.npc, eff.dialog); });
 ui.setDate(`${timeline.formatDate()} · ${timeline.season.label}`);
 
 /* ---------- MC-3b NPC 系统：任务 → 对话 → 编年出场（模块只经导出签名通信，效果路由在此汇流） ---------- */
@@ -211,6 +231,7 @@ function openDialog(npc) {
   document.exitPointerLock();
   ui.setTalkHint('');
   dialogUI.open(dialogs?.[npc.dialogId] ?? null, npc);   // 树缺失 → DialogUI 兑底树
+  quests.notify(`talk:${npc.id}`, 1);   // MC-3d：交谈即任务事件（share-the-loaf 等对话直接完成的任务）
 }
 /* ---------- 挖掘粒子（手感包） ---------- */
 const bursts = [];
@@ -336,6 +357,7 @@ const input = { forward: false, back: false, left: false, right: false, jump: fa
 let digHeld = false, placeHeld = false, locked = false;
 
 addEventListener('keydown', (e) => {
+  if (cutscene.isActive) { cutscene.skip(); return; }   // MC-3d：演出中任意键跳过（不透传）
   switch (e.code) {
     case 'KeyW': input.forward = true; break;
     case 'KeyS': input.back = true; break;
@@ -384,7 +406,7 @@ addEventListener('wheel', (e) => {
   ui.showItemName(inventory.heldId());
 });
 addEventListener('mousedown', (e) => {
-  if (!locked) return;
+  if (!locked || cutscene.isActive) return;
   if (e.button === 0) digHeld = true;
   if (e.button === 2) placeHeld = true;
 });
@@ -394,7 +416,7 @@ addEventListener('mouseup', (e) => {
 });
 addEventListener('contextmenu', (e) => e.preventDefault());
 addEventListener('mousemove', (e) => {
-  if (!locked) return;
+  if (!locked || cutscene.isActive) return;   // 演出中冻结视角（镜头语言归演出层）
   player.addLook(e.movementX, e.movementY);
 });
 
@@ -409,7 +431,7 @@ canvas.addEventListener('click', () => {
 });
 document.addEventListener('pointerlockchange', () => {
   locked = document.pointerLockElement === canvas;
-  if (locked) { ui.hideOverlay(); }
+  if (locked) { started = true; ui.hideOverlay(); }   // 首次锁定 = 开卷：时间轴/昼夜自此推进
   else {
     digHeld = placeHeld = false;
     Object.keys(input).forEach((k) => (input[k] = false));
@@ -420,6 +442,7 @@ document.addEventListener('pointerlockchange', () => {
 /* ---------- MC-2 死亡 / 重生 ---------- */
 function die() {
   dead = true;
+  deaths++;   // MC-3d：首次死亡特殊旁白（重生后弹，见下方重生点击处）
   digHeld = placeHeld = false;
   Object.keys(input).forEach((k) => (input[k] = false));
   sfx.groan(0.25);
@@ -435,6 +458,7 @@ document.getElementById('death').addEventListener('click', () => {
   ui.hideDeath();
   ui.renderInventory(inventory); // 死亡不掉行囊（最小集决定；掉落留 MC-4）
   dropManager.clearAll();        // 重生清场：散落掉落物一并消散
+  if (deaths === 1) ui.showPickup('乱世里没有人为你收尸。你在村口醒来，好像什么都没发生过——但你知道发生过。');
   ensureAudio();
   sfx.setNight(isNight);
   canvas.requestPointerLock()?.catch?.(() => { /* 同上：静默降级 */ });
@@ -511,7 +535,7 @@ function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
 
-  if (locked && !dead) {
+  if (locked && !dead && !cutscene.isActive) {   // MC-3d：演出中冻结玩家/AI/交互（世界渲染照常）
     player.update(dt, input);
     interaction.update(dt, digHeld, placeHeld, inventory.heldId());
     health.update(dt);
@@ -559,9 +583,12 @@ function loop(now) {
   }
   world.update(player.pos);
   updateBursts(dt);
-  dropManager.update(dt, player.pos, locked && !dead, onDropPickup);
-  updateDayNight(dt);
-  timeline.update(dt, { isNight, playerPos: player.pos, stats: { blocksPlaced, blocksMined } });
+  dropManager.update(dt, player.pos, locked && !dead && !cutscene.isActive, onDropPickup);
+  // MC-3d：开卷（首次指针锁定）后才起表；演出中暂停（开场旁白不偷游戏日历）
+  if (started && !cutscene.isActive) {
+    updateDayNight(dt);
+    timeline.update(dt, { isNight, playerPos: player.pos, stats: { blocksPlaced, blocksMined } });
+  }
 
   // 第一人称手持模型（MC-2b）：随选中物品切换，挖掘挥动
   heldItem.setItem(inventory.heldId());

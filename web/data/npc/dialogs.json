@@ -1,10 +1,10 @@
 {
-  "_comment": "MC-3b 对话树（schema 见本目录 README.md）。树 id 与 npcs.json 的 dialog 字段对应；effects 在节点进入或选项选中时执行，经 main.js 路由（startQuest→quests.js / setFlag→chapter.js 时间轴 / notify→HUD）。本文件为占位台词：MC-3d 历史人物台词沿同一管线落地，只需扩本文件。",
+  "_comment": "MC-3b/MC-3d 对话树（schema 见本目录 README.md）。树 id 与 npcs.json 的 dialog 字段对应；effects 在节点进入或选项选中时执行，经 main.js 路由（startQuest→quests.js / setFlag→chapter.js 时间轴 / notify→HUD）。MC-3d 依据 docs/design/mc3-chapter1.md §4.2 落地：陈叟双树（elder-01 战前 / elder-01-war 战后，由章节事件 yellow-turban-rises 的 setDialog 效果切换）；吕嫂首句改钜鹿版（与出场日 3-06 对齐，广宗之战在冬季）；传道人黄巾保留纯文字 notify（物品化留 MC-4，设计 §4.2）。",
   "elder-01": {
     "start": "greet",
     "nodes": {
       "greet": {
-        "text": "后生，你的脸色比上个月差。夜里别出门——墙外的东西，不是人。",
+        "text": "后生，脸色比上个月又差了些。今年的徭役抽走了村东两户人，你来得不是时候——不过乱世里，哪有来得是时候的。",
         "choices": [
           { "text": "这世道，还要熬多久？", "next": "world" },
           { "text": "告辞", "next": null }
@@ -24,6 +24,31 @@
       }
     }
   },
+  "elder-01-war": {
+    "_comment": "陈叟战后树（war-begun 置位后由章节事件 setDialog 切换；settle-down 幂等，已完成为 no-op）",
+    "start": "greet",
+    "nodes": {
+      "greet": {
+        "text": "后生，夜里更不能出门了。那些东西，多了。",
+        "choices": [
+          { "text": "外头到底怎么了？", "next": "world" },
+          { "text": "告辞", "next": null }
+        ]
+      },
+      "world": {
+        "text": "钜鹿反了。黄巾裹头的、官府抓的、路上逃的，都搅在一锅里。老朽活了一甲子，头一回见官道上同时没人，又全是人。",
+        "choices": [
+          { "text": "我能做点什么？", "next": "ask" },
+          { "text": "（沉默）", "next": null }
+        ]
+      },
+      "ask": {
+        "text": "墙再垒高些，柴再囤多些。乱世里头，墙就是命。",
+        "effects": [ { "type": "startQuest", "id": "settle-down" } ],
+        "choices": [ { "text": "好。", "next": null } ]
+      }
+    }
+  },
   "taiping-envoy-01": {
     "start": "preach",
     "nodes": {
@@ -36,7 +61,7 @@
       },
       "doubt": {
         "text": "（他笑而不答，只把黄巾往你手里塞了一条。）信则有。三月初五，自见分晓。",
-        "effects": [ { "type": "notify", "text": "你收下了一条黄巾。（占位：MC-3d 事件弧物品）" } ],
+        "effects": [ { "type": "notify", "text": "你收下了一条黄巾。" } ],
         "choices": [ { "text": "……", "next": null } ]
       },
       "leave": {
@@ -49,7 +74,8 @@
     "start": "greet",
     "nodes": {
       "greet": {
-        "text": "官人……行行好。广宗那边打起来了，我带着孩子走了七天，锅都在路上换了粮。",
+        "text": "官人……行行好。钜鹿那边烧起来了，张大贤良师的人挨家挨户发黄巾。我带着孩子走了七天，锅都在路上换了粮。",
+        "effects": [ { "type": "startQuest", "id": "share-the-loaf" } ],
         "choices": [
           { "text": "村子能收留你们吗？", "next": "stay" },
           { "text": "（把行囊里的干粮分她一半）", "next": "thanks", "effects": [ { "type": "setFlag", "flag": "helped-refugee" } ] }

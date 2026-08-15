@@ -15,6 +15,7 @@
 | `dayLengthSeconds` | number | — | 现实秒/游戏日（默认 180，须与昼夜系统一致） |
 | `seasons` | object | — | 季节定义（见下） |
 | `worldState.onEnter` | effect[] | — | 开卷时一次性执行的世界迁移 |
+| `worldState.onExit` | effect[] | — | 章末（越过 end）一次性执行的收束迁移（结尾演出等；MC-3d） |
 | `events` | event[] | — | 编年事件（见下） |
 
 **日历约定**：`{year,month,day}` 为简化格里历，引擎以 `Date.UTC` 折算序数日排序比较；史实农历→公历的校订由 MC-3c 设计文档提供，数据只落换算后的日期。
@@ -60,5 +61,8 @@
 | `blockReplace` | `center:'player'｜{x,y,z}, radius, yRange:[lo,hi], from, to` | 圆柱区域内 `from` 方块批量替换为 `to`（方块 id 见 `blocks.js`） |
 | `mobs` | `spawn: {maxCount, interval, ...}` | 合并覆盖生物生成参数（`data/mobs.json` 同构） |
 | `sky` | `fogNear, fogFar, ...` | 天光/雾参数覆盖（后续扩充 `sunDim`/`skyTint`） |
+| `cutscene` | `title, subtitle, lines[], epilogue?` | MC-3d 章节开场/结尾演出：全屏黑底题签 + 旁白逐行淡入（cutscene.js），演出期间冻结玩家/AI/时间轴；任意键跳过；`epilogue` 在演出结束后作 HUD 短旁白弹出 |
+| `startQuest` | `id` | MC-3d 开启任务（quests.js `begin`；与对话效果同构，幂等） |
+| `setDialog` | `npc, dialog` | MC-3d 运行期切换 NPC 对话树（npc.js `NPCManager.setDialog`；用于旗标后台词切换，免 disappear/reappear 闪场） |
 
 未注册的 type 触发时 console.warn 并跳过，不会中断时间轴。

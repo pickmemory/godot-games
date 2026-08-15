@@ -1,17 +1,23 @@
 {
-  "_comment": "MC-3b 最小任务定义（schema 见 npc/README.md）。本阶段仅占位验证管线：objective.event 对应 main.js 推送的玩家行为事件（与 chapter.js ctx.stats 同名：blocksPlaced/blocksMined）。具体任务内容（黄巾第一章事件弧）由 MC-3d 充实。",
+  "_comment": "MC-3d 第一章任务名册（依据 docs/design/mc3-chapter1.md §4.2；schema 见 npc/README.md）。objective.event 对应 main.js 推送的玩家行为事件：blocksPlaced/blocksMined（交互回调）与 talk:<npcId>（openDialog 时推送）。first-fuel 由章节事件 first-night（gameDaysElapsed 18）自动开启；settle-down 由陈叟对话开启；share-the-loaf 由吕嫂对话开启、对话即完成（交谈计 1）。存档持久化留 MC-4。",
   "quests": [
     {
       "id": "settle-down",
-      "title": "栖身之所（占位）",
+      "title": "栖身之所",
       "desc": "在乱世里垒起自己的墙——放置 20 块方块。",
       "objective": { "event": "blocksPlaced", "count": 20 }
     },
     {
       "id": "first-fuel",
-      "title": "拾柴（占位 · MC-3d 充实）",
+      "title": "拾柴",
       "desc": "夜里要生火。挖下 10 块木头或泥土。",
       "objective": { "event": "blocksMined", "count": 10 }
+    },
+    {
+      "id": "share-the-loaf",
+      "title": "分她一半",
+      "desc": "吕嫂带着孩子逃到村里——和她说话，看她需要什么。",
+      "objective": { "event": "talk:refugee-lu", "count": 1 }
     }
   ]
 }

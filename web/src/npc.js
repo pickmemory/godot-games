@@ -235,6 +235,9 @@ class NPC {
     this.group.add(this.label);
   }
 
+  /** 运行期换对话树（章节事件效果 setDialog → main.js 调；旗标后台词切换用，免 disappear/reappear 闪场） */
+  setDialog(dialogId) { this.dialogId = dialogId ? String(dialogId) : null; }
+
   /** AABB 是否与实心体素重叠（宽高按个体配置） */
   _collides(px, py, pz) {
     const HALF = this.width / 2;
@@ -458,6 +461,13 @@ export class NPCManager {
 
   /** 按 id 取（调试/任务系统用） */
   get(id) { return this.npcs.find((n) => n.id === id) ?? null; }
+
+  /** 运行期换对话树：npcManager.setDialog('elder-chen', 'elder-01-war')（正在对话中的树不换，下火开启生效） */
+  setDialog(id, dialogId) {
+    const n = this.get(id);
+    if (!n) { console.warn(`[npc] setDialog: 未找到 NPC ${id}`); return; }
+    n.setDialog(dialogId);
+  }
 
   clearAll() { for (const n of this.npcs) n.despawn(); }
 

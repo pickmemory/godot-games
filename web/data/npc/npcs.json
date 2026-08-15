@@ -1,5 +1,5 @@
 {
-  "_comment": "MC-3b NPC 定义（schema 见本目录 README.md）。appear/disappear 用简化格里历日期，引擎复用 MC-3a chapter.js 的 dateToSerial 折算序数日判定出场。model.type=glb 时 url 指向 web/assets/npc/ 下的 Quaternius CC0 GLB（引入时须登记 ../CREDITS.md）；当前用程序化体素占位。台词见 dialogs.json。",
+  "_comment": "MC-3b/MC-3d NPC 定义（schema 见本目录 README.md）。appear/disappear 用简化格里历日期，引擎复用 MC-3a chapter.js 的 dateToSerial 折算序数日判定出场。MC-3d 依据 docs/design/mc3-chapter1.md §4.1 核对：陈叟活到章末（无 disappear）；传道人 2-20 入村、3-10 离村（先于 3-25 起事）；吕嫂 3-06 入场（难民先于战报）。model.type=glb 时 url 指向 web/assets/npc/ 下的 Quaternius CC0 GLB（引入时须登记 ../CREDITS.md）；当前用程序化体素占位。台词见 dialogs.json；陈叟战后台词由章节事件 setDialog 动态切换（elder-01 → elder-01-war）。",
   "npcs": [
     {
       "id": "elder-chen",

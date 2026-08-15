@@ -1,64 +1,121 @@
 {
-  "_comment": "MC-3a 第一章「184 黄巾」占位编年数据（schema 见本目录 README.md；具体内容 MC-3c 设计文档充实）。日期为简化格里历序数（引擎用 Date.UTC 记序数日），史实农历对照由 MC-3c 校订。",
+  "_comment": "MC-3d 第一章「184 黄巾」编年数据（依据 docs/design/mc3-chapter1.md MC-3c 设计文档 §3.2/§3.3/§3.4 校订落地；schema 见本目录 README.md）。日期为简化格里历（引擎 Date.UTC 折算序数日），农历→公历换算见设计文档 §3.1（误差 ±3 日）。开场/结尾演出 = worldState.onEnter/onExit 的 cutscene 效果（cutscene.js + main.js 路由）。",
   "id": "184-yellow-turban",
   "title": "第一章 · 黄巾",
   "subtitle": "中平元年",
   "start": { "year": 184, "month": 2, "day": 1 },
-  "end": { "year": 184, "month": 11, "day": 30 },
+  "end": { "year": 184, "month": 12, "day": 31 },
   "dayLengthSeconds": 180,
 
   "seasons": {
-    "spring": { "label": "春", "months": [2, 3, 4], "params": { "skyTint": "#87ceeb", "fogFar": null } },
-    "summer": { "label": "夏", "months": [5, 6, 7], "params": { "skyTint": "#8fd4e8", "fogFar": 140 } },
+    "spring": { "label": "春", "months": [2, 3, 4],  "params": { "skyTint": "#87ceeb", "fogFar": null } },
+    "summer": { "label": "夏", "months": [5, 6, 7],  "params": { "skyTint": "#8fd4e8", "fogFar": 140 } },
     "autumn": { "label": "秋", "months": [8, 9, 10], "params": { "skyTint": "#c8c0a0", "fogFar": 110 } },
     "winter": { "label": "冬", "months": [11, 12, 1], "params": { "skyTint": "#b8c4d8", "fogFar": 90 } }
   },
 
   "worldState": {
     "onEnter": [
-      { "type": "notify", "text": "中平元年 · 春。钜鹿张角，遣弟子奔走四方，以符水咒说天下。" }
+      {
+        "type": "cutscene",
+        "title": "三国长卷 · 第一章",
+        "subtitle": "中平元年",
+        "lines": [
+          "光和七年，天下大疫。你原籍的家，去年就没有了。",
+          "你随流民北上，在冀州一处里聚落下脚。村口的老者收留了你，条件是：自己动手，活下去。",
+          "——挖矿、种田、筑屋，是你的生计。烽火烧过来的时候怎么活下来，是你的抉择。"
+        ]
+      }
+    ],
+    "onExit": [
+      {
+        "type": "cutscene",
+        "title": "第二章 · 讨董（未启）",
+        "subtitle": "长卷未完待续",
+        "lines": [
+          "中平元年，过去了。",
+          "张角死了，张梁死了，张宝死了。朝廷的捷报送进了洛阳。",
+          "你活过了中平元年。你还在。",
+          "可这只是长卷的第一页——凉州的边报，已经在路上了。"
+        ],
+        "epilogue": "第一章「黄巾」已收卷。长卷未完待续——自由营生继续。"
+      }
     ]
   },
 
   "events": [
     {
+      "id": "first-night",
+      "title": "第一夜将至",
+      "when": { "kind": "gameDaysElapsed", "days": 18 },
+      "narration": "天黑得比昨日快。陈叟说，日落之后，墙外的东西不是人。",
+      "effects": [
+        { "type": "startQuest", "id": "first-fuel" },
+        { "type": "setFlag", "flag": "first-night-told" },
+        { "type": "notify", "text": "天黑得比昨日快。日落之后，墙外的东西不是人。夜里要生火——先挖下十块木头或泥土。" }
+      ]
+    },
+    {
       "id": "yellow-turban-rises",
       "title": "黄巾起事",
-      "date": { "year": 184, "month": 3, "day": 5 },
-      "narration": "二月末，唐周告变，马元义车裂于洛阳。张角仓促举兵：皆着黄巾为标帜，七州二十八郡，一时俱起。",
+      "date": { "year": 184, "month": 3, "day": 25 },
+      "narration": "二月末，唐周告变，马元义车裂于洛阳。张角仓促举兵：皆着黄巾为标帜，七州二十八郡，一时俱起。你村子也听得见远处的烟了。",
       "effects": [
-        { "type": "notify", "text": "黄巾起事！七州二十八郡，一时俱起——你的村子也听得见远处的烟了。" },
+        { "type": "notify", "text": "黄巾起事！皆着黄巾为标帜，七州二十八郡一时俱起——你的村子也听得见远处的烟了。" },
         { "type": "mobs", "spawn": { "maxCount": 6, "interval": 5 } },
-        { "type": "setFlag", "flag": "war-begun" }
+        { "type": "setFlag", "flag": "war-begun" },
+        { "type": "setDialog", "npc": "elder-chen", "dialog": "elder-01-war" }
       ]
     },
     {
       "id": "army-marches-through",
       "title": "官军过境",
       "date": { "year": 184, "month": 4, "day": 12 },
-      "narration": "朝廷发兵讨贼，皇甫嵩、朱儁各领一军。大军过处，田垄践为尘土，道旁的青苗全没了。",
+      "narration": "朝廷发五校三河骑兵讨贼。大军过处，田垄践为尘土，道旁的青苗全没了。没有人向你们道一声歉。",
       "effects": [
-        { "type": "notify", "text": "官军过境，田垄践为尘土……" },
+        { "type": "notify", "text": "官军过境，田垄践为尘土，道旁的青苗全没了。没有人向你们道一声歉。" },
         { "type": "blockReplace", "center": "player", "radius": 16, "yRange": [-2, 1], "from": 1, "to": 2 }
       ]
     },
     {
+      "id": "changshe-victory",
+      "title": "长社大捷（远报）",
+      "date": { "year": 184, "month": 6, "day": 28 },
+      "narration": "南边传来消息：皇甫嵩在长社纵火，大破黄巾波才部。捷报贴不到你的村子，粮价倒是先涨了。",
+      "effects": [
+        { "type": "notify", "text": "长社大捷的远报传来。捷报贴不到你的村子，粮价倒是先涨了。" },
+        { "type": "setFlag", "flag": "court-winning" }
+      ]
+    },
+    {
       "id": "autumn-smoke",
-      "title": "战火烟尘",
+      "title": "秋烟",
       "date": { "year": 184, "month": 8, "day": 20 },
       "narration": "入秋，兵燹连绵，四野的烟压低了天。看得见的日子，也短了。",
       "effects": [
-        { "type": "notify", "text": "入秋，兵燹连绵，四野的烟压低了天。" },
-        { "type": "sky", "fogFar": 95, "fogNear": 28 }
+        { "type": "notify", "text": "入秋，兵燹连绵，四野的烟压低了天。看得见的日子，也短了。" },
+        { "type": "sky", "fogNear": 28, "fogFar": 95 }
       ]
     },
     {
       "id": "guangzong-falls",
       "title": "广宗城破",
-      "date": { "year": 184, "month": 11, "day": 25 },
-      "narration": "皇甫嵩破广宗，张梁战死。首乱平了，可散落各州的黄巾，才刚刚开始流散四方——你也是其中一个名字。",
+      "date": { "year": 184, "month": 12, "day": 8 },
+      "narration": "皇甫嵩破广宗，张梁战死，三万余黄巾赴河。首乱平了。可散落各州的乱兵，才刚刚开始流散四方——这个冬天，锁好你的门。",
       "effects": [
-        { "type": "notify", "text": "广宗城破，张梁败亡。首乱平了，乱世才刚开始。" }
+        { "type": "notify", "text": "广宗城破，张梁战死。首乱平了，可乱兵才刚开始流散四方——这个冬天，锁好你的门。" },
+        { "type": "mobs", "spawn": { "maxCount": 8, "interval": 4 } },
+        { "type": "setFlag", "flag": "first-rebellion-ended" }
+      ]
+    },
+    {
+      "id": "year-end",
+      "title": "岁除",
+      "date": { "year": 184, "month": 12, "day": 28 },
+      "narration": "中平元年就要过完了。你还活着。村里又少了三户人，也多了两个口。",
+      "effects": [
+        { "type": "notify", "text": "中平元年就要过完了。你还活着。村里又少了三户人，也多了两个口。" },
+        { "type": "setFlag", "flag": "chapter1-almost-end" }
       ]
     },
     {
@@ -67,8 +124,27 @@
       "when": { "kind": "minStat", "stat": "blocksPlaced", "count": 20 },
       "narration": "你亲手垒起了二十块砖石。在这条长卷里，你给自己挣出了一个能睡觉的地方。",
       "effects": [
-        { "type": "notify", "text": "你垒起了自己的栖身之所。乱世里，这是一个名字立起来的方式。" },
+        { "type": "notify", "text": "你亲手垒起了二十块砖石——你给自己挣出了一个能睡觉的地方。" },
         { "type": "setFlag", "flag": "settled" }
+      ]
+    },
+    {
+      "id": "first-iron",
+      "title": "铁镐在手",
+      "when": { "kind": "minStat", "stat": "blocksMined", "count": 120 },
+      "narration": "铁镐握在手里，比锄头沉，比命轻。乱世里，这也是一种底气。",
+      "effects": [
+        { "type": "notify", "text": "铁镐握在手里，比锄头沉，比命轻。乱世里，这也是一种底气。" },
+        { "type": "setFlag", "flag": "tooled" }
+      ]
+    },
+    {
+      "id": "helped-the-widow",
+      "title": "分她一半",
+      "when": { "kind": "flag", "flag": "helped-refugee" },
+      "narration": "你把干粮分了一半出去。这年头，善是一种很贵的东西。",
+      "effects": [
+        { "type": "notify", "text": "你把干粮分了一半出去。这年头，善是一种很贵的东西。" }
       ]
     }
   ]

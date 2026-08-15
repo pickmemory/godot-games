@@ -34,7 +34,7 @@
 | `spawn` | `{x,z}` | — | 锚点世界坐标（引擎落该处地表；缺省 8,8） |
 | `wander` | `{radius,speed}` | — | 游走半径（格）/ 步速（格/秒，默认 1.4） |
 | `appear` / `disappear` | `{date}` | — | **编年出场/离场钩子**：`{year,month,day}` 简化格里历；日期复用 MC-3a `chapter.js` 的 `dateToSerial` 折算序数日，由 `NPCManager.setChronicle(currentSerial)` 在开卷与每个游戏日翻页时判定。缺省 = 开卷在场 / 永不离场 |
-| `dialog` | string | — | 对话树键 → `dialogs.json` 顶层键；缺省不可交谈 |
+| `dialog` | string | — | 对话树键 → `dialogs.json` 顶层键；缺省不可交谈。运行期可由章节事件效果 `setDialog` 切换（`NPCManager.setDialog(id, treeKey)`，如陈叟战前/战后双树） |
 
 漫游 AI 三态：`idle`（待机）→ `wander`（锚点圆内随机游走）→ `approach`（玩家 5 格内走近至 2.2 格站定面向玩家，玩家离开 9 格放弃）。决策限频 0.35s 且个体错峰；物理为重力 + 逐轴 AABB 体素碰撞 + 撞墙小跳（可上 1 格台阶），与 player/mob 同算法思路、按 NPC 自身宽高独立实现。
 
