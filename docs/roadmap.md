@@ -22,7 +22,7 @@
 - [~] #33 已派发 MC-3d 第一章可玩切片（按 MC-3c 落地：黄巾村落世界状态 + 3 个编年事件 + 2 个 NPC + 章节开场/结尾演出）→ web/src/ + web/data/ (engineering-lead)
 
 ## MC-4 · 生计与定居
-- [ ] MC-4a 农耕（开垦/播种/生长周期/收获，季节联动）→ web/src/ (engineering-lead)
+- [~] #34 已派发 MC-4a 农耕（开垦/播种/生长周期/收获，季节联动）→ web/src/ (engineering-lead)
 - [ ] MC-4b 建造扩展（门/窗/楼梯/栅栏方块 + 简易村民 + 房屋判定）→ web/src/ (engineering-lead)
 - [ ] MC-4c 存档抽象层（ISaveAdapter 接口：localStorage 实现 + chunk 差分 + 章节进度；为 Steam Cloud 预留同构替换）→ web/src/ (engineering-lead)
 
