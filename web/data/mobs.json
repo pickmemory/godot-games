@@ -1,0 +1,18 @@
+{
+  "name": "流民行尸",
+  "maxHp": 10,
+  "speed": 2.7,
+  "damage": 3,
+  "attackRange": 1.7,
+  "attackCooldown": 1.1,
+  "jumpVelocity": 8.6,
+  "width": 0.6,
+  "height": 1.9,
+  "spawn": {
+    "maxCount": 4,
+    "interval": 7,
+    "minDist": 16,
+    "maxDist": 26
+  },
+  "despawnDist": 64
+}

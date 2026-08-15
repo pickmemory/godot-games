@@ -36,13 +36,40 @@
   .slot canvas { width: 36px; height: 36px; image-rendering: pixelated; }
   .slot .num { position: absolute; left: 4px; top: 2px; font-size: 10px; color: rgba(255,255,255,.55); }
 
-  #blockName { position: fixed; left: 50%; bottom: 76px; transform: translateX(-50%);
+  #blockName { position: fixed; left: 50%; bottom: 108px; transform: translateX(-50%);
     color: #fff; text-shadow: 0 1px 3px #000; font-size: 15px; letter-spacing: 2px;
     opacity: 0; transition: opacity .4s; z-index: 10; pointer-events: none; }
   #fps { position: fixed; right: 10px; top: 8px; color: rgba(255,255,255,.75);
     font: 12px/1.6 Consolas, monospace; text-shadow: 0 1px 2px #000; z-index: 10;
     text-align: right; pointer-events: none; }
   #fps .t { color: rgba(255,255,255,.5); }
+
+  /* MC-2 血量红心条（每颗 = 2 点血） */
+  #hearts { position: fixed; left: 50%; bottom: 74px; transform: translateX(-50%);
+    display: flex; gap: 3px; z-index: 10; pointer-events: none; }
+  .heart { position: relative; width: 20px; height: 20px; font-size: 17px; line-height: 21px;
+    color: rgba(255,255,255,.14); text-shadow: 0 1px 2px rgba(0,0,0,.9); }
+  .heart .fill { position: absolute; left: 0; top: 0; height: 100%; overflow: hidden;
+    white-space: nowrap; color: #e04b3a; }
+
+  /* 受击/低血量红晕 */
+  #vignette { position: fixed; inset: 0; pointer-events: none; z-index: 15; opacity: 0;
+    background: radial-gradient(ellipse at center, transparent 42%, rgba(140,10,10,.6) 100%);
+    transition: opacity .7s; }
+  #vignette.low { animation: lowPulse 1.6s ease-in-out infinite; }
+  @keyframes lowPulse { 0%,100% { opacity: .22; } 50% { opacity: .55; } }
+
+  /* 死亡界面 */
+  #death { position: fixed; inset: 0; background: rgba(26,2,2,.85); z-index: 25;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer; transition: opacity .5s; }
+  #death.hidden { opacity: 0; pointer-events: none; }
+  #death h1 { color: #c9463a; font-size: 40px; letter-spacing: 12px; font-weight: 600;
+    margin-bottom: 8px; text-shadow: 0 2px 12px rgba(0,0,0,.9); }
+  #death .sub { color: rgba(232,217,176,.6); font-size: 14px; letter-spacing: 4px; margin-bottom: 8px; }
+  #death .go { margin-top: 30px; color: #fff; font-size: 17px; letter-spacing: 4px;
+    border: 1px solid rgba(201,70,58,.7); padding: 10px 38px; border-radius: 4px;
+    animation: pulse 2s infinite; } }
 
   /* 开始 / 暂停遮罩 */
   #overlay { position: fixed; inset: 0; background: rgba(8,10,20,.78); backdrop-filter: blur(3px);
@@ -75,13 +102,21 @@
 <div id="hotbar"></div>
 <div id="blockName"></div>
 <div id="fps">-- fps<br><span class="t">chunks --</span></div>
+<div id="vignette"></div>
+<div id="hearts"></div>
+<div id="death" class="hidden">
+  <h1>你倒下了</h1>
+  <div class="sub">乱世的夜，吞没了一个名字。</div>
+  <div class="go">点 击 重 返 长 卷</div>
+</div>
 <div id="overlay">
   <h1>三国长卷</h1>
   <div class="sub">SCROLL OF THE THREE KINGDOMS · 184 A.D.</div>
   <div class="hint">
     <b>WASD</b> 移动　<b>空格</b> 跳跃　<b>F</b> 飞行　<b>Shift</b> 飞行下降<br>
     <b>鼠标左键</b> 按住挖掘　<b>右键</b> 放置　<b>滚轮 / 1-9</b> 切换方块<br>
-    <b>ESC</b> 释放鼠标
+    <b>入夜后，行尸将循着活人的气息游荡而来……</b><br>
+    挖洞、筑墙，或逃到高处——活过你的第一夜。　<b>ESC</b> 释放鼠标
   </div>
   <div class="go">点 击 开 卷</div>
 </div>

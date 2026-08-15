@@ -9,8 +9,13 @@ export class UI {
     this.fpsEl = document.getElementById('fps');
     this.ringEl = document.getElementById('digRing');
     this.overlayEl = document.getElementById('overlay');
+    this.heartsEl = document.getElementById('hearts');
+    this.vignetteEl = document.getElementById('vignette');
+    this.deathEl = document.getElementById('death');
     this._nameTimer = null;
     this._slots = [];
+    this._heartFills = null;
+    this._maxHp = 0;
   }
 
   /** 构建九宫 hotbar（items: 方块 id 数组） */
@@ -61,4 +66,48 @@ export class UI {
 
   showOverlay() { this.overlayEl.classList.remove('hidden'); }
   hideOverlay() { this.overlayEl.classList.add('hidden'); }
+
+  /* ---------- MC-2 生存：血量 / 受击 / 死亡 ---------- */
+
+  /** 构建红心条（每颗心 = 2 点血） */
+  buildHearts(maxHp) {
+    this._maxHp = maxHp;
+    this._heartFills = [];
+    this.heartsEl.innerHTML = '';
+    const n = Math.ceil(maxHp / 2);
+    for (let i = 0; i < n; i++) {
+      const h = document.createElement('div');
+      h.className = 'heart';
+      h.textContent = '♥';
+      const fill = document.createElement('div');
+      fill.className = 'fill';
+      fill.textContent = '♥';
+      h.appendChild(fill);
+      this.heartsEl.appendChild(h);
+      this._heartFills.push(fill);
+    }
+  }
+
+  /** 更新红心（满/半/空）；hp ≤ 6 时挂低血量脉动 */
+  setHealth(hp, maxHp) {
+    if (!this._heartFills) return;
+    for (let i = 0; i < this._heartFills.length; i++) {
+      const v = hp - i * 2; // 该心剩余 (0/1/2)
+      this._heartFills[i].style.width = v >= 2 ? '100%' : v === 1 ? '50%' : '0%';
+    }
+    this.vignetteEl.classList.toggle('low', hp > 0 && hp <= 6);
+  }
+
+  /** 受击红晕闪一下 */
+  flashDamage() {
+    const v = this.vignetteEl;
+    v.style.transition = 'none';
+    v.style.opacity = '0.85';
+    void v.offsetWidth; // 强制 reflow，使下一次 transition 生效
+    v.style.transition = 'opacity .7s';
+    v.style.opacity = '';
+  }
+
+  showDeath() { this.deathEl.classList.remove('hidden'); }
+  hideDeath() { this.deathEl.classList.add('hidden'); }
 }
