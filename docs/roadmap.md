@@ -29,6 +29,6 @@
 ## MC-5 · 第二章 + 打磨 + 发布
 - [~] #37 已派发 MC-5a 美术圣经 v2（体素三国视觉规范：色板/方块变体/UI 书法风/角色比例；Kenney+Quaternius 接入规范）→ docs/design/art-bible.md (art-director)
 - [~] #38 已派发 MC-5b 第二章选段「190·讨董」（设计 + 可玩：迁都焚洛阳事件弧 + 世界状态迁移实例）→ web/src/ + docs/design/ (design-strategist + engineering-lead)
-- [ ] MC-5c 音频方向（中式乐器 BGM 四态 + 环境音 + 历史事件旁白；mmx 生成真实资产）→ docs/design/audio/ + web/assets/audio/ (audio-director)
+- [~] #39 已派发 MC-5c 音频方向（中式乐器 BGM 四态 + 环境音 + 历史事件旁白；mmx 生成真实资产）→ docs/design/audio/ + web/assets/audio/ (audio-director)
 - [ ] MC-5d Playtest 报告 + 已知问题（对照设计信条：恐惧/天梯/沙盒三层动机是否成立）→ docs/playtests/round-1.md (quality-lead)
 - [ ] MC-5e Steam 打包（Electron 壳 + steamworks.js 成就/云存档接入 + 构建脚本 + 商店素材清单）→ tools/ + docs/release/ (release-ops)
