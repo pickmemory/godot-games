@@ -1,11 +1,25 @@
-// ui.js — 十字准星已由 CSS 承担；本模块管 hotbar / 方块名提示 / FPS / 挖掘进度环 / 遮罩
+// ui.js — 十字准星已由 CSS 承担；本模块管 hotbar（生存行囊）/ 物品名提示 / FPS / 挖掘进度环 / 遮罩
 import { BLOCK_DEFS } from './blocks.js';
+import { ITEM_DEFS, drawItemIcon } from './items.js';
 import { drawTileTo } from './textures.js';
+
+/** 物品 id → 名称（方块 <100；工具/材料 ≥100） */
+export function itemName(id) {
+  if (!id) return '';
+  return id >= 100 ? (ITEM_DEFS[id]?.name ?? '未知物品') : (BLOCK_DEFS[id]?.name ?? '未知方块');
+}
+
+/** 通用图标：方块画 atlas 瓦片，其余画物品像素图标 */
+export function drawIcon(ctx, id, dx, dy, dw, dh) {
+  if (id >= 100) drawItemIcon(ctx, id, dx, dy, dw, dh);
+  else if (BLOCK_DEFS[id]?.tiles) drawTileTo(ctx, BLOCK_DEFS[id].tiles.side, dx, dy, dw, dh);
+}
 
 export class UI {
   constructor() {
     this.hotbarEl = document.getElementById('hotbar');
     this.nameEl = document.getElementById('blockName');
+    this.pickupEl = document.getElementById('pickup');
     this.fpsEl = document.getElementById('fps');
     this.ringEl = document.getElementById('digRing');
     this.overlayEl = document.getElementById('overlay');
@@ -18,37 +32,69 @@ export class UI {
     this._maxHp = 0;
   }
 
-  /** 构建九宫 hotbar（items: 方块 id 数组） */
-  buildHotbar(items) {
+  /** 重建 hotbar 为生存行囊（inventory 驱动；槽 = {id,count}|null） */
+  buildHotbar(_items) {
     this.hotbarEl.innerHTML = '';
     this._slots = [];
-    items.forEach((id, i) => {
+    for (let i = 0; i < 9; i++) {
       const slot = document.createElement('div');
       slot.className = 'slot';
       const num = document.createElement('span');
       num.className = 'num';
       num.textContent = String(i + 1);
       const cv = document.createElement('canvas');
-      cv.width = 32; cv.height = 32;
-      const ctx = cv.getContext('2d');
-      drawTileTo(ctx, BLOCK_DEFS[id].tiles.side, 0, 0, 32, 32);
+      cv.width = 36; cv.height = 36;
+      const cnt = document.createElement('span');
+      cnt.className = 'cnt';
       slot.appendChild(num);
       slot.appendChild(cv);
+      slot.appendChild(cnt);
       this.hotbarEl.appendChild(slot);
-      this._slots.push(slot);
-    });
+      this._slots.push({ slot, cv, cnt });
+    }
   }
 
-  /** 选中态 + 名称提示（自动淡出） */
+  /** 按行囊内容重绘各槽（库存变化时调用） */
+  renderInventory(inv) {
+    for (let i = 0; i < this._slots.length; i++) {
+      const { slot, cv, cnt } = this._slots[i];
+      const s = inv.slots[i];
+      const ctx = cv.getContext('2d');
+      ctx.clearRect(0, 0, 36, 36);
+      if (s) {
+        drawIcon(ctx, s.id, 2, 2, 32, 32);
+        cnt.textContent = s.count > 1 ? String(s.count) : '';
+        slot.classList.remove('empty');
+      } else {
+        cnt.textContent = '';
+        slot.classList.add('empty');
+      }
+      slot.classList.toggle('sel', i === inv.selected);
+    }
+  }
+
+  /** 选中态（行囊驱动） */
   select(index) {
-    this._slots.forEach((s, i) => s.classList.toggle('sel', i === index));
+    this._slots.forEach((s, i) => s.slot.classList.toggle('sel', i === index));
   }
 
-  showBlockName(id) {
-    this.nameEl.textContent = BLOCK_DEFS[id]?.name ?? '';
+  /** 切换手持时显示物品名（自动淡出） */
+  showItemName(id) {
+    this.nameEl.textContent = itemName(id);
+    if (!id) return;
     this.nameEl.style.opacity = '1';
     clearTimeout(this._nameTimer);
     this._nameTimer = setTimeout(() => { this.nameEl.style.opacity = '0'; }, 1200);
+  }
+
+  /** 拾取提示（hotbar 上方短提示；text='' 隐藏） */
+  showPickup(text) {
+    const el = this.pickupEl;
+    if (!text) { el.style.opacity = '0'; return; }
+    el.textContent = text;
+    el.style.opacity = '1';
+    clearTimeout(this._pickupTimer);
+    this._pickupTimer = setTimeout(() => { el.style.opacity = '0'; }, 1400);
   }
 
   setStats(fps, chunks) {

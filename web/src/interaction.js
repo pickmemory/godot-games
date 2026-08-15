@@ -1,6 +1,7 @@
 // interaction.js — DDA 体素射线选块 + 线框高亮 + 按住挖掘进度 + 放置
 import * as THREE from 'three';
 import { isSolid, BLOCK_DEFS } from './blocks.js';
+import { digTime, toolDefOf, FALLBACK_MINING } from './mining.js';
 
 const REACH = 6;          // 交互距离（格）
 const PLACE_CD = 0.22;    // 放置冷却（秒）
@@ -24,6 +25,7 @@ export class Interaction {
     this.digKey = null;
     this.digProgress = 0;
     this._placeCd = 0;
+    this.miningCfg = FALLBACK_MINING;   // main 在 fetch data/mining.json 后注入
 
     // 选块高亮线框（黑框，略大于 1 格防 z-fighting）
     const box = new THREE.BoxGeometry(1.002, 1.002, 1.002);
@@ -66,9 +68,9 @@ export class Interaction {
    * @param {number} dt
    * @param {boolean} digHeld  左键按住
    * @param {boolean} placeHeld 右键按住/单击
-   * @param {number} hotbarBlockId 当前 hotbar 选中方块
+   * @param {number} heldItemId 当前手持物品 id（0=空手；<100 方块可放置，>=100 工具/材料不可放置）
    */
-  update(dt, digHeld, placeHeld, hotbarBlockId) {
+  update(dt, digHeld, placeHeld, heldItemId) {
     this._placeCd = Math.max(0, this._placeCd - dt);
     const hit = this.raycast();
 
@@ -84,13 +86,14 @@ export class Interaction {
     this.highlight.scale.setScalar(shrink);
     this.highlight.position.set(hit.pos[0] + 0.5, hit.pos[1] + 0.5, hit.pos[2] + 0.5);
 
-    // 挖掘（按住累计）
+    // 挖掘（按住累计；耗时 = 硬度×工具效率，见 mining.js）
     if (digHeld) {
       const key = hit.pos.join(',');
       if (key !== this.digKey) { this.digKey = key; this.digProgress = 0; }
       const id = this.world.getBlock(hit.pos[0], hit.pos[1], hit.pos[2]);
-      const hardness = BLOCK_DEFS[id]?.hardness ?? 1;
-      this.digProgress += dt / Math.max(0.05, hardness);
+      const def = BLOCK_DEFS[id];
+      const seconds = digTime(this.miningCfg, def, toolDefOf(heldItemId));
+      this.digProgress += dt / seconds;
       this.cb.onDigProgress(Math.min(1, this.digProgress));
 
       if (this.digProgress >= 1) {
@@ -102,8 +105,9 @@ export class Interaction {
       this._resetDig();
     }
 
-    // 放置（面邻接 + 冷却 + 不与玩家重叠 + 不覆盖实块）
-    if (placeHeld && this._placeCd === 0) {
+    // 放置（仅手持方块物品；面邻接 + 冷却 + 不与玩家重叠 + 不覆盖实块）
+    const placeId = heldItemId > 0 && heldItemId < 100 ? heldItemId : 0;
+    if (placeHeld && placeId > 0 && this._placeCd === 0) {
       const tx = hit.pos[0] + hit.normal[0];
       const ty = hit.pos[1] + hit.normal[1];
       const tz = hit.pos[2] + hit.normal[2];
@@ -112,7 +116,7 @@ export class Interaction {
         const overlap = tx + 1 > a.x0 && tx < a.x1
           && ty + 1 > a.y0 && ty < a.y1
           && tz + 1 > a.z0 && tz < a.z1;
-        if (!overlap && this.world.setBlock(tx, ty, tz, hotbarBlockId)) {
+        if (!overlap && this.world.setBlock(tx, ty, tz, placeId)) {
           this.cb.onPlace([tx, ty, tz]);
           this._placeCd = PLACE_CD;
         }

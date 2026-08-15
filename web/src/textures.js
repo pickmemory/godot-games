@@ -99,6 +99,66 @@ const PAINTERS = {
       ctx.fillRect(ox + x, oy + y, 1, 1);
     }
   },
+  [TILE.COAL_ORE]: (ctx, ox, oy, rnd) => {
+    // 石底 + 黑煤斑团（2×2/3×2 簇，确定性伪随机保证同 seed 一致）
+    const specks = [];
+    for (let i = 0; i < 5; i++) {
+      const sx = 1 + Math.floor(rnd() * 12), sy = 1 + Math.floor(rnd() * 12);
+      const w = 2 + Math.floor(rnd() * 2), h = 2;
+      specks.push([sx, sy, w, h]);
+    }
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      ctx.fillStyle = shade('#8a8a8a', (rnd() - 0.5) * 0.18);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+    for (const [sx, sy, w, h] of specks) {
+      for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) {
+        ctx.fillStyle = shade('#232323', (rnd() - 0.5) * 0.2);
+        ctx.fillRect(ox + Math.min(15, sx + dx), oy + Math.min(15, sy + dy), 1, 1);
+      }
+    }
+  },
+  [TILE.IRON_ORE]: (ctx, ox, oy, rnd) => {
+    // 石底 + 锈铁矿斑（土黄颗粒簇）
+    const specks = [];
+    for (let i = 0; i < 5; i++) {
+      const sx = 1 + Math.floor(rnd() * 12), sy = 1 + Math.floor(rnd() * 12);
+      specks.push([sx, sy, 2 + Math.floor(rnd() * 2), 2]);
+    }
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      ctx.fillStyle = shade('#8a8a8a', (rnd() - 0.5) * 0.18);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+    for (const [sx, sy, w, h] of specks) {
+      for (let dy = 0; dy < h; dy++) for (let dx = 0; dx < w; dx++) {
+        ctx.fillStyle = shade('#c99a68', (rnd() - 0.5) * 0.25);
+        ctx.fillRect(ox + Math.min(15, sx + dx), oy + Math.min(15, sy + dy), 1, 1);
+      }
+    }
+  },
+  [TILE.TABLE_TOP]: (ctx, ox, oy, rnd) => {
+    // 木板底 + 中央 2×2 工作格（十字缝）
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const seam = (y % 5 === 4) ? -0.18 : ((x + y * 3) % 8 === 0 ? -0.08 : (rnd() - 0.5) * 0.1);
+      ctx.fillStyle = shade('#b08a52', seam);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+    for (let y = 3; y <= 12; y++) for (let x = 3; x <= 12; x++) {
+      const grid = (x === 3 || x === 12 || y === 3 || y === 12 || x === 7 || x === 8 || y === 7 || y === 8) ? -0.3 : -0.05;
+      ctx.fillStyle = shade('#8f6c3e', grid + (rnd() - 0.5) * 0.08);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+  },
+  [TILE.TABLE_SIDE]: (ctx, ox, oy, rnd) => {
+    // 木板底 + 台面横沿 + 挂着的锯/锯痕占位纹理
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      let v = (y % 5 === 4) ? -0.18 : ((x + y * 3) % 8 === 0 ? -0.08 : (rnd() - 0.5) * 0.1);
+      if (y < 3) v = -0.28;                       // 台面厚沿
+      if (y >= 5 && y <= 11 && x >= 3 && x <= 12) v = ((x * 2 + y) % 5 === 0) ? -0.32 : -0.02; // 工具压痕
+      ctx.fillStyle = shade('#b08a52', v);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+  },
 };
 
 let cached = null;

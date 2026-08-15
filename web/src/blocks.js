@@ -1,5 +1,9 @@
 // blocks.js — 方块注册表（数据驱动：新增方块只改这里）
 // 瓦片索引对应 textures.js atlas 中的绘制顺序。
+// 挖掘字段（mining.js 公式消费）：
+//   tool: 适用工具类（'pickaxe' | null=徒手即可）；minTier: 建议工具等级
+//   drop: 掉落物品 id（数字；0=无掉落；缺省=掉自身）；minDropTier: 掉落所需最低工具等级
+import { ITEM } from './items.js';
 
 export const CHUNK_X = 16;
 export const CHUNK_Y = 64;
@@ -11,28 +15,32 @@ export const TILE = {
   GRASS_TOP: 0, GRASS_SIDE: 1, DIRT: 2, STONE: 3,
   LOG_SIDE: 4, LOG_TOP: 5, LEAVES: 6, SAND: 7,
   PLANK: 8, COBBLE: 9,
+  COAL_ORE: 10, IRON_ORE: 11, TABLE_TOP: 12, TABLE_SIDE: 13,
 };
 
 export const BLOCK = {
   AIR: 0, GRASS: 1, DIRT: 2, STONE: 3, WOOD_LOG: 4,
   LEAVES: 5, SAND: 6, PLANK: 7, COBBLE: 8,
+  COAL_ORE: 9, IRON_ORE: 10, CRAFT_TABLE: 11,
 };
 
 // 索引 = 方块 id。hardness: 基础挖掘秒数（徒手）。
 export const BLOCK_DEFS = [
   { name: '空气',   solid: false, transparent: true,  hardness: 0,    tiles: null },
-  { name: '草方块', solid: true,  transparent: false, hardness: 0.45, tiles: { top: TILE.GRASS_TOP, side: TILE.GRASS_SIDE, bottom: TILE.DIRT } },
+  { name: '草方块', solid: true,  transparent: false, hardness: 0.45, drop: BLOCK.DIRT,   tiles: { top: TILE.GRASS_TOP, side: TILE.GRASS_SIDE, bottom: TILE.DIRT } },
   { name: '泥土',   solid: true,  transparent: false, hardness: 0.5,  tiles: { top: TILE.DIRT, side: TILE.DIRT, bottom: TILE.DIRT } },
-  { name: '石头',   solid: true,  transparent: false, hardness: 1.5,  tiles: { top: TILE.STONE, side: TILE.STONE, bottom: TILE.STONE } },
+  { name: '石头',   solid: true,  transparent: false, hardness: 1.5,  tool: 'pickaxe', minTier: 1, drop: BLOCK.COBBLE, tiles: { top: TILE.STONE, side: TILE.STONE, bottom: TILE.STONE } },
   { name: '原木',   solid: true,  transparent: false, hardness: 1.0,  tiles: { top: TILE.LOG_TOP, side: TILE.LOG_SIDE, bottom: TILE.LOG_TOP } },
-  { name: '树叶',   solid: true,  transparent: true,  hardness: 0.2,  tiles: { top: TILE.LEAVES, side: TILE.LEAVES, bottom: TILE.LEAVES } },
+  { name: '树叶',   solid: true,  transparent: true,  hardness: 0.2,  drop: 0, tiles: { top: TILE.LEAVES, side: TILE.LEAVES, bottom: TILE.LEAVES } },
   { name: '沙子',   solid: true,  transparent: false, hardness: 0.4,  tiles: { top: TILE.SAND, side: TILE.SAND, bottom: TILE.SAND } },
   { name: '木板',   solid: true,  transparent: false, hardness: 1.0,  tiles: { top: TILE.PLANK, side: TILE.PLANK, bottom: TILE.PLANK } },
-  { name: '圆石',   solid: true,  transparent: false, hardness: 1.6,  tiles: { top: TILE.COBBLE, side: TILE.COBBLE, bottom: TILE.COBBLE } },
+  { name: '圆石',   solid: true,  transparent: false, hardness: 1.6,  tool: 'pickaxe', minTier: 1, tiles: { top: TILE.COBBLE, side: TILE.COBBLE, bottom: TILE.COBBLE } },
+  { name: '煤矿石', solid: true,  transparent: false, hardness: 3.0,  tool: 'pickaxe', minTier: 1, drop: ITEM.COAL, tiles: { top: TILE.COAL_ORE, side: TILE.COAL_ORE, bottom: TILE.COAL_ORE } },
+  { name: '铁矿石', solid: true,  transparent: false, hardness: 3.0,  tool: 'pickaxe', minTier: 2, minDropTier: 2, tiles: { top: TILE.IRON_ORE, side: TILE.IRON_ORE, bottom: TILE.IRON_ORE } },
+  { name: '工作台', solid: true,  transparent: false, hardness: 1.2,  tiles: { top: TILE.TABLE_TOP, side: TILE.TABLE_SIDE, bottom: TILE.PLANK } },
 ];
 
-// Hotbar 默认九宫（方块 id 序列）
-export const HOTBAR = [BLOCK.GRASS, BLOCK.DIRT, BLOCK.STONE, BLOCK.WOOD_LOG, BLOCK.LEAVES, BLOCK.PLANK, BLOCK.COBBLE, BLOCK.SAND, BLOCK.GRASS];
+// 说明：hotbar 自 MC-2b 起由 inventory（生存行囊）驱动，不再提供创造模式固定九宫。
 
 export function isSolid(id) { return id !== BLOCK.AIR && BLOCK_DEFS[id].solid; }
 export function isOpaque(id) { return id !== BLOCK.AIR && !BLOCK_DEFS[id].transparent; }

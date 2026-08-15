@@ -93,7 +93,7 @@ export function generateChunk(cx, cz, seed) {
     }
   }
 
-  /* ---------- 树（只在本 chunk 内，避免跨界写） ---------- */
+  /* ---------- chunk 内确定性随机源（矿石 + 树共用） ---------- */
   let s = (seed ^ (cx * 374761393) ^ (cz * 668265263)) | 0;
   const rnd = () => {
     s |= 0; s = (s + 0x6D2B79F5) | 0;
@@ -101,6 +101,31 @@ export function generateChunk(cx, cz, seed) {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+
+  /* ---------- 矿石（MC-2b）：煤浅层 / 铁深层，随机游走小簇，只替换石头 ---------- */
+  // 参数：[方块 id, 矿脉数, 每簇步数, yMin, yMax]（y 越界或非石头则跳过该步，保证“深层”语义）
+  const ORE_RULES = [
+    [BLOCK.COAL_ORE, 4, 8, 5, 30],   // 煤：浅层，量较多
+    [BLOCK.IRON_ORE, 2, 6, 2, 13],   // 铁：深层稀少（需往下挖，配石镐门槛）
+  ];
+  for (const [oreId, veins, steps, yMin, yMax] of ORE_RULES) {
+    for (let v = 0; v < veins; v++) {
+      let x = Math.floor(rnd() * CHUNK_X);
+      let z = Math.floor(rnd() * CHUNK_Z);
+      let y = yMin + Math.floor(rnd() * (yMax - yMin + 1));
+      for (let s = 0; s < steps; s++) {
+        if (x >= 0 && x < CHUNK_X && z >= 0 && z < CHUNK_Z && y >= 0 && y < CHUNK_Y) {
+          const i = idx(x, y, z);
+          if (data[i] === BLOCK.STONE) data[i] = oreId;  // 只替换石头（不破坏表层/基底结构）
+        }
+        x += Math.floor(rnd() * 3) - 1;
+        y += Math.floor(rnd() * 3) - 1;
+        z += Math.floor(rnd() * 3) - 1;
+      }
+    }
+  }
+
+  /* ---------- 树（只在本 chunk 内，避免跨界写） ---------- */
   const treeCount = rnd() < 0.35 ? 0 : 1 + Math.floor(rnd() * 3); // 0~3 棵
 
   for (let t = 0; t < treeCount; t++) {

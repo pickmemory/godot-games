@@ -1,14 +1,18 @@
 // main.js — 装配：渲染器/场景/昼夜/输入/粒子/WebAudio 手感包/主循环
 import * as THREE from 'three';
-import { HOTBAR, BLOCK_DEFS } from './blocks.js';
+import { BLOCK, BLOCK_DEFS } from './blocks.js';
 import { buildAtlas } from './textures.js';
 import { World } from './world.js';
 import { surfaceHeight } from './terrain.js';
 import { Player } from './player.js';
 import { Interaction } from './interaction.js';
-import { UI } from './ui.js';
+import { UI, itemName, drawIcon } from './ui.js';
 import { Health } from './health.js';
 import { MobManager, FALLBACK_MOB_CONFIG } from './mob.js';
+import { Inventory } from './inventory.js';
+import { Crafting } from './crafting.js';
+import { HeldItem } from './helditem.js';
+import { FALLBACK_MINING, dropOf, toolDefOf } from './mining.js';
 
 /* ---------- 启动 ---------- */
 const canvas = document.getElementById('game');
@@ -30,7 +34,7 @@ scene.fog = new THREE.Fog(0x87ceeb, 40, 130);
 const ambient = new THREE.AmbientLight(0xffffff, 0.55);
 const sun = new THREE.DirectionalLight(0xffffff, 0.9);
 sun.position.set(60, 100, 35);
-scene.add(ambient, sun);
+scene.add(ambient, sun, camera);   // camera 入场景：手持模型挂在 camera 上（helditem.js）
 
 const SEED = Number(new URLSearchParams(location.search).get('seed')) || 1337;
 const DAY_LEN = 180; // 秒/昼夜
@@ -44,9 +48,24 @@ const player = new Player(camera, world);
 player.spawn(SPAWN_X, surfaceHeight(SPAWN_X, SPAWN_Z, SEED), SPAWN_Z);
 
 const ui = new UI();
-let hotbarIndex = 0;
-ui.buildHotbar(HOTBAR);
-ui.select(hotbarIndex);
+
+/* ---------- MC-2b 工具天梯：生存行囊 + 挖掘公式 + 合成 + 手持模型 ---------- */
+const inventory = new Inventory(9);              // 9 槽 = hotbar（最小集；背包扩容留 MC-4）
+ui.buildHotbar();
+ui.renderInventory(inventory);
+inventory.onChange(() => ui.renderInventory(inventory));
+
+let miningCfg = FALLBACK_MINING;                  // 公式参数：data/mining.json 缺失时同构兑底
+try {
+  const res = await fetch('data/mining.json');
+  if (res.ok) miningCfg = await res.json();
+} catch (e) { /* 离线/缺文件 → 兑底 */ }
+
+let recipeData = null;                            // 配方：data/recipes.json 缺失时兑底
+try {
+  const res = await fetch('data/recipes.json');
+  if (res.ok) recipeData = await res.json();
+} catch (e) { /* 同上 */ }
 
 /* ---------- MC-2 生存：血量 + 夜间敌对生物（数值数据驱动 web/data/mobs.json） ---------- */
 let mobConfig = FALLBACK_MOB_CONFIG;
@@ -230,9 +249,52 @@ const interaction = new Interaction(camera, world, scene, player, {
   onDigComplete(blockId, pos) {
     sfxBreak();
     spawnBurst(pos, BLOCK_DEFS[blockId].tiles.side);
+    // 掉落 → 行囊（mining.js：drop 字段 + 掉落等级门槛）
+    const drop = dropOf(BLOCK_DEFS[blockId], toolDefOf(inventory.heldId()), blockId);
+    if (drop) {
+      const left = inventory.add(drop, 1);
+      ui.showPickup(left > 0 ? '行囊已满，挖下的东西散失了…' : `+1 ${itemName(drop)}`);
+    } else if (BLOCK_DEFS[blockId].minDropTier) {
+      ui.showPickup('镐的等级不够，什么也没挖下来…');
+    }
   },
-  onPlace() { sfxPlace(); },
+  onPlace() {
+    sfxPlace();
+    inventory.takeFromSelected(1);   // 生存模式：放置即消耗
+  },
 });
+interaction.miningCfg = miningCfg;
+
+const crafting = new Crafting(inventory, { nameOf: itemName, iconRenderer: drawIcon }, {
+  onCrafted(r) { sfxPlace(); ui.showPickup(`合成 ${itemName(r.out.id)} ×${r.out.n}`); },
+});
+if (recipeData?.recipes) crafting.setRecipes(recipeData.recipes);
+
+const heldItem = new HeldItem(camera);
+
+/** 站在已放置的工作台旁（半径 4 格，高差 3）才解锁锻镐配方 */
+function nearCraftingTable() {
+  const px = Math.floor(player.pos.x), py = Math.floor(player.pos.y), pz = Math.floor(player.pos.z);
+  for (let dy = -3; dy <= 3; dy++)
+    for (let dz = -4; dz <= 4; dz++)
+      for (let dx = -4; dx <= 4; dx++)
+        if (world.getBlock(px + dx, py + dy, pz + dz) === BLOCK.CRAFT_TABLE) return true;
+  return false;
+}
+
+function lockPointer() {
+  canvas.requestPointerLock()?.catch?.(() => { /* 指针锁定被拒 → 点击画布可重试 */ });
+}
+function toggleCraft() {
+  if (crafting.isOpen) {
+    crafting.close();
+    lockPointer();
+  } else {
+    crafting.nearStation = nearCraftingTable();
+    crafting.open();
+    document.exitPointerLock();
+  }
+}
 
 /* ---------- 输入 ---------- */
 const input = { forward: false, back: false, left: false, right: false, jump: false, down: false };
@@ -250,10 +312,16 @@ addEventListener('keydown', (e) => {
       player.flying = !player.flying;
       player.vel.y = 0;
       break;
+    case 'KeyE':
+      if (!dead && (locked || crafting.isOpen)) toggleCraft();
+      break;
+    case 'Escape':
+      if (crafting.isOpen) { crafting.close(); lockPointer(); }
+      break;
     default:
       if (e.code.startsWith('Digit')) {
         const n = Number(e.code.slice(5));
-        if (n >= 1 && n <= 9) { hotbarIndex = n - 1; ui.select(hotbarIndex); ui.showBlockName(HOTBAR[hotbarIndex]); }
+        if (n >= 1 && n <= 9) { inventory.select(n - 1); ui.select(inventory.selected); ui.showItemName(inventory.heldId()); }
       }
   }
 });
@@ -268,9 +336,9 @@ addEventListener('keyup', (e) => {
   }
 });
 addEventListener('wheel', (e) => {
-  hotbarIndex = (hotbarIndex + (e.deltaY > 0 ? 1 : -1) + 9) % 9;
-  ui.select(hotbarIndex);
-  ui.showBlockName(HOTBAR[hotbarIndex]);
+  inventory.select((inventory.selected + (e.deltaY > 0 ? 1 : -1) + 9) % 9);
+  ui.select(inventory.selected);
+  ui.showItemName(inventory.heldId());
 });
 addEventListener('mousedown', (e) => {
   if (!locked) return;
@@ -290,7 +358,11 @@ addEventListener('mousemove', (e) => {
 const overlay = document.getElementById('overlay');
 overlay.addEventListener('click', () => {
   ensureAudio();
-  canvas.requestPointerLock()?.catch?.(() => { /* 指针锁定被拒（如刚 ESC）→ 静默，玩家可再点 */ });
+  lockPointer();
+});
+canvas.addEventListener('click', () => {
+  // 面板/遮罩都没显示但指针未锁（如 ESC 后重进）→ 点画布重锁
+  if (!locked && !dead && !crafting.isOpen) { ensureAudio(); lockPointer(); }
 });
 document.addEventListener('pointerlockchange', () => {
   locked = document.pointerLockElement === canvas;
@@ -298,7 +370,7 @@ document.addEventListener('pointerlockchange', () => {
   else {
     digHeld = placeHeld = false;
     Object.keys(input).forEach((k) => (input[k] = false));
-    if (!dead) ui.showOverlay(); // 死亡时由死亡界面接管，不弹暂停遮罩
+    if (!dead && !crafting.isOpen) ui.showOverlay(); // 死亡/合成面板打开时由各自界面接管
   }
 });
 
@@ -318,6 +390,7 @@ document.getElementById('death').addEventListener('click', () => {
   mobManager.clearAll(); // 重生清场：行尸消散，还玩家一个喘息
   dead = false;
   ui.hideDeath();
+  ui.renderInventory(inventory); // 死亡不掉行囊（最小集决定；掉落留 MC-4）
   ensureAudio();
   updateNightAudio(isNight);
   canvas.requestPointerLock()?.catch?.(() => { /* 同上：静默降级 */ });
@@ -381,7 +454,7 @@ function loop(now) {
 
   if (locked && !dead) {
     player.update(dt, input);
-    interaction.update(dt, digHeld, placeHeld, HOTBAR[hotbarIndex]);
+    interaction.update(dt, digHeld, placeHeld, inventory.heldId());
     health.update(dt);
     mobManager.update(dt, player.pos, isNight);
     // 夜里有行尸在场 → 随机远处呻吟（恐惧氛围）
@@ -393,6 +466,13 @@ function loop(now) {
   world.update(player.pos);
   updateBursts(dt);
   updateDayNight(dt);
+
+  // 第一人称手持模型（MC-2b）：随选中物品切换，挖掘挥动
+  heldItem.setItem(inventory.heldId());
+  heldItem.update(dt, {
+    moving: input.forward || input.back || input.left || input.right,
+    digging: digHeld && locked && !dead,
+  });
 
   frames++; fpsClock += dt;
   if (fpsClock >= 0.5) {
