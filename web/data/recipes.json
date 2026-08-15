@@ -8,6 +8,10 @@
     { "id": "pick_stone",  "out": { "id": 101, "n": 1 }, "in": [{ "id": 8,   "n": 3 }, { "id": 104, "n": 2 }], "station": true },
     { "id": "pick_iron",   "out": { "id": 102, "n": 1 }, "in": [{ "id": 10,  "n": 3 }, { "id": 104, "n": 2 }], "station": true },
     { "id": "hoe_wood",    "out": { "id": 105, "n": 1 }, "in": [{ "id": 7,   "n": 2 }, { "id": 104, "n": 2 }], "station": true },
-    { "id": "hoe_stone",   "out": { "id": 106, "n": 1 }, "in": [{ "id": 8,   "n": 2 }, { "id": 104, "n": 2 }], "station": true }
+    { "id": "hoe_stone",   "out": { "id": 106, "n": 1 }, "in": [{ "id": 8,   "n": 2 }, { "id": 104, "n": 2 }], "station": true },
+    { "id": "door",        "out": { "id": 20,  "n": 3 }, "in": [{ "id": 7,   "n": 6 }], "station": true },
+    { "id": "window",      "out": { "id": 28,  "n": 2 }, "in": [{ "id": 7,   "n": 2 }, { "id": 104, "n": 1 }], "station": true },
+    { "id": "fence",       "out": { "id": 29,  "n": 3 }, "in": [{ "id": 7,   "n": 4 }, { "id": 104, "n": 2 }], "station": true },
+    { "id": "stairs",      "out": { "id": 30,  "n": 4 }, "in": [{ "id": 7,   "n": 6 }], "station": true }
   ]
 }

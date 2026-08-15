@@ -1,6 +1,6 @@
 // interaction.js — DDA 体素射线选块 + 线框高亮 + 按住挖掘进度 + 放置
 import * as THREE from 'three';
-import { isSolid, isInteractable, BLOCK_DEFS } from './blocks.js';
+import { isSolid, isInteractable, BLOCK_DEFS, CHUNK_Y, orientedPlaceId, doorTopId } from './blocks.js';
 import { digTime, toolDefOf, FALLBACK_MINING } from './mining.js';
 import { buildCrackTextures } from './textures.js';
 
@@ -137,18 +137,36 @@ export class Interaction {
       }
     }
 
-    // 放置（仅手持方块物品；面邻接 + 冷却 + 不与玩家重叠 + 不覆盖实块/作物）
+    // 放置（仅手持方块物品；面邻接 + 冷却 + 不与玩家重叠 + 不覆盖实块/作物/开态门）
     const placeId = heldItemId > 0 && heldItemId < 100 ? heldItemId : 0;
     if (placeHeld && placeId > 0 && this._placeCd === 0) {
       const tx = hit.pos[0] + hit.normal[0];
       const ty = hit.pos[1] + hit.normal[1];
       const tz = hit.pos[2] + hit.normal[2];
-      if (ty >= 0 && ty < 64 && !isInteractable(this.world.getBlock(tx, ty, tz))) {
+      if (ty >= 0 && ty < CHUNK_Y && !isInteractable(this.world.getBlock(tx, ty, tz))) {
         const a = this.player.aabb;
-        const overlap = tx + 1 > a.x0 && tx < a.x1
-          && ty + 1 > a.y0 && ty < a.y1
-          && tz + 1 > a.z0 && tz < a.z1;
-        if (!overlap && this.world.setBlock(tx, ty, tz, placeId)) {
+        const overlapCell = (cx, cy, cz) => cx + 1 > a.x0 && cx < a.x1
+          && cy + 1 > a.y0 && cy < a.y1
+          && cz + 1 > a.z0 && cz < a.z1;
+        // MC-4b：门/楼梯按玩家视线定朝向（blocks.js orientedPlaceId，注册表数据驱动）
+        const dv = new THREE.Vector3();
+        this.camera.getWorldDirection(dv);
+        const finalId = orientedPlaceId(placeId, dv.x, dv.z);
+        const def = BLOCK_DEFS[finalId];
+
+        if (def?.placeDoor) {
+          // 双格门：下格 + 上格需全空且不与玩家重叠；上格失败则回退下格（跨 chunk 未载兑底）
+          if (ty + 1 >= CHUNK_Y || isInteractable(this.world.getBlock(tx, ty + 1, tz))) return;
+          if (overlapCell(tx, ty, tz) || overlapCell(tx, ty + 1, tz)) return;
+          if (this.world.setBlock(tx, ty, tz, finalId)) {
+            if (!this.world.setBlock(tx, ty + 1, tz, doorTopId(finalId))) {
+              this.world.setBlock(tx, ty, tz, 0);   // 上格未装载 → 整门不落
+              return;
+            }
+            this.cb.onPlace([tx, ty, tz]);
+            this._placeCd = PLACE_CD;
+          }
+        } else if (!overlapCell(tx, ty, tz) && this.world.setBlock(tx, ty, tz, finalId)) {
           this.cb.onPlace([tx, ty, tz]);
           this._placeCd = PLACE_CD;
         }

@@ -245,6 +245,46 @@ const PAINTERS = {
     ctx.fillRect(ox + 7, oy + 12, 2, 4);
     ctx.fillRect(ox + 5, oy + 11, 2, 1); ctx.fillRect(ox + 9, oy + 11, 2, 1);
   },
+  /* ---------- MC-4b 建造瓦片 ---------- */
+  [TILE.DOOR_LOWER]: (ctx, ox, oy, rnd) => {  // 门下半：深框 + 竖板 + 两条横带
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const border = (x < 1 || x > 14 || y < 1 || y > 14);
+      const batten = (y === 4 || y === 5 || y === 10 || y === 11);
+      const seam = (x % 4 === 3) ? -0.14 : (rnd() - 0.5) * 0.1;
+      ctx.fillStyle = shade('#9c7440', border ? -0.3 : batten ? -0.18 : seam);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+  },
+  [TILE.DOOR_UPPER]: (ctx, ox, oy, rnd) => {  // 门上半：同框，中上部棂格小窗（镂空透光）
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const border = (x < 1 || x > 14 || y < 1 || y > 14);
+      const seam = (x % 4 === 3) ? -0.14 : (rnd() - 0.5) * 0.1;
+      ctx.fillStyle = shade('#9c7440', border ? -0.3 : seam);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+    ctx.clearRect(ox + 3, oy + 3, 10, 6);              // 窗洞（透明，alphaTest 鐾空）
+    ctx.fillStyle = '#7d5a30';
+    ctx.fillRect(ox + 7, oy + 3, 2, 6);                 // 竖棂
+    ctx.fillRect(ox + 3, oy + 5, 10, 2);                // 横棂
+  },
+  [TILE.WINDOW]: (ctx, ox, oy, rnd) => {      // 窗：木框 + 井字棂，棂间鐾空透光
+    ctx.clearRect(ox, oy, 16, 16);
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const frame = (x < 2 || x > 13 || y < 2 || y > 13);
+      const mullion = (x >= 7 && x <= 8) || (y >= 7 && y <= 8);
+      if (!frame && !mullion) continue;                 // 棂间透明
+      ctx.fillStyle = shade('#8a6a3c', frame ? (rnd() - 0.5) * 0.12 : -0.1 + (rnd() - 0.5) * 0.1);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+  },
+  [TILE.FENCE]: (ctx, ox, oy, rnd) => {       // 栅栏：竖纹木板 + 深边
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+      const edge = (x < 1 || x > 14);
+      const grain = ((x * 5 + 3) % 7 === 0) ? -0.12 : (rnd() - 0.5) * 0.1;
+      ctx.fillStyle = shade('#b08a52', edge ? -0.25 : grain);
+      ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+  },
 };
 
 let cached = null;

@@ -16,6 +16,7 @@ import { FALLBACK_MINING, dropOf, toolDefOf } from './mining.js';
 import { SFX } from './sfx.js';
 import { DropManager } from './drops.js';
 import { Farming } from './farming.js';
+import { Building } from './building.js';
 import { loadChapter, normalizeChapter, ChapterTimeline, FALLBACK_CHAPTER } from './chapter.js';
 import { NPCManager, FALLBACK_NPC_DATA } from './npc.js';
 import { DialogUI, FALLBACK_DIALOGS } from './dialog.js';
@@ -114,6 +115,13 @@ let farmingData = null;
 try {
   const res = await fetch('data/farming.json');
   if (res.ok) farmingData = await res.json();
+} catch (e) { /* 同上 */ }
+
+/* ---------- MC-4b 建造数据（房屋判定阈值/入住流民模板；缺文件 → building.js 兑底） ---------- */
+let buildingData = null;
+try {
+  const res = await fetch('data/building.json');
+  if (res.ok) buildingData = await res.json();
 } catch (e) { /* 同上 */ }
 
 const PLAYER_MAX_HP = 20;
@@ -235,6 +243,39 @@ const dialogUI = new DialogUI({
 const npcManager = new NPCManager(scene, world, npcData);
 npcManager.setChronicle(chapterResult.chapter.startSerial);   // 开卷即判（此后日翻页重判）
 
+/* ---------- MC-4b 建造扩展：门开合 + 房屋判定（判定成功 → 流民入住 + 定居反馈） ---------- */
+const building = new Building(world, {
+  notify: (t) => ui.showPickup(t),
+  sound: () => sfx.place(),
+  // 门口占格检查：玩家 AABB 或任一在场 NPC 站在本格 → 拒绝关门（防夹进实心格）
+  cellBlocked: (x, y, z) => {
+    const a = player.aabb;
+    if (x + 1 > a.x0 && x < a.x1 && y + 1 > a.y0 && y < a.y1 && z + 1 > a.z0 && z < a.z1) return true;
+    for (const n of npcManager.npcs) {
+      if (!n.active) continue;
+      if (Math.abs(n.pos.x - (x + 0.5)) < 0.85 && Math.abs(n.pos.z - (z + 0.5)) < 0.85
+        && n.pos.y + 1.9 > y && n.pos.y < y + 2) return true;
+    }
+    return false;
+  },
+  onHouse(house) {
+    ui.showPickup(building.cfg.messages.settled);
+    // 入住：动态 NPC（不占 npcs.json 编年位），锚点 = 内腔落脚地板格，户内小半径漫游
+    const v = building.cfg.villager;
+    npcManager.spawnDynamic({
+      id: `settler-${house.door.join('-')}`,
+      name: v.name,
+      title: v.title,
+      model: v.model,
+      // anchor = 内腔落脚空气格；NPC spawn.y 语义 = 脚下实地格（故 -1）
+      spawn: { x: house.anchor[0], y: house.anchor[1] - 1, z: house.anchor[2] },
+      wander: { radius: house.radius, speed: v.wanderSpeed },
+    });
+    setTimeout(() => ui.showPickup(building.cfg.messages.villager), 1600);
+  },
+});
+if (buildingData) building.setData(buildingData);
+
 function openDialog(npc) {
   document.exitPointerLock();
   ui.setTalkHint('');
@@ -332,10 +373,10 @@ const interaction = new Interaction(camera, world, scene, player, {
     quests.notify('blocksMined', 1);   // MC-3b：玩家行为 → 任务事件（与 chapter ctx.stats 同名）
     sfx.blockBreak();
     spawnBurst(pos, BLOCK_DEFS[blockId].tiles.side);
-    // MC-4a：作物掉落由农耕系统特判（成熟=产出+种子；未熟颗粒无收），其余走 mining.js dropOf
-    const cropDrops = farming.breakDrops(blockId);
-    if (cropDrops) {
-      for (const d of cropDrops) dropManager.spawn(d.id, pos, d.n);
+    // MC-4a/MC-4b 掉落特判：门（整扇一件）/ 作物（成熟才有产出）优先，其余走 mining.js dropOf
+    const drops = building.breakDrops(blockId) ?? farming.breakDrops(blockId);
+    if (drops) {
+      for (const d of drops) dropManager.spawn(d.id, pos, d.n);
     } else {
       // 掉落 → 掉落物实体（mining.js：drop 字段 + 掉落等级门槛；拾取在 drops.js/update）
       const drop = dropOf(BLOCK_DEFS[blockId], toolDefOf(inventory.heldId()), blockId);
@@ -346,15 +387,17 @@ const interaction = new Interaction(camera, world, scene, player, {
       }
     }
     farming.afterDig(pos, blockId);   // 耕地被挖 → 连带顶上作物弹出；作物被挖 → 清生长记录
+    building.afterDig(pos, blockId);  // MC-4b：门被拆一半 → 另一半连带消失
   },
-  onPlace() {
+  onPlace(pos) {
     sfx.place();
     blocksPlaced++;
     quests.notify('blocksPlaced', 1);  // MC-3b：同上
     inventory.takeFromSelected(1);   // 生存模式：放置即消耗
+    building.onPlaced(pos);          // MC-4b：新落一扇门 → 尝试房屋判定
   },
-  // 右键物品用法（锄地/播种/收获/进食）：interaction 在放置前优先问询，返回 true 则消费本次右键
-  onUse: (hit, heldId) => farming.useOn(hit, heldId),
+  // 右键物品用法：门开合（MC-4b）优先，再锄地/播种/收获/进食（MC-4a）；返回 true 则消费本次右键
+  onUse: (hit, heldId) => building.useOn(hit) || farming.useOn(hit, heldId),
 });
 interaction.miningCfg = miningCfg;
 

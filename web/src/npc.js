@@ -13,7 +13,7 @@
 // NPC 数据 schema 见 web/data/npc/README.md；示例见 web/data/npc/npcs.json。
 
 import * as THREE from 'three';
-import { isSolid, CHUNK_Y } from './blocks.js';
+import { collisionBoxes, CHUNK_Y } from './blocks.js';
 import { surfaceHeight } from './terrain.js';
 import { dateToSerial } from './chapter.js';
 
@@ -238,7 +238,7 @@ class NPC {
   /** 运行期换对话树（章节事件效果 setDialog → main.js 调；旗标后台词切换用，免 disappear/reappear 闪场） */
   setDialog(dialogId) { this.dialogId = dialogId ? String(dialogId) : null; }
 
-  /** AABB 是否与实心体素重叠（宽高按个体配置） */
+  /** AABB 是否与方块碰撞盒重叠（MC-4b：细几何按注册表 collision 盒精确判定，宽高按个体配置） */
   _collides(px, py, pz) {
     const HALF = this.width / 2;
     const y0 = Math.floor(py), y1 = Math.floor(py + this.height - 0.01);
@@ -247,16 +247,22 @@ class NPC {
     for (let y = y0; y <= y1; y++)
       for (let z = z0; z <= z1; z++)
         for (let x = x0; x <= x1; x++)
-          if (isSolid(this.world.getBlock(x, y, z))) return true;
+          for (const b of collisionBoxes(this.world.getBlock(x, y, z))) {
+            if (px - HALF < x + b[3] && px + HALF > x + b[0]
+              && py < y + b[4] && py + this.height > y + b[1]
+              && pz - HALF < z + b[5] && pz + HALF > z + b[2]) return true;
+          }
     return false;
   }
 
-  /** 在场登场：落到锚点地表（chunk 未装载时由 Manager 延迟重试） */
+  /** 在场登场：落到锚点地表（chunk 未装载时由 Manager 延迟重试）；spawn.y 可指定落脚层（MC-4b 入住户内用） */
   trySpawn() {
     const bx = Math.floor(this.anchorX), bz = Math.floor(this.anchorZ);
     if (!this.world.isChunkLoaded(Math.floor(bx / 16), Math.floor(bz / 16))) return false;
-    const y = surfaceHeight(bx, bz, this.world.seed);
-    if (y <= 2 || y >= CHUNK_Y - 4) return false;
+    const y = this.def.spawn?.y != null
+      ? Math.max(0, Math.min(CHUNK_Y - 3, Math.floor(this.def.spawn.y)))
+      : surfaceHeight(bx, bz, this.world.seed);
+    if (this.def.spawn?.y == null && (y <= 2 || y >= CHUNK_Y - 4)) return false;   // 地表生成才设虚空保护；显式 y（MC-4b 入住户内）由判定过的内腔担保
     this.pos.set(this.anchorX, y + 1.01, this.anchorZ);
     this.vel.set(0, 0, 0);
     this.group.position.copy(this.pos);
@@ -457,6 +463,21 @@ export class NPCManager {
       if (d < bestD) { bestD = d; best = n; }
     }
     return best;
+  }
+
+  /**
+   * 运行期动态入场（MC-4b 定居：房屋判定成功后 main 调，往屋里按一名流民）。
+   * 同 id 已存在则直接返回旧实例（重复判定兑底）。
+   * @param {object} def 与 npcs.json 单条同构
+   */
+  spawnDynamic(def) {
+    const exist = this.get(String(def?.id ?? ''));
+    if (exist) return exist;
+    const npc = new NPC(this.scene, this.world, def);
+    this.npcs.push(npc);
+    this.wantsActive.set(npc.id, true);
+    npc.trySpawn();
+    return npc;
   }
 
   /** 按 id 取（调试/任务系统用） */

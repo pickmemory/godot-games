@@ -20,6 +20,8 @@ export const TILE = {
   FARMLAND: 14, FARMLAND_WET: 15,
   MILLET_0: 16, MILLET_1: 17, MILLET_2: 18,
   GREENS_0: 19, GREENS_1: 20, GREENS_2: 21,
+  // MC-4b 建造扩展：门（下/上格面板）+ 窗棂 + 栅栏（楼梯复用 PLANK）
+  DOOR_LOWER: 22, DOOR_UPPER: 23, WINDOW: 24, FENCE: 25,
 };
 
 export const BLOCK = {
@@ -30,6 +32,12 @@ export const BLOCK = {
   FARMLAND: 12, FARMLAND_WET: 13,
   MILLET_0: 14, MILLET_1: 15, MILLET_2: 16,       // 粟：发芽 → 抽穗 → 成熟
   GREENS_0: 17, GREENS_1: 18, GREENS_2: 19,       // 葵菜：发芽 → 展叶 → 成熟
+  // MC-4b 建造扩展：门 8 态（下/上 × X/Z 朝向 × 开/合）+ 窗 + 栅栏 + 楼梯 4 朝向
+  // 门 axis = 合上门板横跨的轴（X 轴门板挡 Z 向通行）；开态门板转向铰链侧（x/z=0 一侧）
+  DOOR_X: 20, DOOR_X_OPEN: 21, DOOR_Z: 22, DOOR_Z_OPEN: 23,
+  DOOR_X_TOP: 24, DOOR_X_TOP_OPEN: 25, DOOR_Z_TOP: 26, DOOR_Z_TOP_OPEN: 27,
+  WINDOW: 28, FENCE: 29,
+  STAIRS_PZ: 30, STAIRS_NZ: 31, STAIRS_PX: 32, STAIRS_NX: 33,   // 升梯方向：+Z/-Z/+X/-X
 };
 
 // 索引 = 方块 id。hardness: 基础挖掘秒数（徒手）。
@@ -56,11 +64,105 @@ export const BLOCK_DEFS = [
   { name: '葵菜·发芽', solid: false, transparent: true, cross: true, hardness: 0.05, drop: 0, tiles: { top: TILE.GREENS_0, side: TILE.GREENS_0, bottom: TILE.GREENS_0 } },
   { name: '葵菜·展叶', solid: false, transparent: true, cross: true, hardness: 0.05, drop: 0, tiles: { top: TILE.GREENS_1, side: TILE.GREENS_1, bottom: TILE.GREENS_1 } },
   { name: '葵菜·成熟', solid: false, transparent: true, cross: true, hardness: 0.05, drop: 0, tiles: { top: TILE.GREENS_2, side: TILE.GREENS_2, bottom: TILE.GREENS_2 } },
+  // MC-4b 门（双格方块）：下半/上半 × 合/开。合态全格碰撞（挡通行），开态无碰撞但 selectable（射线可选中才能关门）
+  // 掉落走 building.breakDrops（拆任一半 = 整扇门一件），故 drop: 0 防 mining.js 通配双掉
+  { name: '木门', solid: true,  transparent: true, hardness: 1.0, drop: 0, placeDoor: true,
+    shape: 'door', door: { axis: 'x', open: false, top: false }, tiles: { top: TILE.DOOR_LOWER, side: TILE.DOOR_LOWER, bottom: TILE.DOOR_LOWER } },
+  { name: '木门', solid: false, transparent: true, hardness: 1.0, drop: 0, selectable: true,
+    shape: 'door', door: { axis: 'x', open: true,  top: false }, tiles: { top: TILE.DOOR_LOWER, side: TILE.DOOR_LOWER, bottom: TILE.DOOR_LOWER } },
+  { name: '木门', solid: true,  transparent: true, hardness: 1.0, drop: 0, placeDoor: true,
+    shape: 'door', door: { axis: 'z', open: false, top: false }, tiles: { top: TILE.DOOR_LOWER, side: TILE.DOOR_LOWER, bottom: TILE.DOOR_LOWER } },
+  { name: '木门', solid: false, transparent: true, hardness: 1.0, drop: 0, selectable: true,
+    shape: 'door', door: { axis: 'z', open: true,  top: false }, tiles: { top: TILE.DOOR_LOWER, side: TILE.DOOR_LOWER, bottom: TILE.DOOR_LOWER } },
+  { name: '木门·上', solid: true,  transparent: true, hardness: 1.0, drop: 0,
+    shape: 'door', door: { axis: 'x', open: false, top: true }, tiles: { top: TILE.DOOR_UPPER, side: TILE.DOOR_UPPER, bottom: TILE.DOOR_UPPER } },
+  { name: '木门·上', solid: false, transparent: true, hardness: 1.0, drop: 0, selectable: true,
+    shape: 'door', door: { axis: 'x', open: true,  top: true }, tiles: { top: TILE.DOOR_UPPER, side: TILE.DOOR_UPPER, bottom: TILE.DOOR_UPPER } },
+  { name: '木门·上', solid: true,  transparent: true, hardness: 1.0, drop: 0,
+    shape: 'door', door: { axis: 'z', open: false, top: true }, tiles: { top: TILE.DOOR_UPPER, side: TILE.DOOR_UPPER, bottom: TILE.DOOR_UPPER } },
+  { name: '木门·上', solid: false, transparent: true, hardness: 1.0, drop: 0, selectable: true,
+    shape: 'door', door: { axis: 'z', open: true,  top: true }, tiles: { top: TILE.DOOR_UPPER, side: TILE.DOOR_UPPER, bottom: TILE.DOOR_UPPER } },
+  // 窗：木框棂格，棂间镂空（alphaTest 透光透视）；全格碰撞（MC 玻璃同款简化）
+  { name: '木窗', solid: true, transparent: true, hardness: 0.5, tiles: { top: TILE.WINDOW, side: TILE.WINDOW, bottom: TILE.WINDOW } },
+  // 栅栏：中柱细碰撞盒（1 格高简化，MC 的 1.5 格防跳留给后续）；mesher 自动连横栏
+  { name: '栅栏', solid: true, transparent: true, hardness: 1.0, shape: 'fence',
+    collision: [[0.375, 0, 0.375, 0.625, 1, 0.625]], tiles: { top: TILE.FENCE, side: TILE.FENCE, bottom: TILE.FENCE } },
+  // 楼梯：下半满板 + 上半靠升梯方向半板；collision 双盒（player/npc 精确，mob/drop 按整格）
+  { name: '木梯阶', solid: true, transparent: true, hardness: 1.0, placeStairs: true, shape: 'stairs', stairs: { dir: [0, 1] },
+    collision: [[0, 0, 0, 1, 0.5, 1], [0, 0.5, 0.5, 1, 1, 1]], tiles: { top: TILE.PLANK, side: TILE.PLANK, bottom: TILE.PLANK } },
+  { name: '木梯阶', solid: true, transparent: true, hardness: 1.0, drop: BLOCK.STAIRS_PZ, shape: 'stairs', stairs: { dir: [0, -1] },
+    collision: [[0, 0, 0, 1, 0.5, 1], [0, 0.5, 0, 1, 1, 0.5]], tiles: { top: TILE.PLANK, side: TILE.PLANK, bottom: TILE.PLANK } },
+  { name: '木梯阶', solid: true, transparent: true, hardness: 1.0, drop: BLOCK.STAIRS_PZ, shape: 'stairs', stairs: { dir: [1, 0] },
+    collision: [[0, 0, 0, 1, 0.5, 1], [0.5, 0.5, 0, 1, 1, 1]], tiles: { top: TILE.PLANK, side: TILE.PLANK, bottom: TILE.PLANK } },
+  { name: '木梯阶', solid: true, transparent: true, hardness: 1.0, drop: BLOCK.STAIRS_PZ, shape: 'stairs', stairs: { dir: [-1, 0] },
+    collision: [[0, 0, 0, 1, 0.5, 1], [0, 0.5, 0, 0.5, 1, 1]], tiles: { top: TILE.PLANK, side: TILE.PLANK, bottom: TILE.PLANK } },
 ];
 
 // 说明：hotbar 自 MC-2b 起由 inventory（生存行囊）驱动，不再提供创造模式固定九宫。
 
 export function isSolid(id) { return id !== BLOCK.AIR && BLOCK_DEFS[id].solid; }
 export function isOpaque(id) { return id !== BLOCK.AIR && !BLOCK_DEFS[id].transparent; }
-/** 可被射线选中（实心方块 + 十字面片作物）：interaction.js 选块/放置防覆盖用 */
-export function isInteractable(id) { return id !== BLOCK.AIR && (BLOCK_DEFS[id].solid || !!BLOCK_DEFS[id].cross); }
+/** 可被射线选中（实心方块 + 十字面片作物 + 开态门等细几何）：interaction.js 选块/放置防覆盖用 */
+export function isInteractable(id) {
+  if (id === BLOCK.AIR) return false;
+  const def = BLOCK_DEFS[id];
+  return def.solid || !!def.cross || !!def.selectable;
+}
+
+/* ---------- MC-4b 建造方块语义辅助（注册表派生，勿散落硬编码） ---------- */
+
+/** 是否门方块（任一半/任一态） */
+export function isDoor(id) { return id !== BLOCK.AIR && !!BLOCK_DEFS[id]?.door; }
+
+let _doorToggleMap = null, _doorTopMap = null;
+function buildDoorMaps() {
+  _doorToggleMap = {}; _doorTopMap = {};
+  for (const [idStr, def] of BLOCK_DEFS.entries()) {
+    if (!def.door) continue;
+    const id = Number(idStr);
+    for (const [oidStr, odef] of BLOCK_DEFS.entries()) {
+      if (!odef.door) continue;
+      if (odef.door.axis === def.door.axis && odef.door.open === !def.door.open && odef.door.top === def.door.top)
+        _doorToggleMap[id] = Number(oidStr);
+      if (odef.door.axis === def.door.axis && odef.door.open === def.door.open && odef.door.top === !def.door.top)
+        _doorTopMap[id] = Number(oidStr);
+    }
+  }
+}
+
+/** 开↔合同伴 id（开关门用） */
+export function doorToggleId(id) {
+  if (!_doorToggleMap) buildDoorMaps();
+  return _doorToggleMap[id] ?? 0;
+}
+
+/** 上/下半同伴 id（放双格门用）；非门返回 0 */
+export function doorTopId(id) {
+  if (!_doorTopMap) buildDoorMaps();
+  return _doorTopMap[id] ?? 0;
+}
+
+/** 放置朝向化 id：门按玩家视线定轴向，楼梯按视线定升梯向；普通方块原样返回 */
+export function orientedPlaceId(baseId, dx, dz) {
+  const def = BLOCK_DEFS[baseId];
+  if (!def) return baseId;
+  if (def.placeDoor) {
+    // 面向墙放门：门板横跨轴 ⊥ 视线主轴（视线主 Z → 板跨 X，挡 Z 向通行）
+    return Math.abs(dx) > Math.abs(dz) ? BLOCK.DOOR_Z : BLOCK.DOOR_X;
+  }
+  if (def.placeStairs) {
+    if (Math.abs(dx) > Math.abs(dz)) return dx > 0 ? BLOCK.STAIRS_PX : BLOCK.STAIRS_NX;
+    return dz > 0 ? BLOCK.STAIRS_PZ : BLOCK.STAIRS_NZ;
+  }
+  return baseId;
+}
+
+/** 方块碰撞盒列表（单元格内坐标 [x0,y0,z0,x1,y1,z1]）：细几何（楼梯/栅栏）精确碰撞用 */
+const FULL_BOX = [[0, 0, 0, 1, 1, 1]];
+const NO_BOX = [];
+export function collisionBoxes(id) {
+  if (id === BLOCK.AIR) return NO_BOX;
+  const def = BLOCK_DEFS[id];
+  if (Array.isArray(def.collision)) return def.collision;
+  return def.solid ? FULL_BOX : NO_BOX;
+}

@@ -1,0 +1,20 @@
+{
+  "_comment": "MC-4b 建造扩展参数（building.js 消费；缺文件/离线 → 模块内同构兜底）。house：房屋判定阈值——泛洪上限/内部格数下限/占地边长下限/内高下限（格）。villager：判定成功后入住的流民模板（spawn 动态生成，不占 npcs.json 编年位）。messages：定居/入住提示文案。方块与门的 id/碰撞盒在 web/src/blocks.js 注册表，不在本文件。",
+  "house": {
+    "maxFloodCells": 512,
+    "minInteriorCells": 4,
+    "minFootprint": 2,
+    "minInteriorHeight": 2
+  },
+  "villager": {
+    "name": "投靠的流民",
+    "title": "新邻",
+    "model": { "type": "procedural", "robe": "#7a6a52", "skin": "#d9b38c", "headband": "#5a4632" },
+    "wanderSpeed": 1.1,
+    "wanderRadiusMax": 3
+  },
+  "messages": {
+    "settled": "门户既成，风雨可蔽——这里算是个家了",
+    "villager": "有流民寻上门来，在你的屋檐下安了身"
+  }
+}

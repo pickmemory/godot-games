@@ -18,7 +18,9 @@
 | WebAudio 全套 SFX（脚步/挖掘分段/破碎/放置/拾取/受击/呻吟/夜风） | 本项目 `web/src/sfx.js` 程序合成 | 自研 | MC-2c 手感打磨音效 |
 | NPC 低模体素村民（占位）+ 头顶名牌 | 本项目 `web/src/npc.js` 程序化 BoxGeometry/CylinderGeometry + CanvasTexture | 自研 | MC-3b NPC 实体模型（Quaternius CC0 GLB 适配接口已预留：`model.type='glb'`，引入时须在此登记来源 URL 与许可） |
 | 对话面板/立绘占位/交谈提示 UI | 本项目 `web/src/dialog.js` + `web/index.html` CSS/DOM + canvas 立绘占位 | 自研 | MC-3b 对话与任务界面 |
-| 任务系统（状态机，无素材） | 本项目 `web/src/quests.js` | 自研 | MC-3b 最小任务接口（供 MC-3d 事件弧） | MC-1 为纯程序化占位；按路线图 MC-5a（美术圣经 v2）与各阶段美术任务接入：
+| 任务系统（状态机，无素材） | 本项目 `web/src/quests.js` | 自研 | MC-3b 最小任务接口（供 MC-3d 事件弧） |
+| 农耕瓦片（耕地/作物六阶段） | 本项目 `web/src/textures.js` 程序化 canvas 绘制 | 自研（无第三方版权） | MC-4a 农耕贴图 |
+| 建造瓦片（门上/下、窗棂、栅栏） | 本项目 `web/src/textures.js` 程序化 canvas 绘制 | 自研（无第三方版权） | MC-4b 门/窗/栅栏贴图（楼梯复用木板瓦片） | MC-1 为纯程序化占位；按路线图 MC-5a（美术圣经 v2）与各阶段美术任务接入：
 - Kenney.nl（Voxel Pack 等，CC0，商用免署名）
 - Quaternius.com（低模角色/道具/建筑，CC0）
 - OpenGameArt.org（仅 CC0 / CC-BY 条目；CC-BY 须在此署名作者与链接）

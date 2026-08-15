@@ -1,6 +1,6 @@
 // player.js — 第一人称玩家：WASD + 重力跳跃 + 飞行 + 逐轴 AABB 体素碰撞
 import * as THREE from 'three';
-import { isSolid } from './blocks.js';
+import { collisionBoxes } from './blocks.js';
 
 const WIDTH = 0.6;      // AABB x/z 宽
 const HEIGHT = 1.8;     // AABB 高
@@ -35,7 +35,7 @@ export class Player {
     this.pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, this.pitch - dy * 0.0024));
   }
 
-  /** AABB 是否与实心体素重叠 */
+  /** AABB 是否与方块碰撞盒重叠（MC-4b：楼梯/栅栏等细几何按注册表 collision 盒精确判定） */
   _collides(px, py, pz) {
     const y0 = Math.floor(py), y1 = Math.floor(py + HEIGHT - 0.01);
     const x0 = Math.floor(px - HALF), x1 = Math.floor(px + HALF);
@@ -43,7 +43,11 @@ export class Player {
     for (let y = y0; y <= y1; y++)
       for (let z = z0; z <= z1; z++)
         for (let x = x0; x <= x1; x++)
-          if (isSolid(this.world.getBlock(x, y, z))) return true;
+          for (const b of collisionBoxes(this.world.getBlock(x, y, z))) {
+            if (px - HALF < x + b[3] && px + HALF > x + b[0]
+              && py < y + b[4] && py + HEIGHT > y + b[1]
+              && pz - HALF < z + b[5] && pz + HALF > z + b[2]) return true;
+          }
     return false;
   }
 
