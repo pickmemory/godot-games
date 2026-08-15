@@ -2,9 +2,11 @@
 import * as THREE from 'three';
 import { isSolid, BLOCK_DEFS } from './blocks.js';
 import { digTime, toolDefOf, FALLBACK_MINING } from './mining.js';
+import { buildCrackTextures } from './textures.js';
 
 const REACH = 6;          // 交互距离（格）
 const PLACE_CD = 0.22;    // 放置冷却（秒）
+const CRACK_STAGES = 8;   // 裂纹分段数（与 main.js 挖掘分段音同步）
 
 export class Interaction {
   /**
@@ -36,6 +38,21 @@ export class Interaction {
     box.dispose();
     this.highlight.visible = false;
     scene.add(this.highlight);
+
+    // 挖掘裂纹 overlay：略放大的盒体 + 多边形偏移，随进度逐段换贴图（MC-2c）
+    this.crackStages = buildCrackTextures(CRACK_STAGES);
+    const crackBox = new THREE.BoxGeometry(1.002, 1.002, 1.002);
+    this.crack = new THREE.Mesh(crackBox, new THREE.MeshBasicMaterial({
+      map: this.crackStages[0],       // 初始即绑贴图，后续仅换 map 不重编 shader
+      transparent: true,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2,
+    }));
+    this.crack.visible = false;
+    this.crack.renderOrder = 1;        // 在不透明 chunk 之后绘制
+    scene.add(this.crack);
   }
 
   /** Amanatides & Woo DDA。返回 {pos, normal} 或 null */
@@ -94,7 +111,9 @@ export class Interaction {
       const def = BLOCK_DEFS[id];
       const seconds = digTime(this.miningCfg, def, toolDefOf(heldItemId));
       this.digProgress += dt / seconds;
-      this.cb.onDigProgress(Math.min(1, this.digProgress));
+      const pct = Math.min(1, this.digProgress);
+      this._setCrack(hit.pos, pct);
+      this.cb.onDigProgress(pct);
 
       if (this.digProgress >= 1) {
         const removed = this.world.setBlock(hit.pos[0], hit.pos[1], hit.pos[2], 0);
@@ -128,5 +147,15 @@ export class Interaction {
     if (this.digKey !== null) this.cb.onDigProgress(0);
     this.digKey = null;
     this.digProgress = 0;
+    this.crack.visible = false;
+  }
+
+  /** 裂纹 overlay：pct∈(0,1] → 分段贴图；非挖掘/换目标时隐藏 */
+  _setCrack(pos, pct) {
+    if (pct <= 0) { this.crack.visible = false; return; }
+    const stage = Math.min(CRACK_STAGES - 1, Math.floor(pct * CRACK_STAGES));
+    this.crack.material.map = this.crackStages[stage];
+    this.crack.position.set(pos[0] + 0.5, pos[1] + 0.5, pos[2] + 0.5);
+    this.crack.visible = true;
   }
 }

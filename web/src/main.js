@@ -13,6 +13,8 @@ import { Inventory } from './inventory.js';
 import { Crafting } from './crafting.js';
 import { HeldItem } from './helditem.js';
 import { FALLBACK_MINING, dropOf, toolDefOf } from './mining.js';
+import { SFX } from './sfx.js';
+import { DropManager } from './drops.js';
 
 /* ---------- 启动 ---------- */
 const canvas = document.getElementById('game');
@@ -77,6 +79,11 @@ try {
 const PLAYER_MAX_HP = 20;
 let dead = false;
 
+/* 受击震屏（MC-2c）：受击时视角轻震，幅度随剩余时间衰减（与红晕/受击音联动） */
+let shakeT = 0;
+const SHAKE_DUR = 0.32;
+function shake() { shakeT = SHAKE_DUR; }
+
 const health = new Health(PLAYER_MAX_HP, {
   onChange: (hp, max) => ui.setHealth(hp, max),
   onDeath: () => die(),
@@ -89,9 +96,10 @@ const mobManager = new MobManager(scene, world, mobConfig, {
     if (dead) return;
     const applied = health.damage(dmg, mobPos);
     if (!applied) return;
-    sfxHurt();
-    sfxGroan(0.22);
+    sfx.hurt();
+    sfx.groan(0.22);
     ui.flashDamage();
+    shake();
     // 击退：推离伤害来源 + 小幅上抛
     const kx = player.pos.x - mobPos.x, kz = player.pos.z - mobPos.z;
     const kl = Math.hypot(kx, kz) || 1;
@@ -101,100 +109,9 @@ const mobManager = new MobManager(scene, world, mobConfig, {
   },
 });
 
-/* ---------- WebAudio 合成音效（零外部文件） ---------- */
-let actx = null;
-function ensureAudio() {
-  if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { /* 静默降级 */ } }
-  if (actx && actx.state === 'suspended') actx.resume();
-}
-function noiseBurst(dur, freq, gain, sweep) {
-  if (!actx) return;
-  const n = actx.sampleRate * dur;
-  const buf = actx.createBuffer(1, n, actx.sampleRate);
-  const ch = buf.getChannelData(0);
-  for (let i = 0; i < n; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / n);
-  const src = actx.createBufferSource();
-  src.buffer = buf;
-  const flt = actx.createBiquadFilter();
-  flt.type = 'lowpass';
-  flt.frequency.setValueAtTime(freq, actx.currentTime);
-  if (sweep) flt.frequency.exponentialRampToValueAtTime(Math.max(80, freq * sweep), actx.currentTime + dur);
-  const g = actx.createGain();
-  g.gain.value = gain;
-  src.connect(flt).connect(g).connect(actx.destination);
-  src.start();
-}
-const sfxDigTick = () => noiseBurst(0.05, 900, 0.12);
-const sfxBreak = () => noiseBurst(0.14, 1400, 0.3, 0.25);
-const sfxPlace = () => noiseBurst(0.06, 2000, 0.2, 0.5);
-
-/* MC-2 生存音效：受击 / 行尸呻吟 / 夜风循环（全部 WebAudio 合成，零外部文件） */
-function sfxHurt() {
-  if (!actx) return;
-  const t = actx.currentTime;
-  const o = actx.createOscillator();
-  o.type = 'square';
-  o.frequency.setValueAtTime(320, t);
-  o.frequency.exponentialRampToValueAtTime(110, t + 0.18);
-  const g = actx.createGain();
-  g.gain.setValueAtTime(0.14, t);
-  g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-  o.connect(g).connect(actx.destination);
-  o.start(t); o.stop(t + 0.22);
-  noiseBurst(0.1, 500, 0.18, 0.4);
-}
-function sfxGroan(vol = 0.14) {
-  if (!actx) return;
-  const t = actx.currentTime;
-  const o = actx.createOscillator();
-  o.type = 'sawtooth';
-  o.frequency.setValueAtTime(85 + Math.random() * 45, t);
-  o.frequency.exponentialRampToValueAtTime(48, t + 0.9);
-  const flt = actx.createBiquadFilter();
-  flt.type = 'lowpass'; flt.frequency.value = 320;
-  const g = actx.createGain();
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + 0.15);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 1.0);
-  o.connect(flt).connect(g).connect(actx.destination);
-  o.start(t); o.stop(t + 1.05);
-}
-let windNodes = null;
-function startWind() {
-  if (!actx || windNodes) return;
-  const buf = actx.createBuffer(1, actx.sampleRate * 2, actx.sampleRate);
-  const ch = buf.getChannelData(0);
-  for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
-  const src = actx.createBufferSource();
-  src.buffer = buf; src.loop = true;
-  const flt = actx.createBiquadFilter();
-  flt.type = 'bandpass'; flt.frequency.value = 380; flt.Q.value = 0.6;
-  const g = actx.createGain();
-  g.gain.value = 0;
-  g.gain.linearRampToValueAtTime(0.12, actx.currentTime + 3);
-  const lfo = actx.createOscillator();
-  lfo.frequency.value = 0.13; // 风声呼吸
-  const lfoGain = actx.createGain();
-  lfoGain.gain.value = 0.05;
-  lfo.connect(lfoGain).connect(g.gain);
-  src.connect(flt).connect(g).connect(actx.destination);
-  src.start(); lfo.start();
-  windNodes = { src, g, lfo };
-}
-function stopWind() {
-  if (!windNodes || !actx) return;
-  const { src, g, lfo } = windNodes;
-  windNodes = null;
-  const t = actx.currentTime;
-  g.gain.cancelScheduledValues(t);
-  g.gain.setValueAtTime(Math.max(0.001, g.gain.value), t);
-  g.gain.linearRampToValueAtTime(0, t + 2);
-  setTimeout(() => { try { src.stop(); lfo.stop(); } catch (e) { /* 已停 */ } }, 2200);
-}
-function updateNightAudio(isNightNow) {
-  if (isNightNow) startWind();
-  else stopWind();
-}
+/* ---------- WebAudio 合成音效（sfx.js 模块；零外部文件，MC-2c 全覆盖） ---------- */
+const sfx = new SFX();
+function ensureAudio() { sfx.ensure(); }
 
 /* ---------- 挖掘粒子（手感包） ---------- */
 const bursts = [];
@@ -238,35 +155,49 @@ function updateBursts(dt) {
   }
 }
 
+/* ---------- 掉落物实体（MC-2c）：破坏后弹出小方块，靠近吸附拾取入行囊 ---------- */
+const dropManager = new DropManager(scene, world, atlas);
+function onDropPickup(itemId, count) {
+  const left = inventory.add(itemId, count);
+  const got = count - left;
+  if (got > 0) {
+    sfx.pickup();
+    ui.showPickup(left > 0
+      ? `行囊已满，捡回 ${got} 个${itemName(itemId)}`
+      : `+${got} ${itemName(itemId)}`);
+  }
+  return got; // 0 = 一个都没收下（满），掉落物保留原地稍后再试
+}
+
 /* ---------- 交互 ---------- */
 let lastTickPct = 0;
 const interaction = new Interaction(camera, world, scene, player, {
   onDigProgress(pct) {
     ui.setDigProgress(pct);
-    if (pct > 0 && Math.floor(pct / 0.2) > Math.floor(lastTickPct / 0.2)) sfxDigTick();
+    // 分段轻响：与裂纹分段（interaction.js CRACK_STAGES=8）同步推进
+    if (pct > 0 && Math.floor(pct * 8) > Math.floor(lastTickPct * 8)) sfx.digTick();
     lastTickPct = pct;
   },
   onDigComplete(blockId, pos) {
-    sfxBreak();
+    sfx.blockBreak();
     spawnBurst(pos, BLOCK_DEFS[blockId].tiles.side);
-    // 掉落 → 行囊（mining.js：drop 字段 + 掉落等级门槛）
+    // 掉落 → 掉落物实体（mining.js：drop 字段 + 掉落等级门槛；拾取在 drops.js/update）
     const drop = dropOf(BLOCK_DEFS[blockId], toolDefOf(inventory.heldId()), blockId);
     if (drop) {
-      const left = inventory.add(drop, 1);
-      ui.showPickup(left > 0 ? '行囊已满，挖下的东西散失了…' : `+1 ${itemName(drop)}`);
+      dropManager.spawn(drop, pos);
     } else if (BLOCK_DEFS[blockId].minDropTier) {
       ui.showPickup('镐的等级不够，什么也没挖下来…');
     }
   },
   onPlace() {
-    sfxPlace();
+    sfx.place();
     inventory.takeFromSelected(1);   // 生存模式：放置即消耗
   },
 });
 interaction.miningCfg = miningCfg;
 
 const crafting = new Crafting(inventory, { nameOf: itemName, iconRenderer: drawIcon }, {
-  onCrafted(r) { sfxPlace(); ui.showPickup(`合成 ${itemName(r.out.id)} ×${r.out.n}`); },
+  onCrafted(r) { sfx.place(); ui.showPickup(`合成 ${itemName(r.out.id)} ×${r.out.n}`); },
 });
 if (recipeData?.recipes) crafting.setRecipes(recipeData.recipes);
 
@@ -379,7 +310,7 @@ function die() {
   dead = true;
   digHeld = placeHeld = false;
   Object.keys(input).forEach((k) => (input[k] = false));
-  sfxGroan(0.25);
+  sfx.groan(0.25);
   document.exitPointerLock();
   ui.showDeath();
 }
@@ -391,8 +322,9 @@ document.getElementById('death').addEventListener('click', () => {
   dead = false;
   ui.hideDeath();
   ui.renderInventory(inventory); // 死亡不掉行囊（最小集决定；掉落留 MC-4）
+  dropManager.clearAll();        // 重生清场：散落掉落物一并消散
   ensureAudio();
-  updateNightAudio(isNight);
+  sfx.setNight(isNight);
   canvas.requestPointerLock()?.catch?.(() => { /* 同上：静默降级 */ });
 });
 addEventListener('resize', () => {
@@ -437,10 +369,21 @@ function updateDayNight(dt) {
   const nowNight = nightK > 0.9;
   if (nowNight !== isNight) {
     isNight = nowNight;
-    updateNightAudio(isNight);
+    sfx.setNight(isNight);
   }
   return nightK;
 }
+
+/* ---------- 脚步音效（MC-2c）：按水平距离计步，音色看脚下方块材质 ---------- */
+const STEP_LEN = 2.1; // 每步位移（格）
+let stepAcc = 0;
+const STEP_MAT = new Map([
+  [BLOCK.GRASS, 'grass'], [BLOCK.DIRT, 'grass'],
+  [BLOCK.STONE, 'stone'], [BLOCK.COBBLE, 'stone'],
+  [BLOCK.COAL_ORE, 'stone'], [BLOCK.IRON_ORE, 'stone'],
+  [BLOCK.SAND, 'sand'],
+  [BLOCK.WOOD_LOG, 'wood'], [BLOCK.PLANK, 'wood'], [BLOCK.CRAFT_TABLE, 'wood'],
+]);
 
 /* ---------- 主循环 ---------- */
 let last = performance.now();
@@ -460,11 +403,38 @@ function loop(now) {
     // 夜里有行尸在场 → 随机远处呻吟（恐惧氛围）
     if (isNight && mobManager.count > 0) {
       groanT -= dt;
-      if (groanT <= 0) { groanT = 4 + Math.random() * 6; sfxGroan(0.08 + Math.random() * 0.08); }
+      if (groanT <= 0) { groanT = 4 + Math.random() * 6; sfx.groan(0.08 + Math.random() * 0.08); }
+    }
+
+    // 脚步：在地面移动时按距离计步（飞行/悬空不计）
+    if (!player.flying && player.onGround) {
+      const hSpeed = Math.hypot(player.vel.x, player.vel.z);
+      if (hSpeed > 0.5) {
+        stepAcc += hSpeed * dt;
+        if (stepAcc >= STEP_LEN) {
+          stepAcc = 0;
+          const bid = world.getBlock(Math.floor(player.pos.x), Math.floor(player.pos.y - 0.05), Math.floor(player.pos.z));
+          sfx.step(STEP_MAT.get(bid) ?? 'grass');
+        }
+      } else {
+        stepAcc = Math.min(stepAcc, STEP_LEN * 0.5); // 停走不积步
+      }
+    } else {
+      stepAcc = 0;
+    }
+
+    // 受击震屏：叠加在玩家相机同步之后，幅度随剩余时间衰减
+    if (shakeT > 0) {
+      shakeT = Math.max(0, shakeT - dt);
+      const k = shakeT / SHAKE_DUR;
+      camera.position.x += (Math.random() - 0.5) * 0.14 * k;
+      camera.position.y += (Math.random() - 0.5) * 0.14 * k;
+      camera.rotation.z += (Math.random() - 0.5) * 0.025 * k;
     }
   }
   world.update(player.pos);
   updateBursts(dt);
+  dropManager.update(dt, player.pos, locked && !dead, onDropPickup);
   updateDayNight(dt);
 
   // 第一人称手持模型（MC-2b）：随选中物品切换，挖掘挥动

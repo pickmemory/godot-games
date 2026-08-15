@@ -12,7 +12,10 @@
 | WebAudio 合成音效 | 本项目 `web/src/main.js` 程序合成 | 自研 | 挖掘/破坏/放置反馈音 |
 | 行尸体素模型 | 本项目 `web/src/mob.js` 程序化 BoxGeometry 搭建 | 自研 | 夜间敌对生物「流民行尸」 |
 | WebAudio 生存音效（受击/呻吟/夜风） | 本项目 `web/src/main.js` 程序合成 | 自研 | 第一夜恐惧氛围 |
-| 红心条 / 红晕 / 死亡界面 | 本项目 `web/index.html` CSS + DOM | 自研 | 血量与死亡 UI | MC-1 为纯程序化占位；按路线图 MC-5a（美术圣经 v2）与各阶段美术任务接入：
+| 红心条 / 红晕 / 死亡界面 | 本项目 `web/index.html` CSS + DOM | 自研 | 血量与死亡 UI |
+| 挖掘裂纹分段贴图（8 段） | 本项目 `web/src/textures.js` 程序化 canvas 绘制 | 自研（无第三方版权） | MC-2c 挖掘进度裂纹 overlay |
+| 掉落物实体模型 | 本项目 `web/src/drops.js` 程序化 BoxGeometry + 自绘 atlas UV | 自研 | MC-2c 方块/物品掉落物 |
+| WebAudio 全套 SFX（脚步/挖掘分段/破碎/放置/拾取/受击/呻吟/夜风） | 本项目 `web/src/sfx.js` 程序合成 | 自研 | MC-2c 手感打磨音效 | MC-1 为纯程序化占位；按路线图 MC-5a（美术圣经 v2）与各阶段美术任务接入：
 - Kenney.nl（Voxel Pack 等，CC0，商用免署名）
 - Quaternius.com（低模角色/道具/建筑，CC0）
 - OpenGameArt.org（仅 CC0 / CC-BY 条目；CC-BY 须在此署名作者与链接）

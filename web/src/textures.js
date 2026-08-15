@@ -207,6 +207,53 @@ export function buildAtlas() {
   return cached;
 }
 
+/* ---------- 挖掘裂纹分段贴图（MC-2c 手感打磨） ---------- */
+
+let crackCache = null;
+
+/**
+ * 构建（并缓存）挖掘裂纹分段贴图。
+ * 阶段累积：第 s 段 = 前 s-1 段全部裂纹 + 新增裂纹（同一确定性随机序列的前缀），
+ * 视觉上裂纹随挖掘进度逐段加深扩展。裂纹画在透明底上，由 interaction.js
+ * 叠在被挖方块位置（略放大的盒体 + polygonOffset 防 z-fighting）。
+ * @param {number} stageCount 分段数（默认 8）
+ * @returns {THREE.CanvasTexture[]} 长度 stageCount，索引 = 已完成阶段-1
+ */
+export function buildCrackTextures(stageCount = 8) {
+  if (crackCache && crackCache.length === stageCount) return crackCache;
+  const textures = [];
+  for (let s = 0; s < stageCount; s++) {
+    const cv = document.createElement('canvas');
+    cv.width = TILE_PX; cv.height = TILE_PX;
+    const ctx = cv.getContext('2d');
+    const rnd = mulberry32(20240829); // 各阶段同一随机序列 → 裂纹前缀累积
+    const branches = 2 + Math.floor(s * 1.6); // 分支数随阶段增长
+    ctx.strokeStyle = 'rgba(16,12,8,0.85)';
+    ctx.lineWidth = 1;
+    for (let b = 0; b < branches; b++) {
+      let x = 2 + rnd() * 12, y = 2 + rnd() * 12;
+      const segs = 2 + Math.floor(rnd() * 4);
+      ctx.beginPath();
+      ctx.moveTo(x + 0.5, y + 0.5);
+      for (let i = 0; i < segs; i++) {
+        x += (rnd() - 0.5) * 7; y += (rnd() - 0.5) * 7;
+        ctx.lineTo(
+          Math.max(0.5, Math.min(TILE_PX - 0.5, x + 0.5)),
+          Math.max(0.5, Math.min(TILE_PX - 0.5, y + 0.5)),
+        );
+      }
+      ctx.stroke();
+    }
+    const t = new THREE.CanvasTexture(cv);
+    t.magFilter = THREE.NearestFilter;
+    t.minFilter = THREE.NearestFilter;
+    t.generateMipmaps = false;
+    textures.push(t);
+  }
+  crackCache = textures;
+  return textures;
+}
+
 /** 把某瓦片画到目标 2D canvas（hotbar 缩略图用） */
 export function drawTileTo(ctx2d, tileIndex, dx, dy, dw, dh) {
   const { canvas } = buildAtlas();
