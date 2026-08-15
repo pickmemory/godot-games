@@ -1,0 +1,17 @@
+{
+  "_comment": "MC-3b 最小任务定义（schema 见 npc/README.md）。本阶段仅占位验证管线：objective.event 对应 main.js 推送的玩家行为事件（与 chapter.js ctx.stats 同名：blocksPlaced/blocksMined）。具体任务内容（黄巾第一章事件弧）由 MC-3d 充实。",
+  "quests": [
+    {
+      "id": "settle-down",
+      "title": "栖身之所（占位）",
+      "desc": "在乱世里垒起自己的墙——放置 20 块方块。",
+      "objective": { "event": "blocksPlaced", "count": 20 }
+    },
+    {
+      "id": "first-fuel",
+      "title": "拾柴（占位 · MC-3d 充实）",
+      "desc": "夜里要生火。挖下 10 块木头或泥土。",
+      "objective": { "event": "blocksMined", "count": 10 }
+    }
+  ]
+}

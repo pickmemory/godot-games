@@ -16,6 +16,9 @@ import { FALLBACK_MINING, dropOf, toolDefOf } from './mining.js';
 import { SFX } from './sfx.js';
 import { DropManager } from './drops.js';
 import { loadChapter, normalizeChapter, ChapterTimeline, FALLBACK_CHAPTER } from './chapter.js';
+import { NPCManager, FALLBACK_NPC_DATA } from './npc.js';
+import { DialogUI, FALLBACK_DIALOGS } from './dialog.js';
+import { QuestSystem, FALLBACK_QUESTS } from './quests.js';
 
 /* ---------- 启动 ---------- */
 const canvas = document.getElementById('game');
@@ -84,6 +87,25 @@ try {
   if (res.ok) mobConfig = await res.json();
 } catch (e) { /* 文件缺失/离线 → 用模块内同构兜底 */ }
 
+/* ---------- MC-3b NPC/对话/任务数据（数据驱动；缺文件/离线 → 模块内同构兜底） ---------- */
+let npcData = FALLBACK_NPC_DATA;
+try {
+  const res = await fetch('data/npc/npcs.json');
+  if (res.ok) npcData = await res.json();
+} catch (e) { /* 同上 */ }
+
+let dialogs = FALLBACK_DIALOGS;
+try {
+  const res = await fetch('data/npc/dialogs.json');
+  if (res.ok) dialogs = await res.json();
+} catch (e) { /* 同上 */ }
+
+let questData = FALLBACK_QUESTS;
+try {
+  const res = await fetch('data/quests.json');
+  if (res.ok) questData = await res.json();
+} catch (e) { /* 同上 */ }
+
 const PLAYER_MAX_HP = 20;
 let dead = false;
 
@@ -128,7 +150,11 @@ const timeline = new ChapterTimeline(chapterResult.chapter, {
   onEvent(ev) {
     console.log(`[chapter] ${timeline.formatDate()} 「${ev.title}」${ev.narration}`);
   },
-  onDayChange() { ui.setDate(`${timeline.formatDate()} · ${timeline.season.label}`); },
+  onDayChange() {
+    ui.setDate(`${timeline.formatDate()} · ${timeline.season.label}`);
+    // MC-3b 编年出场钩子：日翻页重判 NPC 在场性（appear/disappear 日期 → 序数日比较）
+    npcManager.setChronicle(chapterResult.chapter.startSerial + timeline.day);
+  },
   onSeasonChange(s) { console.log(`[chapter] 季节流转 → ${s.label}`); },
   onChapterEnd() { console.log('[chapter] 章末：越过章节 end 日期，等待下一章（MC-3c 充实迁移）'); },
 });
@@ -160,6 +186,32 @@ timeline.registerEffect('blockReplace', (eff) => {
 });
 ui.setDate(`${timeline.formatDate()} · ${timeline.season.label}`);
 
+/* ---------- MC-3b NPC 系统：任务 → 对话 → 编年出场（模块只经导出签名通信，效果路由在此汇流） ---------- */
+const quests = new QuestSystem({
+  onStart: (q) => ui.showPickup(`事起：《${q.title}》`),
+  onComplete: (q) => ui.showPickup(`事了：《${q.title}》`),
+});
+quests.registerAll(questData.quests);
+
+const dialogUI = new DialogUI({
+  // 对话效果路由：与 chapter.js registerEffect 同一模式，具体执行方在此注册
+  onEffect(eff) {
+    if (!eff || typeof eff !== 'object') return;
+    if (eff.type === 'startQuest') quests.begin(eff.id);
+    else if (eff.type === 'setFlag') timeline.setFlag(eff.flag, eff.value !== false);
+    else if (eff.type === 'notify') ui.showPickup(eff.text);
+    else console.warn(`[dialog] 未知效果类型: ${eff.type}`);
+  },
+});
+
+const npcManager = new NPCManager(scene, world, npcData);
+npcManager.setChronicle(chapterResult.chapter.startSerial);   // 开卷即判（此后日翻页重判）
+
+function openDialog(npc) {
+  document.exitPointerLock();
+  ui.setTalkHint('');
+  dialogUI.open(dialogs?.[npc.dialogId] ?? null, npc);   // 树缺失 → DialogUI 兑底树
+}
 /* ---------- 挖掘粒子（手感包） ---------- */
 const bursts = [];
 function spawnBurst(pos, tileIndex) {
@@ -228,6 +280,7 @@ const interaction = new Interaction(camera, world, scene, player, {
   },
   onDigComplete(blockId, pos) {
     blocksMined++;
+    quests.notify('blocksMined', 1);   // MC-3b：玩家行为 → 任务事件（与 chapter ctx.stats 同名）
     sfx.blockBreak();
     spawnBurst(pos, BLOCK_DEFS[blockId].tiles.side);
     // 掉落 → 掉落物实体（mining.js：drop 字段 + 掉落等级门槛；拾取在 drops.js/update）
@@ -241,6 +294,7 @@ const interaction = new Interaction(camera, world, scene, player, {
   onPlace() {
     sfx.place();
     blocksPlaced++;
+    quests.notify('blocksPlaced', 1);  // MC-3b：同上
     inventory.takeFromSelected(1);   // 生存模式：放置即消耗
   },
 });
@@ -294,10 +348,18 @@ addEventListener('keydown', (e) => {
       player.vel.y = 0;
       break;
     case 'KeyE':
-      if (!dead && (locked || crafting.isOpen)) toggleCraft();
+      if (dead) break;
+      // 优先级：对话中关闭 > 附近 NPC 交谈 > 合成面板（对话/面板互斥，均需指针锁定态）
+      if (dialogUI.isOpen) { dialogUI.close(); lockPointer(); break; }
+      if (locked && !crafting.isOpen) {
+        const near = npcManager.nearestTalkable(player.pos, 3.2);
+        if (near) { openDialog(near); break; }
+      }
+      if (locked || crafting.isOpen) toggleCraft();
       break;
     case 'Escape':
-      if (crafting.isOpen) { crafting.close(); lockPointer(); }
+      if (dialogUI.isOpen) { dialogUI.close(); lockPointer(); }
+      else if (crafting.isOpen) { crafting.close(); lockPointer(); }
       break;
     default:
       if (e.code.startsWith('Digit')) {
@@ -343,7 +405,7 @@ overlay.addEventListener('click', () => {
 });
 canvas.addEventListener('click', () => {
   // 面板/遮罩都没显示但指针未锁（如 ESC 后重进）→ 点画布重锁
-  if (!locked && !dead && !crafting.isOpen) { ensureAudio(); lockPointer(); }
+  if (!locked && !dead && !crafting.isOpen && !dialogUI.isOpen) { ensureAudio(); lockPointer(); }
 });
 document.addEventListener('pointerlockchange', () => {
   locked = document.pointerLockElement === canvas;
@@ -351,7 +413,7 @@ document.addEventListener('pointerlockchange', () => {
   else {
     digHeld = placeHeld = false;
     Object.keys(input).forEach((k) => (input[k] = false));
-    if (!dead && !crafting.isOpen) ui.showOverlay(); // 死亡/合成面板打开时由各自界面接管
+    if (!dead && !crafting.isOpen && !dialogUI.isOpen) ui.showOverlay(); // 死亡/合成/对话接管时由各自界面接管
   }
 });
 
@@ -442,6 +504,7 @@ const STEP_MAT = new Map([
 let last = performance.now();
 let frames = 0, fpsClock = 0;
 let groanT = 5; // 行尸呻吟随机计时
+let talkHintT = 0; // MC-3b：可交谈提示轮询计时（限频 0.15s）
 
 function loop(now) {
   requestAnimationFrame(loop);
@@ -453,6 +516,15 @@ function loop(now) {
     interaction.update(dt, digHeld, placeHeld, inventory.heldId());
     health.update(dt);
     mobManager.update(dt, player.pos, isNight);
+    npcManager.update(dt, player.pos);   // MC-3b：NPC 漫游/接近/物理（AI 决策限频错峰）
+
+    // 可交谈提示：靠近可交谈 NPC 时显示「按 E 交谈」（限频轮询，避免每帧扫企列表）
+    talkHintT -= dt;
+    if (talkHintT <= 0) {
+      talkHintT = 0.15;
+      const near = npcManager.nearestTalkable(player.pos, 3.2);
+      ui.setTalkHint(near && !dialogUI.isOpen ? `按 E 与 ${near.name} 交谈` : '');
+    }
     // 夜里有行尸在场 → 随机远处呻吟（恐惧氛围）
     if (isNight && mobManager.count > 0) {
       groanT -= dt;

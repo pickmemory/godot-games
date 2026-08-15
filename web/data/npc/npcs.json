@@ -1,0 +1,38 @@
+{
+  "_comment": "MC-3b NPC 定义（schema 见本目录 README.md）。appear/disappear 用简化格里历日期，引擎复用 MC-3a chapter.js 的 dateToSerial 折算序数日判定出场。model.type=glb 时 url 指向 web/assets/npc/ 下的 Quaternius CC0 GLB（引入时须登记 ../CREDITS.md）；当前用程序化体素占位。台词见 dialogs.json。",
+  "npcs": [
+    {
+      "id": "elder-chen",
+      "name": "陈叟",
+      "title": "里中老者",
+      "model": { "type": "procedural", "robe": "#8a6f4d", "skin": "#d9b38c", "hat": true },
+      "portrait": { "bg": "#3d3226", "fg": "#e8d9b0" },
+      "spawn": { "x": 14, "z": 10 },
+      "wander": { "radius": 9, "speed": 1.4 },
+      "dialog": "elder-01"
+    },
+    {
+      "id": "taiping-envoy",
+      "name": "黄巾使者",
+      "title": "太平道传道人",
+      "model": { "type": "procedural", "robe": "#c9a53a", "skin": "#d9b38c", "headband": "#a03a2a" },
+      "portrait": { "bg": "#4a3d20", "fg": "#f0dfa0" },
+      "spawn": { "x": 4, "z": 22 },
+      "wander": { "radius": 6, "speed": 1.5 },
+      "appear": { "date": { "year": 184, "month": 2, "day": 20 } },
+      "disappear": { "date": { "year": 184, "month": 3, "day": 10 } },
+      "dialog": "taiping-envoy-01"
+    },
+    {
+      "id": "refugee-lu",
+      "name": "吕嫂",
+      "title": "逃难的农妇",
+      "model": { "type": "procedural", "robe": "#6b7550", "skin": "#d9b38c" },
+      "portrait": { "bg": "#2f3526", "fg": "#dfe8c8" },
+      "spawn": { "x": -6, "z": 16 },
+      "wander": { "radius": 7, "speed": 1.2 },
+      "appear": { "date": { "year": 184, "month": 3, "day": 6 } },
+      "dialog": "refugee-lu-01"
+    }
+  ]
+}

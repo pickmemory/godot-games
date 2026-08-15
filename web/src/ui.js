@@ -27,6 +27,7 @@ export class UI {
     this.vignetteEl = document.getElementById('vignette');
     this.deathEl = document.getElementById('death');
     this.dateEl = document.getElementById('date');
+    this.talkHintEl = document.getElementById('talkHint');
     this._nameTimer = null;
     this._slots = [];
     this._heartFills = null;
@@ -101,6 +102,13 @@ export class UI {
   /** MC-3a 编年日期/季节 HUD（左上角；空串隐藏） */
   setDate(text) {
     if (this.dateEl) this.dateEl.textContent = text ?? '';
+  }
+
+  /** MC-3b 可交谈提示（靠近 NPC 时；空串隐藏） */
+  setTalkHint(text) {
+    if (!this.talkHintEl) return;
+    this.talkHintEl.textContent = text ?? '';
+    this.talkHintEl.style.opacity = text ? '1' : '0';
   }
 
   setStats(fps, chunks) {

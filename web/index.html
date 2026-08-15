@@ -112,6 +112,30 @@
     border: 1px solid rgba(201,70,58,.7); padding: 10px 38px; border-radius: 4px;
     animation: pulse 2s infinite; } }
 
+  /* MC-3b 对话面板（E 与 NPC 交谈；树数据驱动 data/npc/dialogs.json） */
+  #dialog { position: fixed; inset: 0; background: rgba(8,10,20,.62); backdrop-filter: blur(2px);
+    z-index: 24; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12vh; }
+  #dialog.hidden { display: none; }
+  #dialog .panel { width: min(560px, 92vw); background: rgba(22,18,12,.95);
+    border: 1px solid rgba(255,215,106,.35); border-radius: 10px; padding: 16px 20px 14px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.6); }
+  #dialog .dhead { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  #dialog #dPortrait { width: 56px; height: 56px; image-rendering: pixelated; flex: none;
+    border-radius: 6px; border: 1px solid rgba(255,215,106,.3); }
+  #dialog #dName { color: #e8d9b0; font-size: 17px; letter-spacing: 3px; font-weight: 600; }
+  #dialog #dTitle { color: rgba(184,167,104,.85); font-size: 12px; letter-spacing: 2px; margin-top: 2px; }
+  #dialog #dText { color: #fff; font-size: 15px; line-height: 1.8; letter-spacing: 1px;
+    min-height: 54px; margin-bottom: 10px; }
+  #dialog .dChoice { display: block; width: 100%; text-align: left; margin-top: 6px;
+    background: rgba(255,215,106,.08); color: #ffe9a8; border: 1px solid rgba(255,215,106,.3);
+    border-radius: 5px; padding: 8px 14px; font-size: 14px; letter-spacing: 2px; cursor: pointer; }
+  #dialog .dChoice:hover { background: rgba(255,215,106,.22); }
+
+  /* MC-3b 可交谈提示（靠近 NPC 时出现） */
+  #talkHint { position: fixed; left: 50%; bottom: 160px; transform: translateX(-50%);
+    color: #ffe9a8; text-shadow: 0 1px 3px #000; font-size: 13px; letter-spacing: 2px;
+    opacity: 0; transition: opacity .2s; z-index: 10; pointer-events: none; }
+
   /* 开始 / 暂停遮罩 */
   #overlay { position: fixed; inset: 0; background: rgba(8,10,20,.78); backdrop-filter: blur(3px);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -155,6 +179,17 @@
     <div class="close">按 E 或 ESC 关闭</div>
   </div>
 </div>
+<div id="talkHint"></div>
+<div id="dialog" class="hidden">
+  <div class="panel">
+    <div class="dhead">
+      <canvas id="dPortrait" width="72" height="72"></canvas>
+      <div><div id="dName"></div><div id="dTitle"></div></div>
+    </div>
+    <div id="dText"></div>
+    <div id="dChoices"></div>
+  </div>
+</div>
 <div id="death" class="hidden">
   <h1>你倒下了</h1>
   <div class="sub">乱世的夜，吞没了一个名字。</div>
@@ -166,7 +201,7 @@
   <div class="hint">
     <b>WASD</b> 移动　<b>空格</b> 跳跃　<b>F</b> 飞行　<b>Shift</b> 飞行下降<br>
     <b>鼠标左键</b> 按住挖掘　<b>右键</b> 放置选中物品　<b>滚轮 / 1-9</b> 切换行囊<br>
-    <b>E</b> 合成：原木→木板→工作台→<b>木镐</b>→石镐→铁镐，越挖越快<br>
+    <b>E</b> 合成：原木→木板→工作台→<b>木镐</b>→石镐→铁镐，越挖越快；靠近村人时 <b>E</b> 交谈<br>
     <b>入夜后，行尸将循着活人的气息游荡而来……</b><br>
     挖洞、筑墙，或逃到高处——活过你的第一夜。　<b>ESC</b> 释放鼠标
   </div>
