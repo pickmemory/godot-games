@@ -24,7 +24,7 @@
 ## MC-4 · 生计与定居
 - [~] #34 已派发 MC-4a 农耕（开垦/播种/生长周期/收获，季节联动）→ web/src/ (engineering-lead)
 - [~] #35 已派发 MC-4b 建造扩展（门/窗/楼梯/栅栏方块 + 简易村民 + 房屋判定）→ web/src/ (engineering-lead)
-- [ ] MC-4c 存档抽象层（ISaveAdapter 接口：localStorage 实现 + chunk 差分 + 章节进度；为 Steam Cloud 预留同构替换）→ web/src/ (engineering-lead)
+- [~] #36 已派发 MC-4c 存档抽象层（ISaveAdapter 接口：localStorage 实现 + chunk 差分 + 章节进度；为 Steam Cloud 预留同构替换）→ web/src/ (engineering-lead)
 
 ## MC-5 · 第二章 + 打磨 + 发布
 - [ ] MC-5a 美术圣经 v2（体素三国视觉规范：色板/方块变体/UI 书法风/角色比例；Kenney+Quaternius 接入规范）→ docs/design/art-bible.md (art-director)
