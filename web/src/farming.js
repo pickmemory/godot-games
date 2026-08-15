@@ -281,4 +281,31 @@ export class Farming {
   get info() {
     return { plots: this.plots.size, crops: this.crops.size, cfg: this.cfg.id ?? 'farming' };
   }
+
+  /* ---------- MC-4c 存档（耕作状态持久化；与 restore 对偶） ---------- */
+
+  /** 纯 JSON 可存：wetUntil=Infinity（邻水恒湿）序列化为 -1 哨兵 */
+  serialize() {
+    return {
+      plots: [...this.plots.entries()].map(([k, r]) => [k, r.wetUntil === Infinity ? -1 : r.wetUntil]),
+      crops: [...this.crops.entries()].map(([k, c]) => [k, { cropId: c.cropId, growth: c.growth }]),
+    };
+  }
+
+  /** 恢复耕地水分与作物生长（坏条目跳过；作物方块若已被挖换，update 轮询时自然出册） */
+  restore(data) {
+    if (!data || typeof data !== 'object') return false;
+    this.plots = new Map(
+      (Array.isArray(data.plots) ? data.plots : [])
+        .filter(([k, w]) => typeof k === 'string' && Number.isFinite(Number(w)))
+        .map(([k, w]) => [k, { wetUntil: Number(w) === -1 ? Infinity : Math.max(0, Number(w)) }]),
+    );
+    this.crops = new Map(
+      (Array.isArray(data.crops) ? data.crops : [])
+        .filter(([k, c]) => typeof k === 'string' && c && typeof c === 'object' && c.cropId != null)
+        .map(([k, c]) => [k, { cropId: String(c.cropId), growth: Math.max(0, Number(c.growth) || 0) }]),
+    );
+    this._scanKeys = [...this.plots.keys()];   // 水分轮转扫描重建
+    return true;
+  }
 }

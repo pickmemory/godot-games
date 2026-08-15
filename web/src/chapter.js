@@ -219,6 +219,40 @@ export class ChapterTimeline {
 
   /* --- 只读状态 --- */
 
+  /** MC-4c 存档：时间轴状态序列化（与 restore 对偶；Infinity 无，纯 JSON 可存） */
+  serialize() {
+    return {
+      chapterId: this.ch.id,
+      elapsed: this.elapsed,
+      day: this.day,
+      finished: this.finished,
+      flags: [...this.flags],
+      fired: this.ch.events.filter((e) => e.fired).map((e) => e.id),
+      entered: this._entered,
+    };
+  }
+
+  /**
+   * MC-4c 存档：恢复时间轴（跨章/跨档 id 不匹配 → 拒绝并告警，返回 false）。
+   * 已触发事件不重放；entered=true 时跳过 worldState.onEnter（开场演出不重播）。
+   */
+  restore(state) {
+    if (!state || typeof state !== 'object') return false;
+    if (state.chapterId != null && String(state.chapterId) !== String(this.ch.id)) {
+      console.warn(`[chapter] 存档章节「${state.chapterId}」≠ 当前章节「${this.ch.id}」，章节进度不恢复`);
+      return false;
+    }
+    this.elapsed = Math.max(0, Number(state.elapsed) || 0);
+    this.day = Math.max(0, Math.floor(Number(state.day) || 0));
+    this.finished = !!state.finished && this.ch.endSerial !== null;
+    this.flags = new Set(Array.isArray(state.flags) ? state.flags.map(String) : []);
+    const fired = new Set(Array.isArray(state.fired) ? state.fired.map(String) : []);
+    for (const ev of this.ch.events) if (fired.has(ev.id)) ev.fired = true;
+    this._entered = state.entered !== false;   // 缺省视为已入场（存档只在开卷后产生）
+    this._seasonName = this._seasonOf(this.date.month).name;
+    return true;
+  }
+
   /** 当前游戏日 {year, month, day} */
   get date() { return serialToDate(this.ch.startSerial + this.day); }
 

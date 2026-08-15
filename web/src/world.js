@@ -26,6 +26,8 @@ export class World {
     this.tilesPerRow = 4;
     this._genQueue = [];              // 待生成 chunk 坐标（近优先）
     this._lastPcx = null; this._lastPcz = null;
+    this.pendingDiffs = new Map();    // MC-4c 存档："cx,cz" → Map<体素索引, 块id>（载入差分，生成时重放）
+    this.onBlockChanged = null;       // MC-4c 存档：setBlock 成功后回调 (x,y,z,id)（差分增量记录）
   }
 
   key(cx, cz) { return cx + ',' + cz; }
@@ -50,6 +52,7 @@ export class World {
     const lx = x - cx * CHUNK_X, lz = z - cz * CHUNK_Z;
     c.data[lx + lz * CHUNK_X + y * CHUNK_X * CHUNK_Z] = id;
     c.dirty = true;
+    this.onBlockChanged?.(x, y, z, id);   // MC-4c：存档差分记录钩子（详见 save.js attachWorld）
     // 跨界 → 邻 chunk 面剔除需重算
     if (lx === 0) this._markDirty(cx - 1, cz);
     if (lx === CHUNK_X - 1) this._markDirty(cx + 1, cz);
@@ -76,6 +79,9 @@ export class World {
     if (this.chunks.has(k)) return;
     const data = generateChunk(cx, cz, this.seed);
     const rec = { cx, cz, data, mesh: null, dirty: true };
+    // MC-4c 存档：确定性重建后重放玩家差分（挖/放/耕作/章节迁移），再参与网格化
+    const diff = this.pendingDiffs.get(k);
+    if (diff) for (const [idx, id] of diff) data[idx] = id;
     this.chunks.set(k, rec);
   }
 

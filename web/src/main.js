@@ -22,6 +22,7 @@ import { NPCManager, FALLBACK_NPC_DATA } from './npc.js';
 import { DialogUI, FALLBACK_DIALOGS } from './dialog.js';
 import { QuestSystem, FALLBACK_QUESTS } from './quests.js';
 import { Cutscene } from './cutscene.js';
+import { SaveSystem, LocalStorageSaveAdapter } from './save.js';
 
 /* ---------- 启动 ---------- */
 const canvas = document.getElementById('game');
@@ -45,18 +46,51 @@ const sun = new THREE.DirectionalLight(0xffffff, 0.9);
 sun.position.set(60, 100, 35);
 scene.add(ambient, sun, camera);   // camera 入场景：手持模型挂在 camera 上（helditem.js）
 
-const SEED = Number(new URLSearchParams(location.search).get('seed')) || 1337;
+/* ---------- MC-4c 存档抽象层：ISaveAdapter → SaveSystem（发布期换 SteamCloudSaveAdapter 只改此处装配，业务码零改动） ---------- */
+const saveAdapter = new LocalStorageSaveAdapter('sgsc-save-v1');
+const saveSystem = new SaveSystem(saveAdapter, {
+  interval: 30,   // 定时自动存档（秒）
+  onWarn: (msg) => { console.warn('[save]', msg); ui.showPickup(msg); },
+});
+const urlParams = new URLSearchParams(location.search);
+if (urlParams.has('new')) { saveAdapter.clear(); console.log('[save] ?new 开新档：旧档已清'); }
+const snapshot = urlParams.has('new') ? null : saveSystem.loadSnapshot();
+
+let SEED = Number(urlParams.get('seed')) || 1337;
+if (snapshot) {
+  // 差分相对「存档 seed 的地形生成」，故存档 seed 优先于 URL seed（换 seed 重放会得到错误世界）
+  if (urlParams.get('seed')) console.warn('[save] URL seed 与存档并存：以存档 seed 为准');
+  SEED = snapshot.seed;
+}
 let DAY_LEN = 180; // 秒/昼夜（章节数据 dayLengthSeconds 可覆盖，见 MC-3a）
 
 /* ---------- 世界与玩家 ---------- */
 const atlas = buildAtlas();
 const world = new World(scene, atlas.texture, SEED);
+saveSystem.attachWorld(world, snapshot);   // MC-4c：差分先挂上，warmup/后续生成时确定性重放
 const SPAWN_X = 8, SPAWN_Z = 8;
-world.warmup(SPAWN_X, SPAWN_Z);
+const savedPlayer = snapshot?.player;
+const hasSavedPos = Array.isArray(savedPlayer?.pos) && savedPlayer.pos.length === 3
+  && savedPlayer.pos.every((v) => Number.isFinite(v));
+const startPos = hasSavedPos ? savedPlayer.pos : [SPAWN_X, surfaceHeight(SPAWN_X, SPAWN_Z, SEED), SPAWN_Z];
+world.warmup(startPos[0], startPos[2]);
 const player = new Player(camera, world);
-player.spawn(SPAWN_X, surfaceHeight(SPAWN_X, SPAWN_Z, SEED), SPAWN_Z);
+if (hasSavedPos) {
+  // MC-4c：恢复精确存档位置/朝向（不走 spawn 的格心偏移；出生 chunk 已带差分预热）
+  player.pos.set(startPos[0], startPos[1], startPos[2]);
+  player.yaw = Number(savedPlayer.yaw) || 0;
+  player.pitch = Number(savedPlayer.pitch) || 0;
+  player.flying = !!savedPlayer.flying;
+  player.vel.set(0, 0, 0);
+  // 落点净化：存档脚下被差分填实（极端情况）→ 逐格上抬最多 6 格，防卡在方块里
+  for (let lift = 0; lift < 6 && player._collides(player.pos.x, player.pos.y, player.pos.z); lift++) player.pos.y += 1;
+  player._syncCamera();
+} else {
+  player.spawn(SPAWN_X, surfaceHeight(SPAWN_X, SPAWN_Z, SEED), SPAWN_Z);
+}
 
 const ui = new UI();
+if (!saveAdapter.available) console.warn('[save] localStorage 不可用（隐私模式/被禁）：本会话改动不会持久化');
 const cutscene = new Cutscene();   // MC-3d 章节开场/结尾演出层（数据驱动：章节 JSON 的 cutscene 效果）
 
 /* ---------- MC-2b 工具天梯：生存行囊 + 挖掘公式 + 合成 + 手持模型 ---------- */
@@ -176,7 +210,10 @@ const timeline = new ChapterTimeline(chapterResult.chapter, {
     npcManager.setChronicle(chapterResult.chapter.startSerial + timeline.day);
   },
   onSeasonChange(s) { console.log(`[chapter] 季节流转 → ${s.label}`); },
-  onChapterEnd() { console.log('[chapter] 章末：越过章节 end 日期，等待下一章（MC-3c 充实迁移）'); },
+  onChapterEnd() {
+    console.log('[chapter] 章末：越过章节 end 日期，等待下一章（MC-3c 充实迁移）');
+    doSave('chapter-end');   // MC-4c：章节切换触发点
+  },
 });
 
 timeline.registerEffect('notify', (eff) => { if (eff.text) ui.showPickup(eff.text); });
@@ -528,6 +565,7 @@ function die() {
   sfx.groan(0.25);
   document.exitPointerLock();
   ui.showDeath();
+  doSave('death');   // MC-4c：死亡触发点（行囊/世界/章节进度先落盘，刷新不丢）
 }
 document.getElementById('death').addEventListener('click', () => {
   if (!dead) return;
@@ -538,6 +576,7 @@ document.getElementById('death').addEventListener('click', () => {
   ui.hideDeath();
   ui.renderInventory(inventory); // 死亡不掉行囊（最小集决定；掉落留 MC-4）
   dropManager.clearAll();        // 重生清场：散落掉落物一并消散
+  doSave('respawn');             // MC-4c：重生触发点
   if (deaths === 1) ui.showPickup('乱世里没有人为你收尸。你在村口醒来，好像什么都没发生过——但你知道发生过。');
   ensureAudio();
   sfx.setNight(isNight);
@@ -603,6 +642,87 @@ const STEP_MAT = new Map([
   [BLOCK.SAND, 'sand'],
   [BLOCK.WOOD_LOG, 'wood'], [BLOCK.PLANK, 'wood'], [BLOCK.CRAFT_TABLE, 'wood'],
 ]);
+
+/* ---------- MC-4c 存档：状态分节注册（capture/restore 闭包）+ 读档恢复 + 事件触发点 ---------- */
+saveSystem.registerProvider('player', {
+  capture: () => ({ pos: [player.pos.x, player.pos.y, player.pos.z], yaw: player.yaw, pitch: player.pitch, flying: player.flying }),
+  // player 的恢复在 warmup 前已完成（见文件头 hasSavedPos 段），此处只管捕获
+});
+saveSystem.registerProvider('health', {
+  capture: () => ({ hp: Math.max(1, health.hp) }),   // 死亡瞬间的档按 1 血恢复（死亡屏不持久化）
+  restore: (d) => {
+    if (!Number.isFinite(d?.hp)) return;
+    health.hp = Math.min(PLAYER_MAX_HP, Math.max(1, Math.round(d.hp)));
+    ui.setHealth(health.hp, PLAYER_MAX_HP);
+  },
+});
+saveSystem.registerProvider('inventory', {
+  capture: () => ({ selected: inventory.selected, slots: inventory.slots.map((s) => (s ? { id: s.id, count: s.count } : null)) }),
+  restore: (d) => {
+    if (!Array.isArray(d?.slots)) return;
+    const size = inventory.slots.length;
+    inventory.slots = d.slots.slice(0, size).map((s) =>
+      s && Number.isFinite(s.id) && Number.isFinite(s.count) ? { id: s.id, count: Math.max(1, Math.round(s.count)) } : null);
+    while (inventory.slots.length < size) inventory.slots.push(null);
+    inventory.select(Number.isInteger(d.selected) ? Math.min(size - 1, Math.max(0, d.selected)) : 0);
+    ui.renderInventory(inventory);
+    ui.select(inventory.selected);
+  },
+});
+saveSystem.registerProvider('chapter', {
+  capture: () => timeline.serialize(),
+  restore: (d) => {
+    if (!timeline.restore(d)) return;
+    ui.setDate(`${timeline.formatDate()} · ${timeline.season.label}`);
+    // 恢复到当前游戏日 → 重判 NPC 编年在场性（否则全按开卷日算）
+    npcManager.setChronicle(chapterResult.chapter.startSerial + timeline.day);
+  },
+});
+saveSystem.registerProvider('quests', { capture: () => quests.serialize(), restore: (d) => quests.restore(d) });
+saveSystem.registerProvider('farming', { capture: () => farming.serialize(), restore: (d) => farming.restore(d) });
+saveSystem.registerProvider('building', {
+  capture: () => building.serialize(),
+  restore: (d) => {
+    if (!building.restore(d)) return;
+    // 已判定房屋 → 流民按册重新入住（spawnDynamic 同 id 幂等；门/墙本体在差分里）
+    for (const h of building.houses.values()) {
+      const v = building.cfg.villager;
+      npcManager.spawnDynamic({
+        id: `settler-${h.door.join('-')}`,
+        name: v.name,
+        title: v.title,
+        model: v.model,
+        spawn: { x: h.anchor[0], y: h.anchor[1] - 1, z: h.anchor[2] },
+        wander: { radius: h.radius, speed: v.wanderSpeed },
+      });
+    }
+  },
+});
+saveSystem.registerProvider('stats', {
+  capture: () => ({ blocksPlaced, blocksMined, deaths, dayTime }),
+  restore: (d) => {
+    if (!d || typeof d !== 'object') return;
+    blocksPlaced = Math.max(0, Math.round(Number(d.blocksPlaced) || 0));
+    blocksMined = Math.max(0, Math.round(Number(d.blocksMined) || 0));
+    deaths = Math.max(0, Math.round(Number(d.deaths) || 0));
+    if (Number.isFinite(d.dayTime)) dayTime = ((d.dayTime % DAY_LEN) + DAY_LEN) % DAY_LEN;
+  },
+});
+
+if (snapshot) {
+  const restored = saveSystem.restoreProviders(snapshot);
+  console.log(`[save] 读档恢复：seed=${SEED}，分节 [${restored.join(', ')}]，差分 ${saveSystem.diffCount} 格`);
+}
+
+/** 事件型存档触发（自动存档见主循环 saveSystem.update）；未开卷不落盘 */
+function doSave(reason) {
+  if (!started) return;
+  const r = saveSystem.saveNow(reason);
+  if (r.ok && !r.skipped) console.log(`[save] ${reason} 存档：${r.bytes}B（差分 ${r.diffCount} 格）`);
+}
+// 关页/切后台（含刷新）兑底一存；pagehide 覆盖 bfcache 场景，visibilitychange 覆盖切标签页
+addEventListener('pagehide', () => doSave('pagehide'));
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') doSave('hidden'); });
 
 /* ---------- 主循环 ---------- */
 let last = performance.now();
@@ -670,6 +790,9 @@ function loop(now) {
     timeline.update(dt, { isNight, playerPos: player.pos, stats: { blocksPlaced, blocksMined } });
     farming.update(dt);   // MC-4a：作物生长/水分与编年时间同源同门控（演出中不偷长）
   }
+
+  // MC-4c：定时自动存档（未开卷/演出中冻结倒计时；写失败退避+告警，见 save.js）
+  saveSystem.update(dt, started && !cutscene.isActive);
 
   // 第一人称手持模型（MC-2b）：随选中物品切换，挖掘挥动
   heldItem.setItem(inventory.heldId());

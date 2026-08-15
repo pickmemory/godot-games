@@ -66,6 +66,25 @@ export class Building {
 
   get houseCount() { return this.houses.size; }
 
+  /* ---------- MC-4c 存档（已判定房屋持久化；与 restore 对偶） ---------- */
+
+  /** 纯 JSON 可存：[{door, anchor, radius}]（bounds 仅判定时用，不存） */
+  serialize() {
+    return [...this.houses.values()].map((h) => ({ door: [...h.door], anchor: [...h.anchor], radius: h.radius }));
+  }
+
+  /** 恢复房屋册（门被拆后重放时，门方块不在 → 坏条目靠后续判定/挖掘自然出册；此处只做形状校验） */
+  restore(list) {
+    if (!Array.isArray(list)) return false;
+    for (const h of list) {
+      if (!Array.isArray(h?.door) || h.door.length !== 3 || !h.door.every(Number.isFinite)) continue;
+      const anchor = Array.isArray(h.anchor) && h.anchor.length === 3 && h.anchor.every(Number.isFinite)
+        ? [...h.anchor] : [...h.door];
+      this.houses.set(h.door.join(','), { door: [...h.door], anchor, radius: Number(h.radius) > 0 ? Number(h.radius) : 1 });
+    }
+    return true;
+  }
+
   /* ---------- 右键用法（main 路由在 farming 之前；返回 true = 已消费本次右键） ---------- */
 
   /**

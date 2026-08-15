@@ -87,4 +87,24 @@ export class QuestSystem {
   }
 
   get activeList() { return [...this.defs.values()].filter((d) => this.state.get(d.id).status === 'active'); }
+
+  /* ---------- MC-4c 存档（状态机持久化；与 restore 对偶） ---------- */
+
+  /** [id, {status, progress}] 列表（纯 JSON 可存） */
+  serialize() {
+    return [...this.state.entries()].map(([id, st]) => [id, { status: st.status, progress: st.progress }]);
+  }
+
+  /** 恢复任务状态（未注册任务忽略；非法 status/progress 跳过；不触发 onStart/onComplete 回调，避免重播提示） */
+  restore(list) {
+    if (!Array.isArray(list)) return false;
+    for (const [id, st] of list) {
+      const cur = this.state.get(String(id));
+      if (!cur || !st || typeof st !== 'object') continue;
+      if (!['locked', 'active', 'done'].includes(st.status)) continue;
+      cur.status = st.status;
+      cur.progress = Math.max(0, Math.round(Number(st.progress) || 0));
+    }
+    return true;
+  }
 }
