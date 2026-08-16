@@ -37,7 +37,7 @@
 - [~] #42 已派发 D-1 地形色彩与材质层次 v2（色彩带/斑驳/天空渐变）→ web/src/textures.js 等 (art-director)
 - [~] #43 已派发 D-2 探索结构与地标生成（烽燧/荒冢/巨木/河滩 + 罗盘）→ web/src/ + web/data/ (engineering-lead)
 - [~] #44 已派发 D-3 奇遇系统（数据驱动随机事件，编年联动）→ web/src/ + web/data/ (design-strategist)
-- [ ] D-4 声音层（昼夜 BGM + 环境音 + 事件音，mmx 真资产）→ web/assets/audio/ (audio-director)
+- [~] #45 已派发 D-4 声音层（昼夜 BGM + 环境音 + 事件音，mmx 真资产）→ web/assets/audio/ (audio-director)
 - [ ] D-5 开场哇点（镜头演出 + 氛围粒子 + 序幕）→ web/src/ (engineering-lead)
 - [ ] D-6 上架合规审计（CREDITS/术语/视觉距离/QA）→ docs/release/ (quality-lead)
 - [ ] D-7 itch.io 试玩包（zip + 商店素材）→ tools/ + docs/release/ (release-ops)
