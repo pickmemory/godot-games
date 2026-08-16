@@ -1,6 +1,8 @@
 # Web 开发（游戏根 web/，零构建；node_modules 仅本地冒烟工具用）
 node_modules/
 tools/*.png
+# 发布打包产物（itch zip/stage/manifest，可重跑生成；zip 数十 MB 不入库）
+tools/dist/
 
 # OS
 .DS_Store

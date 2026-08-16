@@ -97,3 +97,11 @@
 - 现象：`verify-mc5x.mjs` L1/L3 稳定失败（放/挖火把后 0.9s 内灯不亮/不灭）、`repro-e-talk.mjs` R2 偶发失败（贴脸 0.4s 内提示未出）——且在 **D-2 改动之前的提交上同样失败**（`git archive` 旧提交对照验证），非回归。
 - 根因：主循环 `dt = Math.min(0.05, real)` 防物理爆炸；无头软件渲染 ~20fps 且 setBlock 后 chunk 重网格化帧尖峰 → 游戏时间被拉慢，**累积 dt 的节流**（灯光 0.6s 重扫、交谈提示 0.15s 轮询）在墙钟上远超标称值。
 - 防再犯：**响应层节流（灯光发现/UI 提示类）一律墙钟调度**（`performance.now()` / rAF 时间戳，见 `lights.js · _lastScanMs`、`main.js · talkHintT`）；模拟层节流（昼夜/任务/罗盘）维持 dt 语义不变。测试等待窗要按「节流间隔 × 慢机拉伸系数」留余量；判定环境性失败先拿旧提交 `git archive` 对照，勿臆断回归。
+
+## P2 · 无头截图两坑：CI 无 CJK 字体（汉字豆腐块）+ 开卷双演出吃按键
+
+- 现象：D-7 商店截图首跑——03/04 图 UI 汉字全是方框；KeyH/KeyE 全部"没反应"（断言键位卡收起/对话面板全挂）。
+- 根因一：CI runner `fc-list` 零 CJK 字体，Chromium 汉字渲染为 tofu。修法：装开源楷体到用户字体目录（`curl -L -o ~/.fonts/LXGWWenKai-Regular.ttf https://github.com/lxgw/LxgwWenKai/releases/download/v1.510/LXGWWenKai-Regular.ttf && fc-cache -f`，OFL 许可，开发机字体不随包分发；正式内嵌方案见 compliance-audit N4）。
+- 根因二：开卷链路有**两场**演出（D-5 开场镜头 → MC-3d 章节黑屏卡），均拦截任意键，必须逐场 `Space` 跳过（repro-e-talk.mjs 早已如此，D-7 截图脚本首版漏抄）。
+- 附带：商店摆拍要收 HUD——`#fps` 调试条常驻显示（`ui.setStats`），摆拍时 `display:none`；键位卡收起是 `.min` 类（`ui.setKeysMin`）不是 `.hidden`。传送摆拍点要落 `surfaceHeight(x,z,seed)` 地表，悬空或超出已生成区块会截出黑屏（像素方差=0 是铁证）。
+- 防再犯：截图/无头 UI 断言统一走 `tools/capture-store-shots.mjs` 的 `skipAllCutscenes` + 视口内可见断言模板；换机器先查 `fc-list | grep -ci cjk`。
