@@ -48,6 +48,7 @@
 | 38 | ASH | 灰烬层 | ✓ |  | 0.2 |  |  |  | 自身 |
 | 39 | TORCH | 火把 |  | ✓ | 0.05 |  | 7.5/1.25 | torch | 自身 |
 | 40 | CAMPFIRE | 篝火 |  | ✓ | 0.4 |  | 15/2.1 | campfire | 自身 |
+| 41 | POTTERY | 陪葬陶片 |  | ✓ | 0.15 |  |  | cross | 自身 |
 
 ## TILE 瓦片表（atlas 序号；绘制逻辑在 textures.js PAINTERS）
 
@@ -86,3 +87,4 @@
 | ASH | 30 |
 | TORCH | 31 |
 | CAMPFIRE | 32 |
+| POTTERY | 33 |

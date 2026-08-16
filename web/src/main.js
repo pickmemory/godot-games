@@ -30,6 +30,7 @@ import { SaveSystem, LocalStorageSaveAdapter } from './save.js';
 import { pickSaveAdapter, platformUnlock, STEAM_ACHIEVEMENTS } from './steam-adapter.js';
 import { CelestialBodies, shichen } from './sky.js';
 import { LightManager } from './lights.js';
+import { FALLBACK_EXPLORE, nearestTarget, bearingTo, ExploredMemory } from './explore.js';
 
 /* ---------- 启动 ---------- */
 const canvas = document.getElementById('game');
@@ -73,8 +74,16 @@ if (snapshot) {
 let DAY_LEN = 180; // 秒/昼夜（章节数据 dayLengthSeconds 可覆盖，见 MC-3a）
 
 /* ---------- 世界与玩家 ---------- */
+// MC-6 D-2 探索结构配置：先 fetch 后建世界（结构烘进 chunk 基线，须在 warmup 前定值）；
+// 缺文件/离线 → explore.js 同构兑底 FALLBACK_EXPLORE
+let exploreCfg = FALLBACK_EXPLORE;
+try {
+  const res = await fetch('data/structures/explore.json');
+  if (res.ok) exploreCfg = await res.json();
+} catch (e) { /* 离线/缺文件 → 兑底 */ }
+
 const atlas = buildAtlas();
-const world = new World(scene, atlas.texture, SEED);
+const world = new World(scene, atlas.texture, SEED, exploreCfg);
 saveSystem.attachWorld(world, snapshot);   // MC-4c：差分先挂上，warmup/后续生成时确定性重放
 const SPAWN_X = 8, SPAWN_Z = 8;
 const savedPlayer = snapshot?.player;
@@ -100,6 +109,9 @@ if (hasSavedPos) {
 const ui = new UI();
 ui.setKeysMin(localStorage.getItem('sgsc.keys.min') === '1');   // MC-5x 键位卡初始态
 if (!saveAdapter.available) console.warn('[save] localStorage 不可用（隐私模式/被禁）：本会话改动不会持久化');
+// MC-6 D-2 已探记忆（localStorage，按 seed 分册；?new 开新档时一并清零重来）
+const exploredMemory = new ExploredMemory(`sgsc.explored.v1.${SEED}`);
+if (urlParams.has('new')) exploredMemory.clear();
 const cutscene = new Cutscene();   // MC-3d 章节开场/结尾演出层（数据驱动：章节 JSON 的 cutscene 效果）
 
 /* ---------- MC-2b 工具天梯：生存行囊 + 挖掘公式 + 合成 + 手持模型 ---------- */
@@ -784,6 +796,33 @@ function updateTracker(dt) {
 }
 let clockT = 0;
 
+// MC-6 D-2 探索罗盘：指向最近未探结构；走近（markRadius 内）即标记已探（localStorage 记忆），
+// 下一轮指向更远处。限频 0.25s（region 窗口哈希扫描，O(region 数)，不读 chunk 不全图扫）。
+let compassT = 0;
+function updateCompass(dt) {
+  compassT -= dt;
+  if (compassT > 0) return;
+  compassT = 0.25;
+  const t = nearestTarget(exploreCfg, player.pos.x, player.pos.z, SEED, (k) => exploredMemory.has(k));
+  if (!t) {
+    ui.drawCompass({ yaw: player.yaw, bearing: null, label: '四方茫茫…' });
+    return;
+  }
+  const dist = Math.hypot(t.x - player.pos.x, t.z - player.pos.z);
+  if (dist <= exploreCfg.compass?.markRadius) {
+    if (exploredMemory.add(t.key)) {
+      ui.showPickup(`已探明「${t.name}」——长卷上又多了一处印记`);
+      dlog('explore-mark', { key: t.key });
+    }
+    return;   // 本轮不画针；下一轮自动指向下一个目标
+  }
+  ui.drawCompass({
+    yaw: player.yaw,
+    bearing: bearingTo(player.pos.x, player.pos.z, t.x, t.z),
+    dist, label: t.name,
+  });
+}
+
 /* ---------- 脚步音效（MC-2c）：按水平距离计步，音色看脚下方块材质 ---------- */
 const STEP_LEN = 2.1; // 每步位移（格）
 let stepAcc = 0;
@@ -952,6 +991,7 @@ function loop(now) {
   if (started && !cutscene.isActive) {
     updateDayNight(dt);
     updateTracker(dt);
+    updateCompass(dt);
     timeline.update(dt, { isNight, playerPos: player.pos, stats: { blocksPlaced, blocksMined } });
     farming.update(dt);   // MC-4a：作物生长/水分与编年时间同源同门控（演出中不偷长）
   }
@@ -978,5 +1018,12 @@ requestAnimationFrame(loop);
 
 // 调试钩子（?debug=1 才挂；末尾挂载——此时 lightsMgr/quests 等均已初始化，避免 TDZ；供 tools/ 自动化验证用）
 if (new URLSearchParams(location.search).get('debug') === '1') {
-  window.__dbg = { npcManager, player, world, lightsMgr, quests, get locked() { return locked; } };
+  window.__dbg = {
+    npcManager, player, world, lightsMgr, quests,
+    explore: {
+      cfg: exploreCfg, memory: exploredMemory, seed: SEED,
+      nearest: () => nearestTarget(exploreCfg, player.pos.x, player.pos.z, SEED, (k) => exploredMemory.has(k)),
+    },
+    get locked() { return locked; },
+  };
 }

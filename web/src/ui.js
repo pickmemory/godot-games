@@ -32,6 +32,8 @@ export class UI {
     this.keysEl = document.getElementById('keys');
     this.trackerEl = document.getElementById('questTrack');
     this.sundialEl = document.getElementById('sundial');
+    this.compassEl = document.getElementById('compass');
+    this.compassInfoEl = document.getElementById('compassInfo');
     this._nameTimer = null;
     this._slots = [];
     this._heartFills = null;
@@ -170,6 +172,73 @@ export class UI {
     ctx.restore();
   }
 
+  /**
+   * MC-6 D-2 探索罗盘（日晷下方）：表盘随玩家朝向旋转（北/东/南/西），金针指向最近未探结构。
+   * @param {{yaw:number, bearing:number|null, dist?:number, label?:string}} o
+   *   yaw = 玩家朝向（player.yaw 同约：0=朝 -Z）；bearing = 目标世界方位角（explore.bearingTo）；
+   *   bearing=null 无目标（表盘照转，中心暗点）；dist 单位=格（1 格≈1 步，仅展示用）。
+   *   屏角公式：a = -(bearing - yaw)（验证：朝北时东在右、朝东时北在左，与实地一致）。
+   */
+  drawCompass(o = {}) {
+    if (!this.compassEl) return;
+    const el = this.compassEl, ctx = el.getContext('2d');
+    const W = el.width, R = W / 2;
+    const yaw = Number(o.yaw) || 0, bearing = Number.isFinite(o.bearing) ? o.bearing : null;
+    ctx.clearRect(0, 0, W, W);
+    ctx.save();
+    ctx.translate(R, R);
+
+    // 表盘底（与日晷同语言：深圆 + 金环）
+    ctx.beginPath(); ctx.arc(0, 0, R - 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(12,10,6,.5)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,215,106,.4)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    // 方位标：北（金红）/东/南/西随朝向转 —— 世界方位：北0 东-π/2 南π 西π/2
+    const CARD = [['北', 0, '#ff8a5a'], ['东', -Math.PI / 2, 'rgba(232,217,176,.8)'],
+                  ['南', Math.PI, 'rgba(232,217,176,.8)'], ['西', Math.PI / 2, 'rgba(232,217,176,.8)']];
+    ctx.font = '10px "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const [t, bd, col] of CARD) {
+      const a = -(bd - yaw);
+      ctx.fillStyle = col;
+      ctx.fillText(t, Math.sin(a) * (R - 11), -Math.cos(a) * (R - 11));
+    }
+    // 细刻度（八向短线）
+    ctx.strokeStyle = 'rgba(255,215,106,.22)'; ctx.lineWidth = 1;
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4 + Math.PI / 8 - (-yaw);   // 刻度随盘转（补 -yaw 旋转）
+      ctx.beginPath();
+      ctx.moveTo(Math.sin(a) * (R - 8), -Math.cos(a) * (R - 8));
+      ctx.lineTo(Math.sin(a) * (R - 5), -Math.cos(a) * (R - 5));
+      ctx.stroke();
+    }
+
+    // 指针：有目标=金针（宽头轻尾）；无目标=中心暗点
+    if (bearing != null) {
+      const a = -(bearing - yaw);
+      const dx = Math.sin(a), dy = -Math.cos(a);
+      ctx.beginPath();
+      ctx.moveTo(dx * (R - 7), dy * (R - 7));
+      ctx.lineTo(-dy * 3.2, dx * 3.2);
+      ctx.lineTo(dy * 3.2, -dx * 3.2);
+      ctx.closePath();
+      ctx.fillStyle = '#ffd76a'; ctx.fill();
+      ctx.beginPath(); ctx.arc(dx * (R - 9), dy * (R - 9), 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#ff8a5a'; ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(232,217,176,.35)'; ctx.fill();
+    }
+    ctx.restore();
+
+    // 目标名 + 距离（罗盘下方一行；无目标时引语）
+    if (this.compassInfoEl) {
+      this.compassInfoEl.textContent = bearing != null
+        ? `${o.label ?? '未名之地'} · ${Math.round(o.dist ?? 0)}步`
+        : (o.label ?? '四方茫茫…');
+    }
+  }
+
   /** MC-5x 键位卡收起/展开（localStorage 记忆） */
   setKeysMin(min) {
     if (!this.keysEl) return;
@@ -184,7 +253,7 @@ export class UI {
 <div><kbd>右键</kbd>放置 / 使用</div>
 <div><kbd>E</kbd>交谈（近 NPC）/ 合成</div>
 <div><kbd>1-9</kbd><span style="margin-left:2px">滚轮</span>切换行囊</div>
-<div><kbd>F8</kbd>诊断面板</div>`;
+<div>罗盘指向最近去处　<kbd>F8</kbd>诊断面板</div>`;
   }
 
   /**

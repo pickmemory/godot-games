@@ -26,6 +26,8 @@ export const TILE = {
   RAMMED_EARTH: 26, HAN_TILE: 27, THATCH: 28, CHARRED_WOOD: 29, ASH: 30,
   // MC-5x 照明：火把 / 篝火火焰头
   TORCH: 31, CAMPFIRE: 32,
+  // MC-6 D-2 探索：汉代荒冢的陪葬陶片（十字面片；挖出可拾取收藏）
+  POTTERY: 33,
 };
 
 export const BLOCK = {
@@ -46,6 +48,8 @@ export const BLOCK = {
   RAMMED_EARTH: 34, HAN_TILE: 35, THATCH: 36, CHARRED_WOOD: 37, ASH: 38,
   // MC-5x 照明（solid=false 可穿行；shape 细几何；light 参数由 lights.js 消费为 PointLight）
   TORCH: 39, CAMPFIRE: 40,
+  // MC-6 D-2 探索：陪葬陶片（荒冢封土里的汉代灰陶残片；挖出可拾取收藏，放置可陈列）
+  POTTERY: 41,
 };
 
 // 索引 = 方块 id。hardness: 基础挖掘秒数（徒手）。
@@ -123,6 +127,9 @@ export const BLOCK_DEFS = [
   { name: '篝火', solid: false, transparent: true, hardness: 0.4, selectable: true,
     shape: 'campfire', light: { dist: 15, intensity: 2.1, color: '#ff9a3c' },
     tiles: { top: TILE.CAMPFIRE, side: TILE.LOG_SIDE, bottom: TILE.LOG_SIDE } },
+  // MC-6 D-2：荒冢陪葬陶片（十字面片；无工具门槛，掊土即得；掉自身=可拾取收藏）
+  { name: '陪葬陶片', solid: false, transparent: true, cross: true, hardness: 0.15,
+    tiles: { top: TILE.POTTERY, side: TILE.POTTERY, bottom: TILE.POTTERY } },
 ];
 
 // 说明：hotbar 自 MC-2b 起由 inventory（生存行囊）驱动，不再提供创造模式固定九宫。

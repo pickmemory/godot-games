@@ -100,6 +100,13 @@
   #sundialWrap { position: fixed; right: 12px; top: 50px; pointer-events: none; z-index: 12; }
   #sundial { display: block; }
 
+  /* MC-6 D-2 探索罗盘（日晷下方）：表盘随朝向转，金针指向最近未探结构；下一行目标名+步数 */
+  #compassWrap { position: fixed; right: 12px; top: 148px; pointer-events: none; z-index: 12;
+    padding: 3px 5px 4px; text-align: center; }
+  #compass { display: block; }
+  #compassInfo { font-size: 10.5px; letter-spacing: 1px; color: rgba(232,217,176,.9);
+    margin-top: 1px; white-space: nowrap; }
+
   /* 键位卡（左下；H 收起/展开） */
   #keys { position: fixed; left: 12px; bottom: 12px; padding: 10px 14px 9px;
     font-size: 12px; line-height: 1.85; letter-spacing: 1px; pointer-events: none; }
@@ -110,8 +117,8 @@
     padding: 0 6px; color: #ffe9a8; font: 11px/1.5 Consolas, monospace; }
   #keys.min { padding: 4px 10px; font-size: 11px; color: rgba(232,217,176,.7); }
 
-  /* 任务追踪卡（右上，日晷下方）：当前要干什么 / 会发生什么 */
-  #questTrack { position: fixed; right: 12px; top: 136px; width: 216px;
+  /* 任务追踪卡（右上，罗盘下方）：当前要干什么 / 会发生什么 */
+  #questTrack { position: fixed; right: 12px; top: 242px; width: 216px;
     padding: 10px 14px 9px; font-size: 12px; pointer-events: none; }
   #questTrack .qt-label { color: rgba(184,167,104,.85); font-size: 10px; letter-spacing: 3px; margin-bottom: 5px; }
   #questTrack .qt-title { color: #ffe9a8; font-size: 14px; letter-spacing: 2px; font-weight: 600; }
@@ -240,9 +247,10 @@
   <div><kbd>右键</kbd>放置 / 使用</div>
   <div><kbd>E</kbd>交谈（近 NPC）/ 合成</div>
   <div><kbd>1-9</kbd><span style="margin-left:2px">滚轮</span>切换行囊</div>
-  <div><kbd>F8</kbd>诊断面板</div>
+  <div>罗盘指向最近去处　<kbd>F8</kbd>诊断面板</div>
 </div>
 <div id="sundialWrap" class="glass" style="padding:4px;border-radius:50%"><canvas id="sundial" width="84" height="84"></canvas></div>
+<div id="compassWrap" class="glass"><canvas id="compass" width="60" height="60"></canvas><div id="compassInfo"></div></div>
 <div id="questTrack" class="glass">
   <div class="qt-label">当 下 之 事</div>
   <div class="qt-title"></div>
@@ -293,6 +301,7 @@
     <b>WASD</b> 移动　<b>空格</b> 跳跃　<b>F</b> 飞行　<b>Shift</b> 飞行下降<br>
     <b>鼠标左键</b> 按住挖掘　<b>右键</b> 放置 / 使用（锄地·播种·收获·进食）　<b>滚轮 / 1-9</b> 切换行囊<br>
     <b>E</b> 合成：原木→木板→工作台→<b>木镐</b>→石镐→铁镐，越挖越快；<b>木锄</b>锄地种菜，靠天吃饭；靠近村人时 <b>E</b> 交谈<br>
+    右上罗盘会指向最近的一处去处——烽燧夜里有火，荒冢下埋着东西<br>
     <b>入夜后，行尸将循着活人的气息游荡而来……</b><br>
     挖洞、筑墙，或逃到高处——活过你的第一夜。　<b>ESC</b> 释放鼠标
   </div>

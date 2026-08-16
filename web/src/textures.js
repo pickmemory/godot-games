@@ -384,6 +384,27 @@ const PAINTERS = {
       ctx.fillRect(ox + 3 + i * 2, oy + 13, 2, 2);   // 炭堆
     }
   },
+  [TILE.POTTERY]: (ctx, ox, oy, rnd) => {    // MC-6 D-2 陪葬陶片：汉灰陶残片，绳纹斜排（透明底十字面片用）
+    ctx.clearRect(ox, oy, 16, 16);
+    // 大残片：斜靠的三角陶片（底宽上尖）
+    for (let y = 4; y < 15; y++) {
+      const w = Math.max(1, Math.round((y - 3) * 0.9));
+      for (let x = 0; x < w && x < 8; x++) {
+        const cord = ((x + y) % 4 === 0) ? -0.16 : 0;   // 绳纹压痕
+        ctx.fillStyle = shade('#9c8262', cord + (rnd() - 0.5) * 0.16);
+        ctx.fillRect(ox + 4 + x, oy + y, 1, 1);
+      }
+    }
+    // 小残片：右下另一掊（斜切三角）
+    for (let y = 10; y < 15; y++) for (let x = 0; x < 4; x++) {
+      if (x + (y - 10) < 3) continue;
+      ctx.fillStyle = shade('#8a7052', ((x - y) % 3 === 0 ? -0.14 : 0) + (rnd() - 0.5) * 0.14);
+      ctx.fillRect(ox + 10 + x, oy + y, 1, 1);
+    }
+    // 陶片断面亮色（上缘）
+    ctx.fillStyle = '#c9b28c';
+    ctx.fillRect(ox + 4, oy + 4, 2, 1); ctx.fillRect(ox + 10, oy + 10, 2, 1);
+  },
 };
 
 /* ---------- D-1 参数化草/叶绘制器：接受色调参数 tint（{grass|leaf, dirt?, mottle?}） ----------

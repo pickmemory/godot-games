@@ -17,3 +17,4 @@
 | npc/npcs.json | npcs | npcs:3 |
 | quests.json | quests | quests:6 |
 | recipes.json | recipes | recipes:17 |
+| structures/explore.json | keepout, compass, types | — |

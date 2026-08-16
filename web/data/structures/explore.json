@@ -1,0 +1,40 @@
+{
+  "_comment": "MC-6 D-2 世界探索结构配置（引擎 web/src/explore.js；schema 见本目录 README.md）。types[].shape 决定程序化形状：beacon=残破烽燧（夯土塔+顶部篝火，夜间 lights.js 自动点亮）；mound=汉代荒冢（封土圆丘+陪葬陶片 BLOCK.POTTERY，第 1 片嵌表面、其余埋土内）；greatree=巨木（高原木+大圆冠）；pebbles=河滩卵石（chunk 内饰面：地表沙→圆石混合带，无锚点不上罗盘）。region=每 region×region 个 chunk 至多 1 个实例（结构间距下限）；chance=region 占据率；terrain=锚点地表约束（surfaceHeight 高度带 + ±3 格坡度）；keepout=出生村禁建区。compass：searchRadius=罗盘搜索半径（格），markRadius=接近即标记已探的半径（格）。改数值只改本文件，勿散落硬编码。",
+  "keepout": { "x": 8, "z": 8, "radius": 64 },
+  "compass": { "searchRadius": 384, "markRadius": 14 },
+  "types": [
+    {
+      "id": "beacon-tower",
+      "name": "残破烽燧",
+      "shape": "beacon",
+      "region": 12,
+      "chance": 0.8,
+      "terrain": { "minGround": 16, "maxGround": 34, "maxSlope": 4 },
+      "params": { "minHeight": 3, "maxHeight": 5, "footprint": 2, "speckle": 0.15, "rubble": 0.12, "ruinRate": 0.3 }
+    },
+    {
+      "id": "han-mound",
+      "name": "汉代荒冢",
+      "shape": "mound",
+      "region": 7,
+      "chance": 0.7,
+      "terrain": { "minGround": 16, "maxGround": 30, "maxSlope": 3 },
+      "params": { "minRadius": 4, "maxRadius": 6, "minHeight": 3, "maxHeight": 5, "shardsMin": 2, "shardsMax": 4 }
+    },
+    {
+      "id": "great-oak",
+      "name": "巨木",
+      "shape": "greatree",
+      "region": 5,
+      "chance": 0.75,
+      "terrain": { "minGround": 18, "maxGround": 29, "maxSlope": 3 },
+      "params": { "minTrunk": 5, "maxTrunk": 8, "canopy": [2, 3, 4, 4, 3, 2] }
+    },
+    {
+      "id": "river-pebbles",
+      "name": "河滩卵石",
+      "shape": "pebbles",
+      "params": { "chance": 0.55, "cobbleRate": 0.32, "raisedRate": 0.05 }
+    }
+  ]
+}

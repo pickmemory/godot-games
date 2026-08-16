@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { CHUNK_X, CHUNK_Y, CHUNK_Z } from './blocks.js';
 import { generateChunk, chunkColorBands } from './terrain.js';
 import { buildChunkGeometry } from './mesher.js';
+import { stampExplore } from './explore.js';
 
 const VIEW_RADIUS = 4;      // 视距（chunk 切比雪夫半径）
 const UNLOAD_RADIUS = 6;    // 超出即卸载
@@ -14,10 +15,13 @@ export class World {
    * @param {THREE.Scene} scene
    * @param {THREE.Texture} atlasTexture
    * @param {number} seed
+   * @param {object} [exploreCfg] MC-6 D-2 探索结构配置（web/data/structures/explore.json；
+   *   null = 关闭结构烘焙）。须在 warmup 前定值（main.js 先 fetch 再 new World）。
    */
-  constructor(scene, atlasTexture, seed = 1337) {
+  constructor(scene, atlasTexture, seed = 1337, exploreCfg = null) {
     this.scene = scene;
     this.seed = seed;
+    this.exploreCfg = exploreCfg;
     this.chunks = new Map();          // "cx,cz" → { cx, cz, data, mesh, dirty }
     this.material = new THREE.MeshLambertMaterial({
       map: atlasTexture,
@@ -81,6 +85,9 @@ export class World {
     const k = this.key(cx, cz);
     if (this.chunks.has(k)) return;
     const data = generateChunk(cx, cz, this.seed);
+    // MC-6 D-2 探索结构烘进基线（确定性，同 generateChunk 同源哈希），
+    // 在差分重放之前 → 玩家改动永远覆盖结构方块（save 兼容：结构不产生差分）
+    if (this.exploreCfg) stampExplore(data, cx, cz, this.seed, this.exploreCfg);
     const rec = { cx, cz, data, bands: chunkColorBands(cx, cz, this.seed), mesh: null, dirty: true };
     // MC-4c 存档：确定性重建后重放玩家差分（挖/放/耕作/章节迁移），再参与网格化
     const diff = this.pendingDiffs.get(k);
