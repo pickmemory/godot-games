@@ -40,4 +40,4 @@
 - [~] #45 已派发 D-4 声音层（昼夜 BGM + 环境音 + 事件音，mmx 真资产）→ web/assets/audio/ (audio-director)
 - [~] #46 已派发 D-5 开场哇点（镜头演出 + 氛围粒子 + 序幕）→ web/src/ (engineering-lead)
 - [~] #47 已派发 D-6 上架合规审计（CREDITS/术语/视觉距离/QA）→ docs/release/ (quality-lead)
-- [ ] D-7 itch.io 试玩包（zip + 商店素材）→ tools/ + docs/release/ (release-ops)
+- [~] #48 已派发 D-7 itch.io 试玩包（zip + 商店素材）→ tools/ + docs/release/ (release-ops)
