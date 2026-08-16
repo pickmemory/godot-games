@@ -52,9 +52,15 @@ const PAINTERS = {
     }
   },
   [TILE.STONE]: (ctx, ox, oy, rnd) => {
+    // 深青灰基底 + 裂纹暗斑（去白：MC-5x 视觉调优，夜里不再月光白板）
     for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
-      ctx.fillStyle = shade('#8a8a8a', (rnd() - 0.5) * 0.18);
+      ctx.fillStyle = shade('#6e7680', (rnd() - 0.5) * 0.22);
       ctx.fillRect(ox + x, oy + y, 1, 1);
+    }
+    for (let i = 0; i < 4; i++) {                       // 随机暗斑（岩层锈迹感）
+      const bx = Math.floor(rnd() * 12) + 1, by = Math.floor(rnd() * 12) + 1;
+      ctx.fillStyle = shade('#59616c', (rnd() - 0.5) * 0.1);
+      ctx.fillRect(ox + bx, oy + by, 2 + Math.floor(rnd() * 2), 1 + Math.floor(rnd() * 2));
     }
   },
   [TILE.LOG_SIDE]: (ctx, ox, oy, rnd) => {
@@ -98,7 +104,7 @@ const PAINTERS = {
       const bx = Math.floor(x / 4), by = Math.floor(y / 4);
       const sub = ((bx * 3 + by * 5) % 4) * 0.05 - 0.08;
       const seam = (x % 4 === 0 || y % 4 === 0) ? -0.22 : (rnd() - 0.5) * 0.12;
-      ctx.fillStyle = shade('#7d7d7d', sub + seam);
+      ctx.fillStyle = shade('#666e78', sub + seam);
       ctx.fillRect(ox + x, oy + y, 1, 1);
     }
   },
@@ -354,6 +360,28 @@ const PAINTERS = {
       const bx = Math.floor(rnd() * 13), by = Math.floor(rnd() * 13);
       ctx.fillStyle = shade('#3a352e', (rnd() - 0.5) * 0.15);
       ctx.fillRect(ox + bx, oy + by, 3, 2);
+    }
+  },
+  [TILE.TORCH]: (ctx, ox, oy, rnd) => {      // 火把：木杆纵纹 + 顶端橙红火头 + 白炽芯
+    ctx.fillStyle = '#7a5a34';
+    ctx.fillRect(ox + 6, oy + 6, 4, 10);      // 木杆
+    ctx.fillStyle = 'rgba(0,0,0,.25)';
+    ctx.fillRect(ox + 8, oy + 6, 1, 10);      // 杆侧阴影线
+    const g = ctx.createLinearGradient(ox + 5, oy + 2, ox + 10, oy + 7);
+    g.addColorStop(0, '#ff9a2e'); g.addColorStop(0.55, '#ffd24a'); g.addColorStop(1, '#fff6c8');
+    ctx.fillStyle = g;
+    ctx.fillRect(ox + 5, oy + 2, 6, 5);       // 火头
+    ctx.fillStyle = 'rgba(255,150,40,.5)';
+    ctx.fillRect(ox + 4, oy + 4, 1, 3); ctx.fillRect(ox + 11, oy + 4, 1, 3); // 火肩辉光
+  },
+  [TILE.CAMPFIRE]: (ctx, ox, oy, rnd) => {   // 篝火：焰心（橙黄白三叠）+ 底部炭堆
+    const g = ctx.createRadialGradient(ox + 8, oy + 9, 1, ox + 8, oy + 9, 8);
+    g.addColorStop(0, '#fff2b0'); g.addColorStop(0.4, '#ffc23e'); g.addColorStop(0.8, '#e2621d'); g.addColorStop(1, 'rgba(160,40,10,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(ox + 8, oy + 9, 8, 0, Math.PI * 2); ctx.fill();
+    for (let i = 0; i < 5; i++) {
+      ctx.fillStyle = shade('#2c2620', (rnd() - 0.5) * 0.3);
+      ctx.fillRect(ox + 3 + i * 2, oy + 13, 2, 2);   // 炭堆
     }
   },
 };

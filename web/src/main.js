@@ -28,6 +28,8 @@ import { QuestSystem, FALLBACK_QUESTS } from './quests.js';
 import { Cutscene } from './cutscene.js';
 import { SaveSystem, LocalStorageSaveAdapter } from './save.js';
 import { pickSaveAdapter, platformUnlock, STEAM_ACHIEVEMENTS } from './steam-adapter.js';
+import { CelestialBodies, shichen } from './sky.js';
+import { LightManager } from './lights.js';
 
 /* ---------- 启动 ---------- */
 const canvas = document.getElementById('game');
@@ -96,6 +98,7 @@ if (hasSavedPos) {
 }
 
 const ui = new UI();
+ui.setKeysMin(localStorage.getItem('sgsc.keys.min') === '1');   // MC-5x 键位卡初始态
 if (!saveAdapter.available) console.warn('[save] localStorage 不可用（隐私模式/被禁）：本会话改动不会持久化');
 const cutscene = new Cutscene();   // MC-3d 章节开场/结尾演出层（数据驱动：章节 JSON 的 cutscene 效果）
 
@@ -323,11 +326,6 @@ const dialogUI = new DialogUI({
 const npcManager = new NPCManager(scene, world, npcData);
 npcManager.setChronicle(chapterResult.chapter.startSerial);   // 开卷即判（此后日翻页重判）
 
-// 调试钩子（?debug=1 才挂；供 tools/repro-e-talk.mjs 等自动化验证用，正常游玩不暴露）
-if (new URLSearchParams(location.search).get('debug') === '1') {
-  window.__dbg = { npcManager, player, get locked() { return locked; } };
-}
-
 /* ---------- MC-4b 建造扩展：门开合 + 房屋判定（判定成功 → 流民入住 + 定居反馈） ---------- */
 const building = new Building(world, {
   notify: (t) => ui.showPickup(t),
@@ -522,6 +520,7 @@ function toggleCraft() {
 const TALK_RANGE = 4.5;   // 可交谈距离：与 NPC 迎客半径（approach 5.0 / 停止 1.8）对齐，NPC 停在玩家身旁时必可聊
 const input = { forward: false, back: false, left: false, right: false, jump: false, down: false };
 let digHeld = false, placeHeld = false, locked = false;
+let keysMin = localStorage.getItem('sgsc.keys.min') === '1';   // MC-5x 键位卡收起态（记忆）
 
 addEventListener('keydown', (e) => {
   if (cutscene.isActive) { dlog('anykey:skip-cutscene', { key: e.code }); cutscene.skip(); return; }   // MC-3d：演出中任意键跳过（不透传）
@@ -535,6 +534,10 @@ addEventListener('keydown', (e) => {
     case 'KeyF':
       player.flying = !player.flying;
       player.vel.y = 0;
+      break;
+    case 'KeyH':   // MC-5x 键位卡收起/展开（记忆偏好）
+      keysMin = !keysMin;
+      ui.setKeysMin(keysMin);
       break;
     case 'KeyE': {
       // 诊断快照：每次 E 键的完整分支上下文（含全部 NPC 在场/距离），定位「按了没反应」用
@@ -661,12 +664,14 @@ const SKY_NIGHT = new THREE.Color(0x0b1026);
 const SUN_DAY = new THREE.Color(0xffffff);
 const SUN_NIGHT = new THREE.Color(0x8a97c8);   // 月光冷蓝
 const AMB_DAY = new THREE.Color(0xffffff);
-const AMB_NIGHT = new THREE.Color(0x9aa8d0);
+const AMB_NIGHT = new THREE.Color(0x6d7fae);   // 月夜环境光：压暗加深蓝（去灰白）
 const FOG_DAY = { near: 40, far: 130 };
 const FOG_NIGHT = { near: 12, far: 52 };        // 夜间浓雾压近：看得见的范围就是你的安全区
 const _sky = new THREE.Color();
 const _tint = new THREE.Color();   // MC-5b 章节氛围色（美术圣经 §2.4）
 let dayTime = DAY_LEN * 0.15; // 从清晨开始
+const celestial = new CelestialBodies(scene);          // MC-5x 天体（太阳即时钟）
+const lightsMgr = new LightManager(scene, world);      // MC-5x 火把/篝火点光池
 let isNight = false;
 let nightsSurvived = 0; // MC-5e：夜→昼翻转计数（=1 时解锁 Steam 成就「活过第一夜」；随 stats 分节持久化）
 
@@ -677,9 +682,9 @@ function updateDayNight(dt) {
   let sky, sunI, ambI, nightK;
   if (c < 0.42)       { sky = _sky.copy(SKY_DAY);    sunI = 0.9;  ambI = 0.55; nightK = 0; } // 白天
   else if (c < 0.5)   { const k = (c - 0.42) / 0.08; sky = _sky.lerpColors(SKY_DAY, SKY_SUNSET, k); sunI = 0.9 - 0.35 * k; ambI = 0.55 - 0.15 * k; nightK = 0.35 * k; } // 日落
-  else if (c < 0.58)  { const k = (c - 0.5) / 0.08;  sky = _sky.lerpColors(SKY_SUNSET, SKY_NIGHT, k); sunI = 0.55 - 0.43 * k; ambI = 0.4 - 0.24 * k; nightK = 0.35 + 0.65 * k; } // 入夜
-  else if (c < 0.92)  { sky = _sky.copy(SKY_NIGHT);  sunI = 0.12; ambI = 0.16; nightK = 1; } // 深夜
-  else                { const k = (c - 0.92) / 0.08; sky = _sky.lerpColors(SKY_NIGHT, SKY_DAY, k); sunI = 0.12 + 0.78 * k; ambI = 0.16 + 0.39 * k; nightK = 1 - k; } // 破晓
+  else if (c < 0.58)  { const k = (c - 0.5) / 0.08;  sky = _sky.lerpColors(SKY_SUNSET, SKY_NIGHT, k); sunI = 0.55 - 0.43 * k; ambI = 0.4 - 0.28 * k; nightK = 0.35 + 0.65 * k; } // 入夜
+  else if (c < 0.92)  { sky = _sky.copy(SKY_NIGHT);  sunI = 0.12; ambI = 0.12; nightK = 1; } // 深夜（ambient 压至 0.12）
+  else                { const k = (c - 0.92) / 0.08; sky = _sky.lerpColors(SKY_NIGHT, SKY_DAY, k); sunI = 0.12 + 0.78 * k; ambI = 0.12 + 0.43 * k; nightK = 1 - k; } // 破晓
   renderer.setClearColor(sky);
   scene.fog.color.copy(sky);
   // MC-5b 章节×情绪天空色：事件 sky 效果的 skyTint 覆盖 > 季节 params.skyTint（美术圣经 §2.4）
@@ -710,8 +715,63 @@ function updateDayNight(dt) {
       platformUnlock(STEAM_ACHIEVEMENTS.SURVIVE_FIRST_NIGHT);
     }
   }
+
+  // MC-5x 天体（太阳即时钟）：每帧随玩家平移、随 c 起落
+  celestial.update(c, player.pos, nightK);
+
+  // MC-5x 灯光：火把/篝火点光池 + 手持火把（演出/死亡中也照常，火不该内火）
+  lightsMgr.update(dt, player.pos, inventory.heldId() === BLOCK.TORCH ? BLOCK.TORCH : false);
+
+  // MC-5x 时钟/日晷（限频 0.25s；日晷常亮不随夜色变暗——系统提示性质）
+  clockT -= dt;
+  if (clockT <= 0) {
+    clockT = 0.25;
+    const sc = shichen(c);
+    ui.setClock(`${sc.label}　${nightK > 0.9 ? '夜' : '昼'}`, nightK > 0.9);
+    ui.drawSundial(c, sc);
+  }
+
   return nightK;
 }
+
+// MC-5x 任务追踪卡：玩家「下一步干什么/会发生什么」常驻指引（限频 0.6s）
+let trackerT = 0;
+function updateTracker(dt) {
+  trackerT -= dt;
+  if (trackerT > 0) return;
+  trackerT = 0.6;
+  const c = dayTime / DAY_LEN;
+  const active = quests.activeList;
+  let q;
+  if (active.length) {
+    const st = quests.get(active[0].id);
+    q = [{ title: st.title, desc: st.desc, progress: st.progress, count: st.objective.count }];
+  } else {
+    // 开卷引导：陈叟在场 → 去见他；否则基础生存引导
+    const elder = npcManager.get('elder-chen');
+    q = [{
+      title: elder?.active ? '初来乍到' : '安身立命',
+      desc: elder?.active
+        ? '去村口找陈叟（跟着头顶名牌走），靠近后按 E 交谈。'
+        : '抬头看太阳——它就是你的钟。日落前：挖木垒墙，备一支火把。',
+    }];
+  }
+  // 日落/夜魇预警（回答「会发生什么」）
+  let warn;
+  if (c < 0.42) {
+    const s = Math.round((0.42 - c) * DAY_LEN);
+    warn = { cls: s <= 45 ? 'warn' : '', text: `☀ 距日落 ${s}s · 入夜行尸将至，备好墙与火` };
+  } else if (c < 0.58) {
+    warn = { cls: 'night', text: '日落西山——最后一缕光正在退去' };
+  } else if (c < 0.92) {
+    const s = Math.round((0.92 - c) * DAY_LEN);
+    warn = { cls: 'night', text: `夜 · 行尸游荡 · 破晓还剩 ${s}s` };
+  } else {
+    warn = { cls: '', text: '天将破晓——行尸将在晨光中倒下' };
+  }
+  ui.renderTracker(q, warn);
+}
+let clockT = 0;
 
 /* ---------- 脚步音效（MC-2c）：按水平距离计步，音色看脚下方块材质 ---------- */
 const STEP_LEN = 2.1; // 每步位移（格）
@@ -880,6 +940,7 @@ function loop(now) {
   // MC-3d：开卷（首次指针锁定）后才起表；演出中暂停（开场旁白不偷游戏日历）
   if (started && !cutscene.isActive) {
     updateDayNight(dt);
+    updateTracker(dt);
     timeline.update(dt, { isNight, playerPos: player.pos, stats: { blocksPlaced, blocksMined } });
     farming.update(dt);   // MC-4a：作物生长/水分与编年时间同源同门控（演出中不偷长）
   }
@@ -903,3 +964,8 @@ function loop(now) {
   renderer.render(scene, camera);
 }
 requestAnimationFrame(loop);
+
+// 调试钩子（?debug=1 才挂；末尾挂载——此时 lightsMgr/quests 等均已初始化，避免 TDZ；供 tools/ 自动化验证用）
+if (new URLSearchParams(location.search).get('debug') === '1') {
+  window.__dbg = { npcManager, player, world, lightsMgr, quests, get locked() { return locked; } };
+}

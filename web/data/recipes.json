@@ -1,20 +1,285 @@
 {
   "_comment": "合成最小集（crafting.js 消费）。in=材料[{id,n}]，out=产物{id,n}，station=true 需站在已放置的工作台旁（半径4格）。物品 id：方块=方块 id（blocks.js），工具/材料≥100（items.js）。熔炉/铁矿→铁锭冶炼留给 MC-4，故铁镐暂用铁矿石直锻。",
   "recipes": [
-    { "id": "plank",       "out": { "id": 7,   "n": 4 }, "in": [{ "id": 4,   "n": 1 }], "station": false },
-    { "id": "stick",       "out": { "id": 104, "n": 4 }, "in": [{ "id": 7,   "n": 2 }], "station": false },
-    { "id": "craft_table", "out": { "id": 11,  "n": 1 }, "in": [{ "id": 7,   "n": 4 }], "station": false },
-    { "id": "pick_wood",   "out": { "id": 100, "n": 1 }, "in": [{ "id": 7,   "n": 3 }, { "id": 104, "n": 2 }], "station": true },
-    { "id": "pick_stone",  "out": { "id": 101, "n": 1 }, "in": [{ "id": 8,   "n": 3 }, { "id": 104, "n": 2 }], "station": true },
-    { "id": "pick_iron",   "out": { "id": 102, "n": 1 }, "in": [{ "id": 10,  "n": 3 }, { "id": 104, "n": 2 }], "station": true },
-    { "id": "hoe_wood",    "out": { "id": 105, "n": 1 }, "in": [{ "id": 7,   "n": 2 }, { "id": 104, "n": 2 }], "station": true },
-    { "id": "hoe_stone",   "out": { "id": 106, "n": 1 }, "in": [{ "id": 8,   "n": 2 }, { "id": 104, "n": 2 }], "station": true },
-    { "id": "door",        "out": { "id": 20,  "n": 3 }, "in": [{ "id": 7,   "n": 6 }], "station": true },
-    { "id": "window",      "out": { "id": 28,  "n": 2 }, "in": [{ "id": 7,   "n": 2 }, { "id": 104, "n": 1 }], "station": true },
-    { "id": "fence",       "out": { "id": 29,  "n": 3 }, "in": [{ "id": 7,   "n": 4 }, { "id": 104, "n": 2 }], "station": true },
-    { "id": "stairs",      "out": { "id": 30,  "n": 4 }, "in": [{ "id": 7,   "n": 6 }], "station": true },
-    { "id": "rammed_earth", "out": { "id": 34,  "n": 4 }, "in": [{ "id": 2,   "n": 4 }], "station": false },
-    { "id": "han_tile",    "out": { "id": 35,  "n": 4 }, "in": [{ "id": 8,   "n": 2 }, { "id": 6, "n": 1 }], "station": true },
-    { "id": "thatch",      "out": { "id": 36,  "n": 4 }, "in": [{ "id": 107, "n": 4 }], "station": false }
+    {
+      "id": "plank",
+      "out": {
+        "id": 7,
+        "n": 4
+      },
+      "in": [
+        {
+          "id": 4,
+          "n": 1
+        }
+      ],
+      "station": false
+    },
+    {
+      "id": "stick",
+      "out": {
+        "id": 104,
+        "n": 4
+      },
+      "in": [
+        {
+          "id": 7,
+          "n": 2
+        }
+      ],
+      "station": false
+    },
+    {
+      "id": "craft_table",
+      "out": {
+        "id": 11,
+        "n": 1
+      },
+      "in": [
+        {
+          "id": 7,
+          "n": 4
+        }
+      ],
+      "station": false
+    },
+    {
+      "id": "pick_wood",
+      "out": {
+        "id": 100,
+        "n": 1
+      },
+      "in": [
+        {
+          "id": 7,
+          "n": 3
+        },
+        {
+          "id": 104,
+          "n": 2
+        }
+      ],
+      "station": true
+    },
+    {
+      "id": "pick_stone",
+      "out": {
+        "id": 101,
+        "n": 1
+      },
+      "in": [
+        {
+          "id": 8,
+          "n": 3
+        },
+        {
+          "id": 104,
+          "n": 2
+        }
+      ],
+      "station": true
+    },
+    {
+      "id": "pick_iron",
+      "out": {
+        "id": 102,
+        "n": 1
+      },
+      "in": [
+        {
+          "id": 10,
+          "n": 3
+        },
+        {
+          "id": 104,
+          "n": 2
+        }
+      ],
+      "station": true
+    },
+    {
+      "id": "hoe_wood",
+      "out": {
+        "id": 105,
+        "n": 1
+      },
+      "in": [
+        {
+          "id": 7,
+          "n": 2
+        },
+        {
+          "id": 104,
+          "n": 2
+        }
+      ],
+      "station": true
+    },
+    {
+      "id": "hoe_stone",
+      "out": {
+        "id": 106,
+        "n": 1
+      },
+      "in": [
+        {
+          "id": 8,
+          "n": 2
+        },
+        {
+          "id": 104,
+          "n": 2
+        }
+      ],
+      "station": true
+    },
+    {
+      "id": "door",
+      "out": {
+        "id": 20,
+        "n": 3
+      },
+      "in": [
+        {
+          "id": 7,
+          "n": 6
+        }
+      ],
+      "station": true
+    },
+    {
+      "id": "window",
+      "out": {
+        "id": 28,
+        "n": 2
+      },
+      "in": [
+        {
+          "id": 7,
+          "n": 2
+        },
+        {
+          "id": 104,
+          "n": 1
+        }
+      ],
+      "station": true
+    },
+    {
+      "id": "fence",
+      "out": {
+        "id": 29,
+        "n": 3
+      },
+      "in": [
+        {
+          "id": 7,
+          "n": 4
+        },
+        {
+          "id": 104,
+          "n": 2
+        }
+      ],
+      "station": true
+    },
+    {
+      "id": "stairs",
+      "out": {
+        "id": 30,
+        "n": 4
+      },
+      "in": [
+        {
+          "id": 7,
+          "n": 6
+        }
+      ],
+      "station": true
+    },
+    {
+      "id": "rammed_earth",
+      "out": {
+        "id": 34,
+        "n": 4
+      },
+      "in": [
+        {
+          "id": 2,
+          "n": 4
+        }
+      ],
+      "station": false
+    },
+    {
+      "id": "han_tile",
+      "out": {
+        "id": 35,
+        "n": 4
+      },
+      "in": [
+        {
+          "id": 8,
+          "n": 2
+        },
+        {
+          "id": 6,
+          "n": 1
+        }
+      ],
+      "station": true
+    },
+    {
+      "id": "thatch",
+      "out": {
+        "id": 36,
+        "n": 4
+      },
+      "in": [
+        {
+          "id": 107,
+          "n": 4
+        }
+      ],
+      "station": false
+    },
+    {
+      "id": "torch",
+      "out": {
+        "id": 39,
+        "n": 4
+      },
+      "in": [
+        {
+          "id": 7,
+          "n": 1
+        },
+        {
+          "id": 104,
+          "n": 1
+        }
+      ],
+      "station": false,
+      "_comment": "火把：木板+木棍"
+    },
+    {
+      "id": "campfire",
+      "out": {
+        "id": 40,
+        "n": 1
+      },
+      "in": [
+        {
+          "id": 4,
+          "n": 3
+        },
+        {
+          "id": 104,
+          "n": 2
+        }
+      ],
+      "station": false,
+      "_comment": "篝火：原木+木棍"
+    }
   ]
 }

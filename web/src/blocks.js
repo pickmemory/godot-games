@@ -24,6 +24,8 @@ export const TILE = {
   DOOR_LOWER: 22, DOOR_UPPER: 23, WINDOW: 24, FENCE: 25,
   // MC-5b 第二章「190·讨董」：汉代建材 + 焚洛阳世界状态残留（美术规范见 docs/design/art-bible.md §4）
   RAMMED_EARTH: 26, HAN_TILE: 27, THATCH: 28, CHARRED_WOOD: 29, ASH: 30,
+  // MC-5x 照明：火把 / 篝火火焰头
+  TORCH: 31, CAMPFIRE: 32,
 };
 
 export const BLOCK = {
@@ -42,6 +44,8 @@ export const BLOCK = {
   STAIRS_PZ: 30, STAIRS_NZ: 31, STAIRS_PX: 32, STAIRS_NX: 33,   // 升梯方向：+Z/-Z/+X/-X
   // MC-5b 第二章方块（id 顺延；美术圣经 §4.2 变体表登记）
   RAMMED_EARTH: 34, HAN_TILE: 35, THATCH: 36, CHARRED_WOOD: 37, ASH: 38,
+  // MC-5x 照明（solid=false 可穿行；shape 细几何；light 参数由 lights.js 消费为 PointLight）
+  TORCH: 39, CAMPFIRE: 40,
 };
 
 // 索引 = 方块 id。hardness: 基础挖掘秒数（徒手）。
@@ -112,6 +116,13 @@ export const BLOCK_DEFS = [
     tiles: { top: TILE.CHARRED_WOOD, side: TILE.CHARRED_WOOD, bottom: TILE.CHARRED_WOOD } },
   { name: '灰烬层', solid: true, transparent: false, hardness: 0.2,
     tiles: { top: TILE.ASH, side: TILE.ASH, bottom: TILE.ASH } },
+  // MC-5x 照明：火把（立杆+火头，手持可照明）与篝火（三木交叉+火心，定点大光源）
+  { name: '火把', solid: false, transparent: true, hardness: 0.05, selectable: true,
+    shape: 'torch', light: { dist: 7.5, intensity: 1.25, color: '#ffb35c' },
+    tiles: { top: TILE.TORCH, side: TILE.TORCH, bottom: TILE.TORCH } },
+  { name: '篝火', solid: false, transparent: true, hardness: 0.4, selectable: true,
+    shape: 'campfire', light: { dist: 15, intensity: 2.1, color: '#ff9a3c' },
+    tiles: { top: TILE.CAMPFIRE, side: TILE.LOG_SIDE, bottom: TILE.LOG_SIDE } },
 ];
 
 // 说明：hotbar 自 MC-2b 起由 inventory（生存行囊）驱动，不再提供创造模式固定九宫。

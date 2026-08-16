@@ -203,6 +203,21 @@ export function buildChunkGeometry(data, world, cx, cz, tilesPerRow) {
           addFence(x, y, z, def, tilesPerRow, world, ox, oz, positions, normals, uvs, indices);
           continue;
         }
+        // MC-5x 照明细几何：火把（立杆+火头盒）与篝火（三木交叉+火心盒）——不参与邻面剔除，全画
+        if (def.shape === 'torch') {
+          const C0 = 0.4375, C1 = 0.5625;   // 中柱�?2/16
+          addBox(x, y, z, [C0, 0, C0], [C1, 0.62, C1], def.tiles.side, tilesPerRow, world, ox, oz, positions, normals, uvs, indices);
+          addBox(x, y, z, [C0 - 0.0625, 0.62, C0 - 0.0625], [C1 + 0.0625, 0.78, C1 + 0.0625], def.tiles.top, tilesPerRow, world, ox, oz, positions, normals, uvs, indices);
+          continue;
+        }
+        if (def.shape === 'campfire') {
+          const T = 0.1875;                 // 圆木截面厚 3/16
+          addBox(x, y, z, [0, 0.05, 0.5 - T / 2], [1, 0.3, 0.5 + T / 2], def.tiles.side, tilesPerRow, world, ox, oz, positions, normals, uvs, indices);
+          addBox(x, y, z, [0.5 - T / 2, 0.05, 0], [0.5 + T / 2, 0.3, 1], def.tiles.side, tilesPerRow, world, ox, oz, positions, normals, uvs, indices);
+          addBox(x, y, z, [0.14, 0.02, 0.14], [0.86, 0.24, 0.86], def.tiles.bottom, tilesPerRow, world, ox, oz, positions, normals, uvs, indices);
+          addBox(x, y, z, [0.3, 0.24, 0.3], [0.7, 0.66, 0.7], def.tiles.top, tilesPerRow, world, ox, oz, positions, normals, uvs, indices);  // 火心（篝火瓦片）
+          continue;
+        }
 
         for (const face of FACES) {
           const nb = world.getBlock(ox + x + face.dir[0], y + face.dir[1], oz + z + face.dir[2]);

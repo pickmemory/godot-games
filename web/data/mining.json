@@ -1,6 +1,6 @@
 {
   "_comment": "挖掘公式参数（mining.js 消费）：digSeconds = hardness × baseSeconds ÷ speed。speed：工具匹配=tool.speed（见 src/items.js）；需镐无镐=mismatchFactor；等级不足再乘 tierPenalty。方块硬度/工具需求见 src/blocks.js 注册表。",
-  "baseSeconds": 1.5,
-  "mismatchFactor": 0.3,
+  "baseSeconds": 1.2,
+  "mismatchFactor": 0.5,
   "tierPenalty": 0.25
 }

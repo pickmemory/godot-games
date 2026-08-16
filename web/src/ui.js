@@ -28,6 +28,10 @@ export class UI {
     this.deathEl = document.getElementById('death');
     this.dateEl = document.getElementById('date');
     this.talkHintEl = document.getElementById('talkHint');
+    this.clockEl = document.getElementById('clock');
+    this.keysEl = document.getElementById('keys');
+    this.trackerEl = document.getElementById('questTrack');
+    this.sundialEl = document.getElementById('sundial');
     this._nameTimer = null;
     this._slots = [];
     this._heartFills = null;
@@ -102,6 +106,103 @@ export class UI {
   /** MC-3a 编年日期/季节 HUD（左上角；空串隐藏） */
   setDate(text) {
     if (this.dateEl) this.dateEl.textContent = text ?? '';
+  }
+
+  /** MC-5x 时辰（太阳即时钟的文字面）：label 如「午时 · 日中」；night=true 用月符号 */
+  setClock(label, night = false) {
+    if (!this.clockEl) return;
+    this.clockEl.textContent = label ?? '';
+    this.clockEl.classList.toggle('night', night);
+  }
+
+  /**
+   * MC-5x 日晷（右上角常亮时钟盘）：太阳/月亮双针绕盘一日，中心时辰名。
+   * 常亮不随夜色变暗（系统提示性质）。盘面方位：上=卯（日出） 右=午 下=酉（日落） 左=子（夜半）。
+   * @param {number} c dayTime/DAY_LEN（0..1） @param {{name:string}} sc shichen() 返回值（中心大字）
+   */
+  drawSundial(c, sc) {
+    const el = this.sundialEl;
+    if (!el) return;
+    const ctx = el.getContext('2d');
+    const W = el.width, R = W / 2;
+    ctx.clearRect(0, 0, W, W);
+    ctx.save();
+    ctx.translate(R, R);
+
+    // 盘底（毛玻璃上再叠深色圆，保持常亮对比）
+    ctx.beginPath(); ctx.arc(0, 0, R - 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(12,10,6,.5)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,215,106,.4)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    // 四主刻度：卯（上）午（右）酉（下）子（左）
+    ctx.font = '10px "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const marks = [['卯', 0, -1], ['午', 1, 0], ['酉', 0, 1], ['子', -1, 0]];
+    for (const [t, mx, mz] of marks) {
+      ctx.fillStyle = 'rgba(232,217,176,.85)';
+      ctx.fillText(t, mx * (R - 13), mz * (R - 13));
+    }
+    // 八细分刻度
+    ctx.strokeStyle = 'rgba(255,215,106,.25)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4 + Math.PI / 8;
+      ctx.beginPath();
+      ctx.moveTo(Math.sin(a) * (R - 8), -Math.cos(a) * (R - 8));
+      ctx.lineTo(Math.sin(a) * (R - 5), -Math.cos(a) * (R - 5));
+      ctx.stroke();
+    }
+
+    // 太阳针：c=0 卯（上）→ 0.25 午（右）→ 0.5 酉（下）→ 0.75 子（左），顺时针
+    const dial = (cc, r, color, size) => {
+      const a = cc * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(Math.sin(a) * r, -Math.cos(a) * r, size, 0, Math.PI * 2);
+      ctx.fillStyle = color; ctx.fill();
+    };
+    dial(c, R - 22, '#ffd76a', 5);                    // 太阳
+    dial((c + 0.5) % 1, R - 22, '#cdd9ff', 4);        // 月亮（对跖）
+
+    // 中心当前时辰大字（常亮）
+    ctx.font = '600 20px "KaiTi", "Microsoft YaHei", serif';
+    ctx.fillStyle = '#ffe9a8';
+    ctx.fillText(sc.name, 0, 1);
+    ctx.restore();
+  }
+
+  /** MC-5x 键位卡收起/展开（localStorage 记忆） */
+  setKeysMin(min) {
+    if (!this.keysEl) return;
+    localStorage.setItem('sgsc.keys.min', min ? '1' : '0');
+    this.keysEl.classList.toggle('min', min);
+    this.keysEl.innerHTML = min
+      ? '按 H 查看键位'
+      : `<div class="ktitle">键 位（H 收起）</div>
+<div><kbd>WASD</kbd>移动　<kbd>空格</kbd>跳跃</div>
+<div><kbd>F</kbd>飞行　<kbd>Shift</kbd>飞行下降</div>
+<div><kbd>左键</kbd>按住挖掘</div>
+<div><kbd>右键</kbd>放置 / 使用</div>
+<div><kbd>E</kbd>交谈（近 NPC）/ 合成</div>
+<div><kbd>1-9</kbd><span style="margin-left:2px">滚轮</span>切换行囊</div>
+<div><kbd>F8</kbd>诊断面板</div>`;
+  }
+
+  /**
+   * MC-5x 任务追踪卡：玩家“下一步干什么/会发生什么”的常驻指引。
+   * @param {{title:string, desc:string, progress?:number, count?:number}[]} quests 活动任务（空数组 → 调用方给引导文案）
+   * @param {{cls?:string, text:string}} warn 日落/夜魇预警行（cls: ''|'warn'|'night'）
+   */
+  renderTracker(quests, warn) {
+    if (!this.trackerEl) return;
+    const q = quests[0] ?? { title: '—', desc: '' };
+    const pct = q.count > 0 ? Math.min(100, Math.round((q.progress / q.count) * 100)) : 0;
+    this.trackerEl.querySelector('.qt-title').textContent = q.title;
+    this.trackerEl.querySelector('.qt-desc').textContent = q.desc;
+    this.trackerEl.querySelector('.qt-bar i').style.width = pct + '%';
+    this.trackerEl.querySelector('.qt-cnt').textContent = q.count > 0 ? `${q.progress ?? 0} / ${q.count}` : '';
+    const warnEl = this.trackerEl.querySelector('#sunwarn');
+    warnEl.textContent = warn?.text ?? '';
+    warnEl.className = warn?.cls ?? '';
   }
 
   /** MC-3b 可交谈提示（靠近 NPC 时；空串隐藏） */

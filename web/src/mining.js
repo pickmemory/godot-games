@@ -8,9 +8,9 @@
 import { ITEM_DEFS } from './items.js';
 
 export const FALLBACK_MINING = {
-  baseSeconds: 1.5,    // 徒手基准系数（秒）：hardness=1 无惩罚时 1.5s，对齐 MC 手感
-  mismatchFactor: 0.3, // 需工具但没拿对 → 速度坍缩到 0.3（石头徒手 ≈ 7.5s）
-  tierPenalty: 0.25,   // 等级不足再 ×0.25（铁矿拿木镐 ≈ 9s 且无掉落，逼升石镐）
+  baseSeconds: 1.2,    // 徒手基准系数（秒）：hardness=1 无惩罚时 1.2s（MC-5x 调优：原 1.5 偏磨）
+  mismatchFactor: 0.5, // 需工具但没拿对 → 速度坍到 0.5（石头徒手 3.6s；原 0.3=7.5s 太折磨）
+  tierPenalty: 0.25,   // 等级不足再 ×0.25（铁矿拿木镐无掉落，逼升石镐）
 };
 
 /** 当前工具是否匹配方块工具需求 */
