@@ -23,12 +23,13 @@
 | inventory | 91 | items | main | Inventory |
 | items | 146 | — | blocks crafting drops farming helditem inventory main mining ui | ITEM, ITEM_DEFS, isToolItem, maxStackOf, drawItemIcon |
 | lights | 112 | blocks | main | LightManager |
-| main | 1217 | diag blocks items textures world terrain player interaction ui health mob inventory crafting helditem mining sfx music drops farming building chapter structure npc dialog quests cutscene save steam-adapter sky lights explore encounters | — |  |
+| main | 1272 | diag blocks items textures world terrain player interaction ui health mob inventory crafting helditem mining sfx music drops farming building chapter structure npc dialog quests cutscene opening save steam-adapter sky lights explore encounters | — |  |
 | mesher | 270 | blocks textures | world | buildChunkGeometry |
 | mining | 46 | items | interaction main | FALLBACK_MINING, digTime, dropOf, toolDefOf |
 | mob | 292 | blocks terrain | main | FALLBACK_MOB_CONFIG, MobManager |
-| music | 420 | — | main | FALLBACK_BGM_CFG, FALLBACK_AMBIENT_CFG, MusicSystem |
+| music | 425 | — | main | FALLBACK_BGM_CFG, FALLBACK_AMBIENT_CFG, MusicSystem |
 | npc | 512 | blocks terrain chapter | main | FALLBACK_NPC_DATA, NPCManager |
+| opening | 509 | — | main | FALLBACK_OPENING, Opening |
 | player | 135 | blocks | main | Player |
 | quests | 111 | — | main | FALLBACK_QUESTS, QuestSystem |
 | save | 284 | blocks | main | SAVE_VERSION, MemorySaveAdapter, LocalStorageSaveAdapter, serializeDiffs, parseDiffs, validateSnapshot …(7) |

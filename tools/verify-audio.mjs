@@ -60,7 +60,7 @@ const post = await page.evaluate(() => {
 check('手势后激活 + BGM 首态起播', post.ready === true && typeof post.state === 'string', `state=${post.state}`);
 check('四态流齐全', ['explore', 'danger', 'settle', 'event'].every((s) => post.streams.includes(s)), post.streams.join(','));
 check('sfx 迁入总线 + 夜风被环境层接管', post.sfxOut === true && post.windEnabled === false);
-check('旁白清单加载（42 条）', post.narrCount === 42, `n=${post.narrCount}`);
+check('旁白清单加载（46 条，含 D-5 开场字卡 4 条）', post.narrCount === 46, `n=${post.narrCount}`);
 check('主总线在线（0.9）', post.master !== null && Math.abs(post.master - 0.9) < 0.05);
 
 // 3) speak：真实文案 → 发声（HTMLAudio 在无头环境可播放，静音输出）；乱文案 → false 回落字幕

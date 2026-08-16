@@ -2,6 +2,29 @@
 
 > 按"以后还会踩"的价值排序；新坑追加到顶部。每条：现象 → 根因 → 防再犯。
 
+## P1 · 演出类门控：冻结时间轴时必须仍以 dt=0 刷昼夜视觉层（否则黑天）
+
+- 现象：D-5 开场演出期间整屏近纯色（像素方差 ≈ 2），且相机高空看下去地面也是纯雾色。
+- 根因（两叠加）：① 主循环把 `updateDayNight` 与时间轴一起门控——`renderer.setClearColor` 只在 updateDayNight 里调，
+  门控期间清屏色停在默认黑；② 高空雾把 highFar 设得比「相机高度+视线斜距」还小（96 < ~113）→ 地面全在雾外，满屏纯雾色。
+- 防再犯：任何新演出/暂停层若冻结游戏时钟，视觉刷新用 `updateDayNight(0)`（dt=0 只刷天/雾/灯）；
+  调雾时先算相机到主视目标的斜距，fogFar 必须大于它（已固化在 `.ai/systems/opening.md` 公式表）。
+
+## P2 · 收尾清理链必须防御式：dispose 异常会中断后续状态复位（D-5 实踩）
+
+- 现象：跳过开场后 body.opening 类未移除、演出层不隐藏、飞鸟 Points 残留场景，控制台 `Cannot read properties of undefined (reading 'dispose')`。
+- 根因：粒子记录漏存 `tex` 字段 → `_teardown` 中途抛异常 → 后面的相机/雾/DOM/body 复位全部没执行；Promise 也不 resolve。
+- 防再犯：teardown 顺序「先复位必须成功的状态（相机/雾/DOM/类），再防御式回收 GPU 资源（逐段 try/catch + 可选链）」；
+  整个 _finish 包 try/catch 保证 resolve（opening.js 已固化，新演出层照抄）。
+
+## P2 · 测试耦合清单：动这些地方要同步改测试计数/流程
+
+- verify-audio.mjs 断言 `narrCount === 46`：narrations.json 条数随 gen-narration.mjs 扫描源（chapters/*.json + opening.json cards）变——
+  加/删旁白文案时同步改这个数字。
+- 开卷链路现有两场演出（D-5 开场镜头 → MC-3d 章节黑屏卡）：无头测试要点两次 Space 逐场跳
+  （verify-mc5x / repro-e-talk / verify-encounters / verify-explore / probe-dialog 均已同步）。
+- 演出时序断言在慢无头环境必须轮询（游戏时间 ≈ 墙钟×0.3）：`waitForFunction` 等条件，勿周定 setTimeout（同下 P1 老案）。
+
 ## P2 · mmx：vision 只支持图片，音频资产无自动审听
 
 - 现象：想用 `mmx vision xxx.mp3` 校验生成音频是否"纯环境无旋律"→ 报 Unsupported image format。

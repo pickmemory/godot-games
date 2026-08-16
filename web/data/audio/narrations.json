@@ -1,5 +1,5 @@
 {
-  "_comment": "MC-6 D-4 旁白清单（tools/gen-narration.mjs 生成，勿手改）。文案源唯一：web/data/chapters/*.json；music.js 按 text 精确匹配 → assets/audio/<file>，文案改动未重生成时自动回落纯字幕。",
+  "_comment": "MC-6 D-4 旁白清单（tools/gen-narration.mjs 生成，勿手改）。文案源唯一：web/data/chapters/*.json + web/data/opening.json（D-5 开场字卡）；music.js 按 text 精确匹配 → assets/audio/<file>，文案改动未重生成时自动回落纯字幕。",
   "voice": "male-qn-qingse",
   "speed": 0.9,
   "entries": [
@@ -380,6 +380,42 @@
       "text": "你把半袋粟塞进了唐氏的襁褓里。西迁的路上，这一点粮，也许就是一条命。",
       "hash": "1e6a6ad6",
       "file": "nar-190-dong-zhuo-ev-helped-the-tang.mp3"
+    },
+    {
+      "chapter": "opening",
+      "kind": "opening",
+      "index": 1,
+      "id": null,
+      "text": "天下大疫，烽烟四起。",
+      "hash": "90fe3ef5",
+      "file": "nar-opening-1.mp3"
+    },
+    {
+      "chapter": "opening",
+      "kind": "opening",
+      "index": 2,
+      "id": null,
+      "text": "青史不载无名之人——",
+      "hash": "37019c0b",
+      "file": "nar-opening-2.mp3"
+    },
+    {
+      "chapter": "opening",
+      "kind": "opening",
+      "index": 3,
+      "id": null,
+      "text": "而你，是这条长卷里的一个名字。",
+      "hash": "5f8b625d",
+      "file": "nar-opening-3.mp3"
+    },
+    {
+      "chapter": "opening",
+      "kind": "opening",
+      "index": 4,
+      "id": null,
+      "text": "活下去。",
+      "hash": "c0e542b6",
+      "file": "nar-opening-4.mp3"
     }
   ]
 }

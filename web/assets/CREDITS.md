@@ -25,7 +25,8 @@
 | 四态 BGM（bgm-explore / bgm-danger / bgm-settle / bgm-chapter-event） | mmx 生成（自研）：music-3.0 instrumental，prompt 为《docs/design/audio/audio-direction.md》§3.1 四态情绪词（古琴/箫/建鼓/埙角，平民苍凉、非英雄史诗） | 自研 | MC-5c BGM 四态（探索/危险·夜/定居/章节事件） |
 | 环境音循环（amb-night 夜虫鸣远犬 / amb-distant-war 战火远响） | mmx 生成（自研）：music-3.0 instrumental，field-recording 风 prompt；待人工审听，不合格降级程序合成/OGA(CC0)（audio-direction.md E-音频⑤） | 自研 | MC-5c 环境音背景层/事件层 |
 | 昼环境音循环（amb-day 风鸟雀远村） | mmx 生成（自研）：music-3.0 instrumental，field-recording 风 prompt（audio-direction.md §4.2 风·昼）；待人工审听 | 自研 | MC-6 D-4 昼间背景层（与 amb-night 昼夜交叉淡化） |
-| 成批旁白（nar-*.mp3 ×42：两章开场/收卷逐行 + 全部 events[].narration） | mmx 生成（自研）：tools/gen-narration.mjs 批量调 speech `male-qn-qingse` speed 0.9；文案源唯一 web/data/chapters/*.json | 自研 | MC-6 D-4 历史事件旁白与章节演出配音（清单 web/data/audio/narrations.json） | MC-1 为纯程序化占位；按路线图 MC-5a（美术圣经 v2）与各阶段美术任务接入：
+| 成批旁白（nar-*.mp3 ×42：两章开场/收卷逐行 + 全部 events[].narration） | mmx 生成（自研）：tools/gen-narration.mjs 批量调 speech `male-qn-qingse` speed 0.9；文案源唯一 web/data/chapters/*.json | 自研 | MC-6 D-4 历史事件旁白与章节演出配音（清单 web/data/audio/narrations.json） |
+| 开场序幕旁白（nar-opening-1..4.mp3） | mmx 生成（自研）：同上脚本同音色；文案源唯一 web/data/opening.json cards | 自研 | MC-6 D-5 开场演出序幕字卡配音（清单同上，共 46 条） | MC-1 为纯程序化占位；按路线图 MC-5a（美术圣经 v2）与各阶段美术任务接入：
 - Kenney.nl（Voxel Pack 等，CC0，商用免署名）
 - Quaternius.com（低模角色/道具/建筑，CC0）
 - OpenGameArt.org（仅 CC0 / CC-BY 条目；CC-BY 须在此署名作者与链接）

@@ -19,6 +19,7 @@
 | npc/190-dong-zhuo/npcs.json | npcs | npcs:3 |
 | npc/dialogs.json | elder-01, elder-01-war, taiping-envoy-01, refugee-lu-01 | — |
 | npc/npcs.json | npcs | npcs:3 |
+| opening.json | duration, camera, fov, fog, title, cards, particles | — |
 | quests.json | quests | quests:6 |
 | recipes.json | recipes | recipes:17 |
 | structures/explore.json | keepout, compass, types | — |

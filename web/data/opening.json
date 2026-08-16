@@ -1,0 +1,54 @@
+{
+  "_comment": "MC-6 D-5 开场演出配置（引擎 web/src/opening.js；缺文件/离线 → 模块内同构兜底 FALLBACK_OPENING）。仅新档完整演出（读档续玩跳过；?opening=0 强制关）。camera.points/look 为相对出生点「眼位」的偏移（+x 东 / -z 北 / +y 上），末点须 [0,0,0] 且末视线正对 -Z（与玩家默认 yaw=0 无缝交接）；phaseTime→phaseParam 为时间到曲线参数的分段映射（全景慢扫→俯冲快→落地缓）。cards[].at 为归一化时刻（0~1，升序）。改 cards 文案后须重跑 tools/gen-narration.mjs 重生成开场旁白（nar-opening-*.mp3）。",
+  "duration": 26,
+  "camera": {
+    "points": [
+      [0, 72, 24],
+      [-44, 62, -30],
+      [28, 34, -52],
+      [3, 11, 20],
+      [0, 0, 0]
+    ],
+    "look": [
+      [0, -6, -16],
+      [0, -4, -2],
+      [0, -2, -12],
+      [0, 0, -20],
+      [0, 0, -24]
+    ],
+    "phaseTime": [0, 0.52, 0.86, 1],
+    "phaseParam": [0, 0.44, 0.85, 1]
+  },
+  "fov": { "base": 72, "dive": 82 },
+  "fog": { "highNear": 50, "highFar": 150 },
+  "title": { "text": "三国长卷", "show": [0.03, 0.4] },
+  "cards": [
+    { "at": 0.1, "text": "天下大疫，烽烟四起。" },
+    { "at": 0.32, "text": "青史不载无名之人——" },
+    { "at": 0.56, "text": "而你，是这条长卷里的一个名字。" },
+    { "at": 0.87, "text": "活下去。" }
+  ],
+  "particles": {
+    "smoke": {
+      "columns": [
+        [-42, -20],
+        [36, -50],
+        [-8, 56]
+      ],
+      "perColumn": 24,
+      "height": 24,
+      "spread": 3.2,
+      "size": [2.2, 6.5],
+      "alpha": 0.5,
+      "color": "#6f675c"
+    },
+    "birds": {
+      "count": 9,
+      "center": [22, 30, -34],
+      "radius": 15,
+      "speed": 0.18,
+      "size": 2.6,
+      "color": "#26211a"
+    }
+  }
+}

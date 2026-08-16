@@ -28,6 +28,7 @@ import { NPCManager, FALLBACK_NPC_DATA } from './npc.js';
 import { DialogUI, FALLBACK_DIALOGS } from './dialog.js';
 import { QuestSystem, FALLBACK_QUESTS } from './quests.js';
 import { Cutscene } from './cutscene.js';
+import { Opening, FALLBACK_OPENING } from './opening.js';   // MC-6 D-5 开场演出（俯瞰→俯冲 + 粒子 + 序幕字卡）
 import { SaveSystem, LocalStorageSaveAdapter } from './save.js';
 import { pickSaveAdapter, platformUnlock, STEAM_ACHIEVEMENTS } from './steam-adapter.js';
 import { CelestialBodies, shichen } from './sky.js';
@@ -116,6 +117,7 @@ if (!saveAdapter.available) console.warn('[save] localStorage 不可用（隐私
 const exploredMemory = new ExploredMemory(`sgsc.explored.v1.${SEED}`);
 if (urlParams.has('new')) exploredMemory.clear();
 const cutscene = new Cutscene();   // MC-3d 章节开场/结尾演出层（数据驱动：章节 JSON 的 cutscene 效果）
+const opening = new Opening();     // MC-6 D-5 开场「哇」点：镜头演出排在首次开卷（指针锁定）后、章节开卷演出前
 
 /* ---------- MC-2b 工具天梯：生存行囊 + 挖掘公式 + 合成 + 手持模型 ---------- */
 const inventory = new Inventory(9);              // 9 槽 = hotbar（最小集；背包扩容留 MC-4）
@@ -182,6 +184,12 @@ let encountersData = FALLBACK_ENCOUNTERS;
 try {
   const res = await fetch('data/encounters.json');
   if (res.ok) encountersData = await res.json();
+} catch (e) { /* 同上 */ }
+
+let openingData = FALLBACK_OPENING;
+try {
+  const res = await fetch('data/opening.json');
+  if (res.ok) openingData = await res.json();
 } catch (e) { /* 同上 */ }
 
 /* ---------- MC-6 D-4 声音层数据（bgm 状态机/环境层/旁白清单；缺文件/离线 → music.js 同构兑底） ---------- */
@@ -701,6 +709,7 @@ let digHeld = false, placeHeld = false, locked = false;
 let keysMin = localStorage.getItem('sgsc.keys.min') === '1';   // MC-5x 键位卡收起态（记忆）
 
 addEventListener('keydown', (e) => {
+  if (opening.isActive) { dlog('anykey:skip-opening', { key: e.code }); opening.skip(); return; }   // D-5：开场演出任意键跳过（不透传）
   if (cutscene.isActive) { dlog('anykey:skip-cutscene', { key: e.code }); cutscene.skip(); return; }   // MC-3d：演出中任意键跳过（不透传）
   switch (e.code) {
     case 'KeyW': input.forward = true; break;
@@ -763,11 +772,13 @@ addEventListener('keyup', (e) => {
   }
 });
 addEventListener('wheel', (e) => {
+  if (opening.isActive || cutscene.isActive) return;   // 演出中不切行囊
   inventory.select((inventory.selected + (e.deltaY > 0 ? 1 : -1) + 9) % 9);
   ui.select(inventory.selected);
   ui.showItemName(inventory.heldId());
 });
 addEventListener('mousedown', (e) => {
+  if (opening.isActive) { dlog('anykey:skip-opening', { button: e.button }); opening.skip(); return; }   // D-5：点击亦跳过
   if (!locked || cutscene.isActive) return;
   if (e.button === 0) digHeld = true;
   if (e.button === 2) placeHeld = true;
@@ -778,7 +789,7 @@ addEventListener('mouseup', (e) => {
 });
 addEventListener('contextmenu', (e) => e.preventDefault());
 addEventListener('mousemove', (e) => {
-  if (!locked || cutscene.isActive) return;   // 演出中冻结视角（镜头语言归演出层）
+  if (!locked || cutscene.isActive || opening.isActive) return;   // 演出中冻结视角（镜头语言归演出层）
   player.addLook(e.movementX, e.movementY);
 });
 
@@ -791,14 +802,48 @@ canvas.addEventListener('click', () => {
   // 面板/遮罩都没显示但指针未锁（如 ESC 后重进）→ 点画布重锁
   if (!locked && !dead && !crafting.isOpen && !dialogUI.isOpen) { ensureAudio(); lockPointer(); }
 });
+/* ---------- MC-6 D-5 开场演出：首次开卷（指针锁定）后播 → 章节开卷演出 → 入局 ----------
+ * 仅新档完整演出（读档续玩直接入局）；?opening=0 强制关（调试/自动化用）。
+ * 演出期间：玩家/AI/时间轴/自动存档全冻结，chunk 流式照常（跟镜头走，落地不穿帮）。
+ * 任意键/点击/失锁（ESC）= skip；收尾后相机精确复位回第一人称。 */
+let openingPlayed = false;
+async function maybeStartOpening() {
+  if (openingPlayed || snapshot || urlParams.get('opening') === '0') return;
+  openingPlayed = true;
+  digHeld = placeHeld = false;
+  Object.keys(input).forEach((k) => (input[k] = false));
+  music.stopSpeak();   // 与章节演出同规矩：开演前清场
+  // 烽烟柱优先立在最近的烽燧顶（D-2 地标联动；无则仅村缘炊位）
+  const beacon = nearestStructureOf('beacon-tower', player.pos.x, player.pos.z);
+  const beaconNear = beacon && Math.hypot(beacon.ax - player.pos.x, beacon.az - player.pos.z) < 125;
+  dlog('opening-start', { chapter: CHAPTER_ID, beacon: beaconNear ? [beacon.ax, beacon.az] : null });
+  await opening.play({
+    camera, scene,
+    data: openingData,
+    title: openingData.title?.text ?? '三国长卷',
+    sub: chapterResult.chapter.subtitle ?? '',   // 纪年随章节（第一章中平元年，第二章初平元年）
+    spawn: { x: player.pos.x, y: player.pos.y + 1.62, z: player.pos.z },   // 1.62 = player.js EYE（未导出，保持同值）
+    groundAt: (x, z) => surfaceHeight(x, z, SEED),
+    pixelScale: () => renderer.domElement.height * 0.5,
+    extraSmoke: beaconNear ? [{ x: beacon.ax + 0.5, y: beacon.ground + 6, z: beacon.az + 0.5 }] : [],
+    voice: { speak: (t) => music.speak(t), stop: () => music.stopSpeak() },   // D-4 旁白（缺样音回落纯字幕）
+  });
+  dlog('opening-end', { skipped: opening.skipped === true });
+  player._syncCamera();   // 相机精确复位（跳过/自然结束同路）：交还第一人称
+}
+
 document.addEventListener('pointerlockchange', () => {
   locked = document.pointerLockElement === canvas;
   dlog('lock', { locked, dead, craft: crafting.isOpen, dlg: dialogUI.isOpen });
-  if (locked) { started = true; ui.hideOverlay(); }   // 首次锁定 = 开卷：时间轴/昼夜自此推进
+  if (locked) {
+    started = true; ui.hideOverlay();   // 首次锁定 = 开卷：时间轴/昼夜自此推进
+    maybeStartOpening();   // D-5：新档 → 开场演出（读档/已演过 → no-op，直接章节开卷演出）
+  }
   else {
     digHeld = placeHeld = false;
     Object.keys(input).forEach((k) => (input[k] = false));
-    if (!dead && !crafting.isOpen && !dialogUI.isOpen) ui.showOverlay(); // 死亡/合成/对话接管时由各自界面接管
+    if (opening.isActive) opening.skip();   // D-5：演出中失锁（ESC）= 跳过，回遮罩引导重锁
+    if (!dead && !crafting.isOpen && !dialogUI.isOpen && !opening.isActive) ui.showOverlay(); // 死亡/合成/对话接管时由各自界面接管
   }
 });
 
@@ -1105,7 +1150,7 @@ function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
 
-  const simOn = locked && !dead && !cutscene.isActive;
+  const simOn = locked && !dead && !cutscene.isActive && !opening.isActive;
   if (simOn !== lastSimOn) { lastSimOn = simOn; dlog('sim', { on: simOn, locked, dead, cutscene: cutscene.isActive }); }
   if (simOn) {   // MC-3d：演出中冻结玩家/AI/交互（世界渲染照常）
     player.update(dt, input);
@@ -1158,39 +1203,49 @@ function loop(now) {
       camera.rotation.z += (Math.random() - 0.5) * 0.025 * k;
     }
   }
-  world.update(player.pos);
+  // MC-3d：开卷（首次指针锁定）后才起表；演出中暂停（开场旁白不偷游戏日历）。
+  // D-5：开场演出期间世界时钟冻结但天空/雾/天体/灯光照常刷（dt=0 防黑天；演出相机在高空，
+  //   不刷清屏色会露出默认黑天空），日历/追踪/奇遇/农耕仍全冻结
+  if (started && !cutscene.isActive) {
+    updateDayNight(opening.isActive ? 0 : dt);
+    if (!opening.isActive) {
+      updateTracker(dt);
+      updateCompass(dt);
+      timeline.update(dt, { isNight, playerPos: player.pos, stats: { blocksPlaced, blocksMined } });
+      encounters.update(dt, encCtx());   // MC-6 D-3：奇遇引擎（入夜/破晓沿抽签；followUp/watch 随帧推进）
+      farming.update(dt);   // MC-4a：作物生长/水分与编年时间同源同门控（演出中不偷长）
+    }
+  }
+
+  // MC-6 D-5：开场演出推进（inactive 时 no-op）——镜头/粒子/字卡；须在 updateDayNight 之后
+  //   （高空雾覆盖写在其上）、world.update 之前（流式中心跟随当前镜头位置）
+  opening.update(dt);
+  world.update(opening.isActive ? camera.position : player.pos);   // D-5：演出不冻结世界加载（流式跟镜头）
+  if (opening.isActive && opening.age < 2.5) world.update(camera.position);   // 开场墨色淡入窗口内双倍流式，落地不穿帮
   updateBursts(dt);
   dropManager.update(dt, player.pos, locked && !dead && !cutscene.isActive, onDropPickup);
-  // MC-3d：开卷（首次指针锁定）后才起表；演出中暂停（开场旁白不偷游戏日历）
-  if (started && !cutscene.isActive) {
-    updateDayNight(dt);
-    updateTracker(dt);
-    updateCompass(dt);
-    timeline.update(dt, { isNight, playerPos: player.pos, stats: { blocksPlaced, blocksMined } });
-    encounters.update(dt, encCtx());   // MC-6 D-3：奇遇引擎（入夜/破晓沿抽签；followUp/watch 随帧推进）
-    farming.update(dt);   // MC-4a：作物生长/水分与编年时间同源同门控（演出中不偷长）
-  }
 
   // MC-6 D-4 声音层：演出中也照常 tick（cutscene 隐含 event 态，旁白 ducking 在其下）；
   //   settlePoints = 已判定房屋门坐标（无房屋时 music 内部回落 blocksPlaced 粗代理，audio-direction.md §8.4）
   if (started) {
     music.tick(dt, {
       isNight, playerPos: player.pos, stats: { blocksPlaced, blocksMined },
-      mobs: mobManager.mobs, cutsceneActive: cutscene.isActive,
+      mobs: mobManager.mobs, cutsceneActive: cutscene.isActive || opening.isActive,   // D-5：开场演出也隐含 event 态 BGM
       season: timeline.season.name,
       settlePoints: [...building.houses.values()].map((h) => h.door),
     });
   }
 
   // MC-4c：定时自动存档（未开卷/演出中冻结倒计时；写失败退避+告警，见 save.js）
-  saveSystem.update(dt, started && !cutscene.isActive);
+  saveSystem.update(dt, started && !cutscene.isActive && !opening.isActive);
 
-  // 第一人称手持模型（MC-2b）：随选中物品切换，挖掘挥动
+  // 第一人称手持模型（MC-2b）：随选中物品切换，挖掘挥动；开场演出中随 HUD 一并隐藏
   heldItem.setItem(inventory.heldId());
   heldItem.update(dt, {
     moving: input.forward || input.back || input.left || input.right,
     digging: digHeld && locked && !dead,
   });
+  heldItem.root.visible = !opening.isActive;
 
   frames++; fpsClock += dt;
   if (fpsClock >= 0.5) {
@@ -1205,7 +1260,7 @@ requestAnimationFrame(loop);
 // 调试钩子（?debug=1 才挂；末尾挂载——此时 lightsMgr/quests 等均已初始化，避免 TDZ；供 tools/ 自动化验证用）
 if (new URLSearchParams(location.search).get('debug') === '1') {
   window.__dbg = {
-    npcManager, player, world, lightsMgr, quests, encounters, music,
+    npcManager, player, world, lightsMgr, quests, encounters, music, opening,
     encounterCtx: encCtx,
     explore: {
       cfg: exploreCfg, memory: exploredMemory, seed: SEED,

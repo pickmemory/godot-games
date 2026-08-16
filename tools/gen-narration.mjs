@@ -50,6 +50,13 @@ function collectEntries() {
       if (ev.narration) entries.push({ chapter: cid, kind: 'event', index: 0, id: String(ev.id), text: String(ev.narration) });
     }
   }
+  // MC-6 D-5：开场序幕字卡（web/data/opening.json cards；文案源同样唯一——改卡片文案后重跑本脚本）
+  try {
+    const op = JSON.parse(fs.readFileSync(path.join(ROOT, 'web/data/opening.json'), 'utf8'));
+    (op.cards ?? []).forEach((c, i) => {
+      if (c?.text) entries.push({ chapter: 'opening', kind: 'opening', index: i + 1, id: null, text: String(c.text) });
+    });
+  } catch { /* opening.json 缺失 → 无开场旁白（字幕照常） */ }
   return entries;
 }
 
@@ -57,6 +64,7 @@ function collectEntries() {
 
 function fileNameOf(e) {
   if (e.kind === 'event') return `nar-${e.chapter}-ev-${e.id}.mp3`;
+  if (e.kind === 'opening') return `nar-opening-${e.index}.mp3`;
   return `nar-${e.chapter}-${e.kind}-${e.index}.mp3`;
 }
 
@@ -119,7 +127,7 @@ if (fail > 0 && ok === 0) {
 }
 
 const manifest = {
-  _comment: 'MC-6 D-4 旁白清单（tools/gen-narration.mjs 生成，勿手改）。文案源唯一：web/data/chapters/*.json；music.js 按 text 精确匹配 → assets/audio/<file>，文案改动未重生成时自动回落纯字幕。',
+  _comment: 'MC-6 D-4 旁白清单（tools/gen-narration.mjs 生成，勿手改）。文案源唯一：web/data/chapters/*.json + web/data/opening.json（D-5 开场字卡）；music.js 按 text 精确匹配 → assets/audio/<file>，文案改动未重生成时自动回落纯字幕。',
   voice: VOICE,
   speed: Number(SPEED),
   entries: plan.map(({ chapter, kind, index, id, text, hash, file }) => ({ chapter, kind, index, id, text, hash, file })),

@@ -225,7 +225,9 @@ if (browser) {
   await page.waitForTimeout(2500);
   await page.click('#overlay').catch(() => {});
   await page.waitForTimeout(500);
-  await page.keyboard.press('Space');   // 跳开场演出
+  await page.keyboard.press('Space');   // 跳 D-5 开场演出（MC-6）
+  await page.waitForTimeout(400);
+  await page.keyboard.press('Space');   // 跳章节开卷演出（MC-3d）
   await page.waitForTimeout(800);
 
   // B1 装配：引擎在位、真数据加载（非兜底 1 事件）、效果已注册、ctx 就绪

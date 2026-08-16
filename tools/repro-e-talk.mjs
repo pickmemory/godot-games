@@ -36,7 +36,9 @@ await page.goto(`http://127.0.0.1:${PORT}/?debug=1`, { waitUntil: 'networkidle' 
 await page.waitForTimeout(2500);
 await page.click('#overlay').catch(() => {});
 await page.waitForTimeout(600);
-// 开卷演出（worldState.onEnter cutscene，~12s）在此期间吃掉一切按键：先跳过，等它收尾
+// 开卷链路有两场：先 D-5 开场镜头演出（MC-6），再章节开卷黑屏卡（MC-3d，~12s）——都吃按键，逐场跳过
+await page.keyboard.press('Space');
+await page.waitForTimeout(400);
 await page.keyboard.press('Space');
 await page.waitForTimeout(800);
 const cs = await page.evaluate(() => ({
