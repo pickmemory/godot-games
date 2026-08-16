@@ -658,8 +658,11 @@ addEventListener('resize', () => {
 });
 
 /* ---------- 昼夜 ---------- */
+// D-1 汉代绢画暖调（docs/design/art/color-pass.md §3）：日落/破晓不再是糖果橙，
+// 换赭石-淡赭色阶；破晓新增独立暖色停点（原先深夜→白昼直插会路过死灰蓝）
 const SKY_DAY = new THREE.Color(0x87ceeb);
-const SKY_SUNSET = new THREE.Color(0xff9a5a);
+const SKY_SUNSET = new THREE.Color(0xe29a68);   // 赭石琥珀（原 #ff9a5a，去饱和加暖）
+const SKY_DAWN = new THREE.Color(0xe8c79e);    // 绢本淡赭（卯时破晓暖光）
 const SKY_NIGHT = new THREE.Color(0x0b1026);
 const SUN_DAY = new THREE.Color(0xffffff);
 const SUN_NIGHT = new THREE.Color(0x8a97c8);   // 月光冷蓝
@@ -684,15 +687,23 @@ function updateDayNight(dt) {
   else if (c < 0.5)   { const k = (c - 0.42) / 0.08; sky = _sky.lerpColors(SKY_DAY, SKY_SUNSET, k); sunI = 0.9 - 0.35 * k; ambI = 0.55 - 0.15 * k; nightK = 0.35 * k; } // 日落
   else if (c < 0.58)  { const k = (c - 0.5) / 0.08;  sky = _sky.lerpColors(SKY_SUNSET, SKY_NIGHT, k); sunI = 0.55 - 0.43 * k; ambI = 0.4 - 0.28 * k; nightK = 0.35 + 0.65 * k; } // 入夜
   else if (c < 0.92)  { sky = _sky.copy(SKY_NIGHT);  sunI = 0.12; ambI = 0.12; nightK = 1; } // 深夜（ambient 压至 0.12）
-  else                { const k = (c - 0.92) / 0.08; sky = _sky.lerpColors(SKY_NIGHT, SKY_DAY, k); sunI = 0.12 + 0.78 * k; ambI = 0.12 + 0.43 * k; nightK = 1 - k; } // 破晓
+  else                { const k = (c - 0.92) / 0.08; nightK = 1 - k; sunI = 0.12 + 0.78 * k; ambI = 0.12 + 0.43 * k;
+    // D-1 破晓两段暖调：深夜→绢赭→天蓝（55% 处过暖色停点，日出前后有“揭卷”的暖光）
+    sky = k < 0.55 ? _sky.lerpColors(SKY_NIGHT, SKY_DAWN, k / 0.55)
+                   : _sky.lerpColors(SKY_DAWN, SKY_DAY, (k - 0.55) / 0.45); } // 破晓
   renderer.setClearColor(sky);
   scene.fog.color.copy(sky);
   // MC-5b 章节×情绪天空色：事件 sky 效果的 skyTint 覆盖 > 季节 params.skyTint（美术圣经 §2.4）
   //   混入比例随夜色衰减（白天 55%，深夜余 14% —— 焚城期的夜晚天际线留一线火光橙）
+  //   D-1：日落/破晓窗口内额外压低季节 tint（暖光时段让绢画暖调主导，平滑渐变避免色跳）
   const tintHex = skyOverrides.skyTint ?? timeline.season.params.skyTint;
   if (tintHex) {
+    const warmK = Math.max(
+      Math.max(0, Math.min(1, (c - 0.40) / 0.06)) - Math.max(0, Math.min(1, (c - 0.52) / 0.06)),
+      Math.max(0, Math.min(1, (c - 0.90) / 0.06)),
+    );
     _tint.set(tintHex);
-    sky.lerp(_tint, 0.55 * (1 - 0.75 * nightK));
+    sky.lerp(_tint, 0.55 * (1 - 0.75 * nightK) * (1 - 0.55 * warmK));
     renderer.setClearColor(sky);
     scene.fog.color.copy(sky);
   }

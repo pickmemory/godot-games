@@ -21,8 +21,8 @@
 | inventory | 91 | items | main | Inventory |
 | items | 146 | — | blocks crafting drops farming helditem inventory mining ui | ITEM, ITEM_DEFS, isToolItem, maxStackOf, drawItemIcon |
 | lights | 109 | blocks | main | LightManager |
-| main | 972 | diag blocks textures world terrain player interaction ui health mob inventory crafting helditem mining sfx drops farming building chapter structure npc dialog quests cutscene save steam-adapter sky lights | — |  |
-| mesher | 255 | blocks | world | buildChunkGeometry |
+| main | 983 | diag blocks textures world terrain player interaction ui health mob inventory crafting helditem mining sfx drops farming building chapter structure npc dialog quests cutscene save steam-adapter sky lights | — |  |
+| mesher | 270 | blocks textures | world | buildChunkGeometry |
 | mining | 46 | items | interaction main | FALLBACK_MINING, digTime, dropOf, toolDefOf |
 | mob | 292 | blocks terrain | main | FALLBACK_MOB_CONFIG, MobManager |
 | npc | 497 | blocks terrain chapter | main | FALLBACK_NPC_DATA, NPCManager |
@@ -33,8 +33,8 @@
 | sky | 92 | — | main | shichen, CelestialBodies |
 | steam-adapter | 131 | — | main | STEAM_ACHIEVEMENTS, hasSteamBridge, SteamCloudSaveAdapter, pickSaveAdapter, platformUnlock |
 | structure | 76 | terrain blocks | main | stampStructure |
-| terrain | 160 | blocks | main mob npc structure world | surfaceHeight, generateChunk |
-| textures | 490 | blocks | helditem interaction main ui | buildAtlas, buildCrackTextures, drawTileTo |
+| terrain | 212 | blocks | main mob npc structure world | surfaceHeight, chunkColorBands, generateChunk |
+| textures | 530 | blocks | helditem interaction main mesher ui | BAND_PALETTE, BAND_TILES, buildAtlas, buildCrackTextures, drawTileTo |
 | ui | 275 | blocks items textures | main | itemName, drawIcon, UI |
 | world | 161 | blocks terrain mesher | main | World |
 

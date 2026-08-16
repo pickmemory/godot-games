@@ -5,7 +5,25 @@ import { TILE } from './blocks.js';
 
 const TILE_PX = 16;          // 每瓦片像素
 const TILES_PER_ROW = 4;     // atlas 一行 4 瓦片
-const TILE_TOTAL = Math.max(...Object.values(TILE)) + 1;   // 瓦片总数（atlas 高度随之伸缩）
+
+/* ---------- D-1 地形色彩带：同瓦片多色变体（docs/design/art/color-pass.md） ----------
+ * 变体瓦片**追加**在 blocks.js TILE 表之后：既有 TILE 序号与 atlas 布局函数（4 瓦/行）不变，
+ * blocks.js 注册表零改动（草方块仍指向基准瓦片）；mesher 按 terrain.chunkColorBands 的
+ * 列带索引从这里取变体。色板 hex 已登记 art-bible §2.1 / color-pass.md。 */
+export const BAND_PALETTE = {
+  grass:  ['#5d9c3f', '#7fa24a', '#a8974a'],   // 0 嫩绿(基准) → 1 黄绿 → 2 枯黄
+  leaves: ['#3e7a2e', '#5c8a35', '#8a8438'],   // 0 浓绿(基准) → 1 黄绿 → 2 枯黄赭
+};
+const VARIANT_BASE = Math.max(...Object.values(TILE)) + 1;   // 首个追加瓦片号（现 33）
+/** 带索引 → 瓦片号：[基准, 变体1, 变体2]（mesher 消费） */
+export const BAND_TILES = {
+  GRASS_TOP:  [TILE.GRASS_TOP,  VARIANT_BASE,     VARIANT_BASE + 1],
+  GRASS_SIDE: [TILE.GRASS_SIDE, VARIANT_BASE + 2, VARIANT_BASE + 3],
+  LEAVES:     [TILE.LEAVES,     VARIANT_BASE + 4, VARIANT_BASE + 5],
+};
+const VARIANT_COUNT = 6;
+
+const TILE_TOTAL = VARIANT_BASE + VARIANT_COUNT;            // 瓦片总数（atlas 高度随追加变体伸缩）
 const ATLAS_ROWS = Math.ceil(TILE_TOTAL / TILES_PER_ROW);
 const ATLAS_PX = TILE_PX * TILES_PER_ROW;
 const ATLAS_H = TILE_PX * ATLAS_ROWS;
@@ -29,22 +47,10 @@ function shade(hex, amt) {
   return `rgb(${r | 0},${g | 0},${b | 0})`;
 }
 
-// 每瓦片绘制器：在 (ox,oy) 起 16×16 区域画像素
+// 每瓦片绘制器：在 (ox,oy) 起 16×16 区域画像素。tint = 可选色调参数（D-1 同瓦片多色变体）
 const PAINTERS = {
-  [TILE.GRASS_TOP]: (ctx, ox, oy, rnd) => {
-    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
-      ctx.fillStyle = shade('#5d9c3f', (rnd() - 0.5) * 0.22);
-      ctx.fillRect(ox + x, oy + y, 1, 1);
-    }
-  },
-  [TILE.GRASS_SIDE]: (ctx, ox, oy, rnd) => {
-    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
-      const grassDepth = 3 + ((x * 7 + 3) % 3); // 草皮锯齿深度 3~5
-      const base = y < grassDepth ? '#5d9c3f' : '#7a5335';
-      ctx.fillStyle = shade(base, (rnd() - 0.5) * 0.2);
-      ctx.fillRect(ox + x, oy + y, 1, 1);
-    }
-  },
+  [TILE.GRASS_TOP]: (ctx, ox, oy, rnd) => paintGrassTop(ctx, ox, oy, rnd),
+  [TILE.GRASS_SIDE]: (ctx, ox, oy, rnd) => paintGrassSide(ctx, ox, oy, rnd),
   [TILE.DIRT]: (ctx, ox, oy, rnd) => {
     for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
       ctx.fillStyle = shade('#7a5335', (rnd() - 0.5) * 0.24);
@@ -78,13 +84,7 @@ const PAINTERS = {
       ctx.fillRect(ox + x, oy + y, 1, 1);
     }
   },
-  [TILE.LEAVES]: (ctx, ox, oy, rnd) => {
-    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
-      const hole = rnd() < 0.12;
-      ctx.fillStyle = hole ? 'rgba(0,0,0,0)' : shade('#3e7a2e', (rnd() - 0.5) * 0.3);
-      ctx.fillRect(ox + x, oy + y, 1, 1);
-    }
-  },
+  [TILE.LEAVES]: (ctx, ox, oy, rnd) => paintLeaves(ctx, ox, oy, rnd),
   [TILE.SAND]: (ctx, ox, oy, rnd) => {
     for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
       ctx.fillStyle = shade('#d9c47f', (rnd() - 0.5) * 0.14);
@@ -385,6 +385,46 @@ const PAINTERS = {
     }
   },
 };
+
+/* ---------- D-1 参数化草/叶绘制器：接受色调参数 tint（{grass|leaf, dirt?, mottle?}） ----------
+ * 基准瓦片不传 tint（色值与 art-bible §2.1 恒定）；追加变体传入 BAND_PALETTE 色 + 更大斑玻 */
+function paintGrassTop(ctx, ox, oy, rnd, tint) {
+  const base = tint?.grass ?? '#5d9c3f';
+  const mottle = tint?.mottle ?? 0.22;
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    ctx.fillStyle = shade(base, (rnd() - 0.5) * mottle);
+    ctx.fillRect(ox + x, oy + y, 1, 1);
+  }
+}
+function paintGrassSide(ctx, ox, oy, rnd, tint) {
+  const grass = tint?.grass ?? '#5d9c3f';
+  const dirt = tint?.dirt ?? '#7a5335';   // 侧贴图土层不随带变色（只换草皮条）
+  const mottle = tint?.mottle ?? 0.2;
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    const grassDepth = 3 + ((x * 7 + 3) % 3); // 草皮锯齿深度 3~5
+    ctx.fillStyle = shade(y < grassDepth ? grass : dirt, (rnd() - 0.5) * mottle);
+    ctx.fillRect(ox + x, oy + y, 1, 1);
+  }
+}
+function paintLeaves(ctx, ox, oy, rnd, tint) {
+  const base = tint?.leaf ?? '#3e7a2e';
+  const mottle = tint?.mottle ?? 0.3;
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    const hole = rnd() < 0.12;
+    ctx.fillStyle = hole ? 'rgba(0,0,0,0)' : shade(base, (rnd() - 0.5) * mottle);
+    ctx.fillRect(ox + x, oy + y, 1, 1);
+  }
+}
+
+/* 色带变体：同绘制器 + BAND_PALETTE 色调（枯带斑玻更大，“干”可读） */
+Object.assign(PAINTERS, {
+  [BAND_TILES.GRASS_TOP[1]]:  (ctx, ox, oy, rnd) => paintGrassTop(ctx, ox, oy, rnd, { grass: BAND_PALETTE.grass[1], mottle: 0.24 }),
+  [BAND_TILES.GRASS_TOP[2]]:  (ctx, ox, oy, rnd) => paintGrassTop(ctx, ox, oy, rnd, { grass: BAND_PALETTE.grass[2], mottle: 0.3 }),
+  [BAND_TILES.GRASS_SIDE[1]]: (ctx, ox, oy, rnd) => paintGrassSide(ctx, ox, oy, rnd, { grass: BAND_PALETTE.grass[1] }),
+  [BAND_TILES.GRASS_SIDE[2]]: (ctx, ox, oy, rnd) => paintGrassSide(ctx, ox, oy, rnd, { grass: BAND_PALETTE.grass[2], mottle: 0.24 }),
+  [BAND_TILES.LEAVES[1]]:     (ctx, ox, oy, rnd) => paintLeaves(ctx, ox, oy, rnd, { leaf: BAND_PALETTE.leaves[1], mottle: 0.32 }),
+  [BAND_TILES.LEAVES[2]]:     (ctx, ox, oy, rnd) => paintLeaves(ctx, ox, oy, rnd, { leaf: BAND_PALETTE.leaves[2], mottle: 0.36 }),
+});
 
 let cached = null;
 

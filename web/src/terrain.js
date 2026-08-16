@@ -49,13 +49,33 @@ function makeNoise2D(seed) {
 
 /* ---------- 地形参数 ---------- */
 const BASE_H = 22;
-const SAND_H = 15;       // 低于此高度表层为沙
+const SAND_H = 15;       // 低于此高度表层为沙（河滩基准；另叠加低频“滩宽”噪声外延，见下）
+const ROCK_H = 32;       // D-1 高度带：高于此高度地表草皮剥落、岩层裸露（含碎石）
+
+/* ---------- D-1 地形色彩带（docs/design/art/color-pass.md） ----------
+ * 每列（16×16/chunk）用低频噪声算一次带索引，落 LUT 供 mesher 查表换瓦片变体；
+ * 禁止逐方块重采样（性能约束）。带定义：
+ *   grass  0=嫩绿(基准) 1=黄绿 2=枯黄   —— 湿度噪声 + 高度干燥偏置（高处更枯）
+ *   leaves 0=浓绿(基准) 1=黄绿 2=枯黄赭 —— 独立噪声相位（树冠与草地分带错开）
+ * 阈值/频率改动须同步 color-pass.md 色板表。 */
+const BAND_GRASS_TH = [0.40, 0.62];   // 湿度 v 分带阈值（<0.40 嫩绿 / 中 黄绿 / >0.62 枯黄）
+const BAND_LEAF_TH = [0.45, 0.70];
+const MOIST_FREQ = 0.006;             // 低频：色带补丁 ~80-160 格宽（截图级大色块，非噪点）
+
 const noiseCache = new Map();
 
 function getNoise(seed) {
   let n = noiseCache.get(seed);
   if (!n) { n = makeNoise2D(seed); noiseCache.set(seed, n); }
   return n;
+}
+
+/** 列级确定性哈希（碎石斑驳/边界抖动用，O(1)，非噪声） */
+function colHash(wx, wz, seed) {
+  let h = Math.imul(wx, 0x27d4eb2d) ^ Math.imul(wz, 0x165667b1) ^ (seed | 0);
+  h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
+  h ^= h >>> 13;
+  return (h >>> 0) / 4294967296;
 }
 
 export function surfaceHeight(wx, wz, seed) {
@@ -68,25 +88,58 @@ export function surfaceHeight(wx, wz, seed) {
 }
 
 /**
+ * D-1 色彩带查表：每 chunk 一次，产出每列（16×16）的草/叶带索引（0/1/2）。
+ * world._generate 缓存在 chunk 记录上，mesher 按列读取换瓦片变体（禁止逐方块重采样）。
+ * @returns {{grass: Uint8Array, leaves: Uint8Array}} 长度 256，索引 = x + z*16
+ */
+export function chunkColorBands(cx, cz, seed) {
+  const grass = new Uint8Array(CHUNK_X * CHUNK_Z);
+  const leaves = new Uint8Array(CHUNK_X * CHUNK_Z);
+  const nm = getNoise(seed + 1201);   // 草地湿度（低频）
+  const nl = getNoise(seed + 4501);   // 树冠色相（独立相位，与草地分带错开）
+  for (let z = 0; z < CHUNK_Z; z++) {
+    for (let x = 0; x < CHUNK_X; x++) {
+      const wx = cx * CHUNK_X + x, wz = cz * CHUNK_Z + z;
+      const h = surfaceHeight(wx, wz, seed);
+      const dry = (h - 24) * 0.03;    // 高度干燥偏置：谷地更润、山脊更枯（与裸岩带呼应）
+      let v = nm(wx * MOIST_FREQ, wz * MOIST_FREQ) * 0.5 + 0.5 + dry;
+      v = Math.max(0, Math.min(1, v));
+      let lv = nl(wx * MOIST_FREQ, wz * MOIST_FREQ) * 0.5 + 0.5 + dry * 0.66;
+      lv = Math.max(0, Math.min(1, lv));
+      const i = x + z * CHUNK_X;
+      grass[i] = v < BAND_GRASS_TH[0] ? 0 : v < BAND_GRASS_TH[1] ? 1 : 2;
+      leaves[i] = lv < BAND_LEAF_TH[0] ? 0 : lv < BAND_LEAF_TH[1] ? 1 : 2;
+    }
+  }
+  return { grass, leaves };
+}
+
+/**
  * 生成一个 chunk 的方块数据。
  * @returns {Uint8Array} 列主序 idx = x + z*16 + y*256
  */
 export function generateChunk(cx, cz, seed) {
   const data = new Uint8Array(CHUNK_X * CHUNK_Y * CHUNK_Z);
   const idx = (x, y, z) => x + z * CHUNK_X + y * CHUNK_X * CHUNK_Z;
+  const nBeach = getNoise(seed + 331);   // 滩宽噪声：河滩/沙地随低频外延（0~2.5 格）
+  const nRock = getNoise(seed + 611);    // 裸岩带边界抖动（高频，破直线等高线）
 
   for (let z = 0; z < CHUNK_Z; z++) {
     for (let x = 0; x < CHUNK_X; x++) {
       const wx = cx * CHUNK_X + x;
       const wz = cz * CHUNK_Z + z;
       const h = surfaceHeight(wx, wz, seed);
-      const sandy = h <= SAND_H + 1;
+      const sandy = h <= SAND_H + 1 + (nBeach(wx * 0.03, wz * 0.03) * 0.5 + 0.5) * 2.5;
+      // D-1 高度带：山顶草皮剥落 → 岩层裸露（约三成列混入圆石呈“碎石滩”质感）
+      const rocky = h >= ROCK_H + nRock(wx * 0.09, wz * 0.09) * 2.0;
 
       for (let y = 0; y <= h; y++) {
         let id;
         if (y < 2) id = BLOCK.STONE;                       // 基底
-        else if (y === h) id = sandy ? BLOCK.SAND : BLOCK.GRASS;
-        else if (y >= h - 3) id = sandy ? BLOCK.SAND : BLOCK.DIRT;
+        else if (y === h) id = rocky
+          ? (colHash(wx, wz, seed) < 0.3 ? BLOCK.COBBLE : BLOCK.STONE)
+          : sandy ? BLOCK.SAND : BLOCK.GRASS;
+        else if (y >= h - 3) id = rocky ? BLOCK.STONE : sandy ? BLOCK.SAND : BLOCK.DIRT;
         else id = BLOCK.STONE;
         data[idx(x, y, z)] = id;
       }
@@ -133,8 +186,7 @@ export function generateChunk(cx, cz, seed) {
     const tz = 2 + Math.floor(rnd() * (CHUNK_Z - 4));
     const wx = cx * CHUNK_X + tx, wz = cz * CHUNK_Z + tz;
     const ground = surfaceHeight(wx, wz, seed);
-    if (ground <= SAND_H + 1) continue;                  // 沙地不长树
-    if (data[idx(tx, ground, tz)] !== BLOCK.GRASS) continue;
+    if (data[idx(tx, ground, tz)] !== BLOCK.GRASS) continue;   // 沙滩/裸岩/坡上无树（草皮即地表判定）
 
     const trunkH = 4 + Math.floor(rnd() * 3);            // 4~6
     const topY = ground + trunkH;

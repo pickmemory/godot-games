@@ -1,5 +1,6 @@
 // mesher.js — 面剔除网格化：只生成暴露面，合并为单个 BufferGeometry（每 chunk 一次 draw call）
-import { BLOCK_DEFS, isOpaque } from './blocks.js';
+import { BLOCK_DEFS, BLOCK, isOpaque } from './blocks.js';
+import { BAND_TILES } from './textures.js';   // D-1 色彩带变体瓦片（追加瓦片，不动 blocks.js 注册表）
 
 // 六面定义：dir 法线；corners 为块内 4 角（CCW，三角 0,1,2 / 2,1,3）；
 // uv 为瓦片内局部坐标（v=1 是瓦片图像上缘）
@@ -160,9 +161,12 @@ function addCross(x, y, z, tile, tilesPerRow, positions, normals, uvs, indices) 
  * @param {WorldLike} world   只需 getBlock(gx,gy,gz) → number（世界坐标；未加载返回 AIR）
  * @param {number} cx cz      chunk 世界原点 = (cx*16, 0, cz*16)
  * @param {number} tilesPerRow atlas 每行瓦片数
+ * @param {{grass: Uint8Array, leaves: Uint8Array}} [bands]
+ *        D-1 色彩带列索引表（terrain.chunkColorBands 产出，world 每 chunk 缓存一份；
+ *        缺省时回退基准瓦片，兼容旧调用）
  * @returns {{positions: Float32Array, normals: Float32Array, uvs: Float32Array, indices: Uint32Array}}
  */
-export function buildChunkGeometry(data, world, cx, cz, tilesPerRow) {
+export function buildChunkGeometry(data, world, cx, cz, tilesPerRow, bands) {
   const positions = [];
   const normals = [];
   const uvs = [];
@@ -224,9 +228,20 @@ export function buildChunkGeometry(data, world, cx, cz, tilesPerRow) {
           // 可见：邻块为空气，或邻块透明且与本块不同类
           if (nb !== 0 && (isOpaque(nb) || nb === id)) continue;
 
-          const tile = face.dir[1] === 1 ? def.tiles.top
+          const isTop = face.dir[1] === 1, isSide = face.dir[1] === 0;
+          let tile = isTop ? def.tiles.top
             : face.dir[1] === -1 ? def.tiles.bottom
             : def.tiles.side;
+          // D-1 色彩带：草/叶按列带索引换变体瓦片（查表 O(1)，不重采样噪声；底面泥土不变色）
+          if (bands) {
+            const vi = x + z * 16;
+            if (id === BLOCK.GRASS) {
+              if (isTop) tile = BAND_TILES.GRASS_TOP[bands.grass[vi]];
+              else if (isSide) tile = BAND_TILES.GRASS_SIDE[bands.grass[vi]];
+            } else if (id === BLOCK.LEAVES) {
+              tile = BAND_TILES.LEAVES[bands.leaves[vi]];
+            }
+          }
           const tc = tile % tilesPerRow;               // 瓦片列
           const tr = Math.floor(tile / tilesPerRow);   // 瓦片行
           const u0 = tc / tilesPerRow + PAD, u1 = (tc + 1) / tilesPerRow - PAD;

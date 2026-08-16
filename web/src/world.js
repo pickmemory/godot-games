@@ -1,7 +1,7 @@
 // world.js — chunk 管理：按玩家位置装载/卸载，脏块分帧重建（每帧限 2 生成 + 2 重建）
 import * as THREE from 'three';
 import { CHUNK_X, CHUNK_Y, CHUNK_Z } from './blocks.js';
-import { generateChunk } from './terrain.js';
+import { generateChunk, chunkColorBands } from './terrain.js';
 import { buildChunkGeometry } from './mesher.js';
 
 const VIEW_RADIUS = 4;      // 视距（chunk 切比雪夫半径）
@@ -81,7 +81,7 @@ export class World {
     const k = this.key(cx, cz);
     if (this.chunks.has(k)) return;
     const data = generateChunk(cx, cz, this.seed);
-    const rec = { cx, cz, data, mesh: null, dirty: true };
+    const rec = { cx, cz, data, bands: chunkColorBands(cx, cz, this.seed), mesh: null, dirty: true };
     // MC-4c 存档：确定性重建后重放玩家差分（挖/放/耕作/章节迁移），再参与网格化
     const diff = this.pendingDiffs.get(k);
     if (diff) for (const [idx, id] of diff) data[idx] = id;
@@ -89,7 +89,7 @@ export class World {
   }
 
   _buildMesh(rec) {
-    const g = buildChunkGeometry(rec.data, this, rec.cx, rec.cz, this.tilesPerRow);
+    const g = buildChunkGeometry(rec.data, this, rec.cx, rec.cz, this.tilesPerRow, rec.bands);
     if (rec.mesh) {
       rec.mesh.geometry.dispose();
       rec.mesh.geometry = this._toGeometry(g);
