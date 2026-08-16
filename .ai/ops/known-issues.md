@@ -2,6 +2,18 @@
 
 > 按"以后还会踩"的价值排序；新坑追加到顶部。每条：现象 → 根因 → 防再犯。
 
+## P2 · 测试耦合（D-6 审计新发现）：verify-audio 的"BGM 首态起播"断言在慢无头机必挂
+
+- 现象：`tools/verify-audio.mjs` 检查项「手势后激活 + BGM 首态起播」FAIL（state=null），其余 11 项 PASS。
+- 根因：断言用固定 `waitForTimeout(2200)` 墙钟等待，但 music.js 的状态判定节流 `STEP=0.5s` 是**游戏时间**（dt 钳制 0.05 下慢无头机游戏时 ≈ 墙钟×0.2~0.35）。D-6 探针实测：+2.2s 时 `acc=0.4999`（差 0.0001 游戏秒未过阈值），+5.2s 时 `state='event'` 正确（开场演出隐含 event 态，符合 D-5 设计）。另：该脚本未进 D-5 双演出跳过同步清单（known-issues P2 老条的清单漏了它）。
+- 防再犯：改 `waitForFunction` 轮询等 `state` 非空（上限 8s）；新增"按游戏时节流"的断言一律轮询，勿用固定墙钟。判定环境性失败先看 acc/游戏时拉伸比。
+
+## P3 · CREDITS 对账（D-6 审计新发现）：MC-5c 旁白样音 2 文件漏登
+
+- 现象：`web/assets/audio/narration-chapter-open.mp3`（332KB）/ `narration-event.mp3`（197KB）在 `web/assets/CREDITS.md` 无登记条目（孤儿文件，违反美术圣经 §8.5 对账纪律）。
+- 根因：MC-5c 生成样音留档，D-4 批量逐行版（nar-*×46）登记时漏了旧样音两文件。
+- 防再犯：引入/替换音频资产后跑一遍对账（`find web/assets -type f` vs CREDITS 表）；修复一行（见 docs/release/compliance-audit.md §1.4）或删除两文件（运行时 narrations.json 不引用，零影响）。自研 mmx 资产无法律风险，属纪律项。
+
 ## P1 · 演出类门控：冻结时间轴时必须仍以 dt=0 刷昼夜视觉层（否则黑天）
 
 - 现象：D-5 开场演出期间整屏近纯色（像素方差 ≈ 2），且相机高空看下去地面也是纯雾色。
