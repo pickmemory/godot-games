@@ -49,6 +49,7 @@
 | 39 | TORCH | 火把 |  | ✓ | 0.05 |  | 7.5/1.25 | torch | 自身 |
 | 40 | CAMPFIRE | 篝火 |  | ✓ | 0.4 |  | 15/2.1 | campfire | 自身 |
 | 41 | POTTERY | 陪葬陶片 |  | ✓ | 0.15 |  |  | cross | 自身 |
+| 42 | SCAR_MARK | 流民刻痕 |  | ✓ | 0.05 |  |  | cross | 0 |
 
 ## TILE 瓦片表（atlas 序号；绘制逻辑在 textures.js PAINTERS）
 
@@ -88,3 +89,4 @@
 | TORCH | 31 |
 | CAMPFIRE | 32 |
 | POTTERY | 33 |
+| SCAR_MARK | 34 |

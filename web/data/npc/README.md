@@ -35,6 +35,7 @@
 | `wander` | `{radius,speed}` | — | 游走半径（格）/ 步速（格/秒，默认 1.4） |
 | `appear` / `disappear` | `{date}` | — | **编年出场/离场钩子**：`{year,month,day}` 简化格里历；日期复用 MC-3a `chapter.js` 的 `dateToSerial` 折算序数日，由 `NPCManager.setChronicle(currentSerial)` 在开卷与每个游戏日翻页时判定。缺省 = 开卷在场 / 永不离场 |
 | `dialog` | string | — | 对话树键 → `dialogs.json` 顶层键；缺省不可交谈。运行期可由章节事件效果 `setDialog` 切换（`NPCManager.setDialog(id, treeKey)`，如陈叟战前/战后双树） |
+| `dialogTree` | object | — | MC-6 D-3：内嵌对话树（`{start, nodes}`，与 dialogs.json 单树同构）。奇遇临时 NPC（encounters.json 的 spawnNpc 效果）用它免登记全局dialogs 册，台词生命周期随事件；`dialogUI.open` 优先于 `dialog` 键 |
 
 漫游 AI 三态：`idle`（待机）→ `wander`（锚点圆内随机游走）→ `approach`（玩家 5 格内走近至 2.2 格站定面向玩家，玩家离开 9 格放弃）。决策限频 0.35s 且个体错峰；物理为重力 + 逐轴 AABB 体素碰撞 + 撞墙小跳（可上 1 格台阶），与 player/mob 同算法思路、按 NPC 自身宽高独立实现。
 

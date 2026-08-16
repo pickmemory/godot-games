@@ -27,6 +27,7 @@
 | 编年史（章节时间轴/NPC/对话/任务/演出） | [chronicle.md](chronicle.md) | ✅ |
 | 昼夜/时辰/天体/灯光 | [day-night-lighting.md](day-night-lighting.md) | ✅ |
 | 探索结构/罗盘 | [explore.md](explore.md) | ✅（MC-6 D-2 新建） |
+| 奇遇（编年之间的随机事件层） | [encounters.md](encounters.md) | ✅（MC-6 D-3 新建） |
 | 体素世界（chunk/地形色彩带/网格化/碰撞） | [voxel-world.md](voxel-world.md) | ✅（D-1 时补齐：色彩带+裸岩+河滩规则；碰撞细节待后续充实） |
 | 农耕/建造定居 | — | 待补 |
 | 存档（差分/适配器） | — | 待补 |

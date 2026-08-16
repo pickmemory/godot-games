@@ -28,6 +28,8 @@ export const TILE = {
   TORCH: 31, CAMPFIRE: 32,
   // MC-6 D-2 探索：汉代荒冢的陪葬陶片（十字面片；挖出可拾取收藏）
   POTTERY: 33,
+  // MC-6 D-3 奇遇：流民刻痕（十字面片；夜叩门被拒后留在门旁墙面的指甲刻痕，纯叙事标记）
+  SCAR_MARK: 34,
 };
 
 export const BLOCK = {
@@ -50,6 +52,8 @@ export const BLOCK = {
   TORCH: 39, CAMPFIRE: 40,
   // MC-6 D-2 探索：陪葬陶片（荒冢封土里的汉代灰陶残片；挖出可拾取收藏，放置可陈列）
   POTTERY: 41,
+  // MC-6 D-3 奇遇：流民刻痕（墙根的指甲挠痕；无掉落——划痕挖了就没了）
+  SCAR_MARK: 42,
 };
 
 // 索引 = 方块 id。hardness: 基础挖掘秒数（徒手）。
@@ -130,6 +134,9 @@ export const BLOCK_DEFS = [
   // MC-6 D-2：荒冢陪葬陶片（十字面片；无工具门槛，掊土即得；掉自身=可拾取收藏）
   { name: '陪葬陶片', solid: false, transparent: true, cross: true, hardness: 0.15,
     tiles: { top: TILE.POTTERY, side: TILE.POTTERY, bottom: TILE.POTTERY } },
+  // MC-6 D-3：流民刻痕（十字面片立于墙根；无掉落——被拒的流民夜里留下的指甲痕）
+  { name: '流民刻痕', solid: false, transparent: true, cross: true, hardness: 0.05, drop: 0,
+    tiles: { top: TILE.SCAR_MARK, side: TILE.SCAR_MARK, bottom: TILE.SCAR_MARK } },
 ];
 
 // 说明：hotbar 自 MC-2b 起由 inventory（生存行囊）驱动，不再提供创造模式固定九宫。

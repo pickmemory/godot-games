@@ -171,6 +171,7 @@ class NPC {
     this.name = String(def.name ?? this.id);
     this.title = def.title ? String(def.title) : '';
     this.dialogId = def.dialog ? String(def.dialog) : null;
+    this.dialogTree = def.dialogTree && def.dialogTree.nodes ? def.dialogTree : null;   // MC-6 D-3 奇遇临时 NPC 可内嵌整树（免登记 dialogs.json）
     this.portrait = def.portrait ?? null;
     this.anchorX = (def.spawn?.x ?? 8) + 0.5;
     this.anchorZ = (def.spawn?.z ?? 8) + 0.5;
@@ -458,7 +459,7 @@ export class NPCManager {
   nearestTalkable(playerPos, maxDist = 3.0) {
     let best = null, bestD = maxDist;
     for (const n of this.npcs) {
-      if (!n.active || !n.dialogId) continue;
+      if (!n.active || (!n.dialogId && !n.dialogTree)) continue;   // 内嵌树（奇遇临时 NPC）也可交谈
       const d = Math.hypot(playerPos.x - n.pos.x, playerPos.z - n.pos.z);
       if (d < bestD) { bestD = d; best = n; }
     }
@@ -482,6 +483,20 @@ export class NPCManager {
 
   /** 按 id 取（调试/任务系统用） */
   get(id) { return this.npcs.find((n) => n.id === id) ?? null; }
+
+  /**
+   * MC-6 D-3：按 id 前缀回收临时 NPC（奇遇 spawnNpc 的 despawnNpc 效果；id 形如 enc-<事件npcId>-<序数日>）。
+   * 幂等：离场 + 移出名录（长会话不积尸）。
+   */
+  removeByIdPrefix(prefix) {
+    if (!prefix) return;
+    for (let i = this.npcs.length - 1; i >= 0; i--) {
+      if (!this.npcs[i].id.startsWith(prefix)) continue;
+      this.npcs[i].dispose();
+      this.wantsActive.delete(this.npcs[i].id);
+      this.npcs.splice(i, 1);
+    }
+  }
 
   /** 运行期换对话树：npcManager.setDialog('elder-chen', 'elder-01-war')（正在对话中的树不换，下火开启生效） */
   setDialog(id, dialogId) {

@@ -405,6 +405,28 @@ const PAINTERS = {
     ctx.fillStyle = '#c9b28c';
     ctx.fillRect(ox + 4, oy + 4, 2, 1); ctx.fillRect(ox + 10, oy + 10, 2, 1);
   },
+  [TILE.SCAR_MARK]: (ctx, ox, oy, rnd) => {  // MC-6 D-3 流民刻痕：墙面/墙根的指甲挠痕（透明底十字面片用）
+    ctx.clearRect(ox, oy, 16, 16);
+    // 四道长短不一的竖向抓痕（下部深、上部浅——人坐在墙根够不到高处）
+    const scratches = [[3, 6, 9], [6, 4, 11], [9, 7, 10], [12, 8, 8]];
+    for (const [x, y0, len] of scratches) {
+      for (let i = 0; i < len; i++) {
+        const y = y0 + i;
+        if (y > 14) break;
+        const fade = 0.5 - 0.35 * (i / len);              // 上端渐浅
+        ctx.fillStyle = shade('#4a3a28', fade * 0.6 + (rnd() - 0.5) * 0.2);
+        ctx.fillRect(ox + x, oy + y, 1, 1);
+        if (i % 3 === 0) {                                 // 指节停顿的深点
+          ctx.fillStyle = shade('#3a2c1c', 0.2);
+          ctx.fillRect(ox + x, oy + Math.min(14, y + 1), 1, 1);
+        }
+      }
+    }
+    // 底部尘土色的擦抹（人坐过的痕迹）
+    for (let x = 2; x < 14; x++) {
+      if (rnd() < 0.4) { ctx.fillStyle = shade('#8a7458', (rnd() - 0.5) * 0.2); ctx.fillRect(ox + x, oy + 13 + (rnd() < 0.5 ? 0 : 1), 1, 1); }
+    }
+  },
 };
 
 /* ---------- D-1 参数化草/叶绘制器：接受色调参数 tint（{grass|leaf, dirt?, mottle?}） ----------

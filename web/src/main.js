@@ -3,7 +3,8 @@ import * as THREE from 'three';
 import { dlog, installDiag } from './diag.js';
 
 installDiag();   // F8 诊断面板（排查 E 交谈用，定位后可移除）
-import { BLOCK, BLOCK_DEFS } from './blocks.js';
+import { BLOCK, BLOCK_DEFS, isSolid } from './blocks.js';
+import { ITEM } from './items.js';
 import { buildAtlas } from './textures.js';
 import { World } from './world.js';
 import { surfaceHeight } from './terrain.js';
@@ -30,7 +31,8 @@ import { SaveSystem, LocalStorageSaveAdapter } from './save.js';
 import { pickSaveAdapter, platformUnlock, STEAM_ACHIEVEMENTS } from './steam-adapter.js';
 import { CelestialBodies, shichen } from './sky.js';
 import { LightManager } from './lights.js';
-import { FALLBACK_EXPLORE, nearestTarget, bearingTo, ExploredMemory } from './explore.js';
+import { FALLBACK_EXPLORE, nearestTarget, bearingTo, anchorAt, ExploredMemory } from './explore.js';
+import { EncounterEngine, FALLBACK_ENCOUNTERS } from './encounters.js';
 
 /* ---------- 启动 ---------- */
 const canvas = document.getElementById('game');
@@ -172,6 +174,13 @@ let questData = FALLBACK_QUESTS;
 try {
   const res = await fetch('data/quests.json');
   if (res.ok) questData = await res.json();
+} catch (e) { /* 同上 */ }
+
+/* ---------- MC-6 D-3 奇遇数据（缺文件/离线 → encounters.js 同构兑底） ---------- */
+let encountersData = FALLBACK_ENCOUNTERS;
+try {
+  const res = await fetch('data/encounters.json');
+  if (res.ok) encountersData = await res.json();
 } catch (e) { /* 同上 */ }
 
 /* ---------- MC-4a 农耕数据（数据驱动；缺文件/离线 → farming.js 同构兑底） ---------- */
@@ -331,6 +340,7 @@ const dialogUI = new DialogUI({
     if (eff.type === 'startQuest') quests.begin(eff.id);
     else if (eff.type === 'setFlag') timeline.setFlag(eff.flag, eff.value !== false);
     else if (eff.type === 'notify') ui.showPickup(eff.text);
+    else if (eff.type === 'giveFood') giveFoodEffect(eff);   // MC-6 D-3：奇遇对话的分食效果（与 encounters 引擎共用实现）
     else console.warn(`[dialog] 未知效果类型: ${eff.type}`);
   },
 });
@@ -375,9 +385,132 @@ function openDialog(npc) {
   dlog('dialog-open', { npc: npc.id, treeId: npc.dialogId, hasTree: !!dialogs?.[npc.dialogId] });
   document.exitPointerLock();
   ui.setTalkHint('');
-  dialogUI.open(dialogs?.[npc.dialogId] ?? null, npc);   // 树缺失 → DialogUI 兑底树
+  dialogUI.open(npc.dialogTree ?? dialogs?.[npc.dialogId] ?? null, npc);   // MC-6 D-3：奇遇临时 NPC 可内嵌整树
   quests.notify(`talk:${npc.id}`, 1);   // MC-3d：交谈即任务事件（share-the-loaf 等对话直接完成的任务）
 }
+
+/* ---------- MC-6 D-3 奇遇引擎装配：调度在 encounters.js（纯引擎），世界效果执行在此注册 ----------
+ * 与 chapter.js registerEffect 同一模式；ctx 每帧由 encCtx() 现递（isNight 翻转沿 = 抽签窗口）。
+ * 红线：奇遇只提供视角与传闻——可路由的效果与章节事件同一能力集，不存在改写章节事件结果的通路。 */
+const encounters = new EncounterEngine(encountersData, {
+  onEvent(ev) { console.log(`[encounters] ${timeline.formatDate()} 奇遇「${ev.title}」`); },
+});
+
+/** 奇遇 ctx（文件头契约见 encounters.js）：serial 与章节时间轴同源（小数日），保证门控/冷却/延迟与编年对齐 */
+function encCtx() {
+  return {
+    isNight,
+    serial: chapterResult.chapter.startSerial + timeline.elapsed,
+    playerPos: player.pos,
+    hasFlag: (f) => timeline.flags.has(f),
+    stats: { blocksPlaced, blocksMined },
+    nearStructure: (typeId, radius) => {
+      const t = nearestStructureOf(typeId, player.pos.x, player.pos.z);
+      return !!t && Math.hypot(t.ax + 0.5 - player.pos.x, t.az + 0.5 - player.pos.z) <= radius;
+    },
+  };
+}
+
+/** 最近指定类型探索结构（D-2 锚点；chunk 窗哈希扫描，不读 chunk 数据）。仅抽签/触发时调用（≤每游戏日 2 次） */
+function nearestStructureOf(typeId, px, pz) {
+  const t = (exploreCfg.types ?? []).find((x) => x.id === typeId);
+  if (!t) return null;
+  const R = 192;   // 搜索半径（格）：覆盖 gate.nearStructure 最大半径 + 余量
+  let best = null, bestD2 = Infinity;
+  for (let cz = Math.floor((pz - R) / 16); cz <= Math.floor((pz + R) / 16); cz++)
+    for (let cx = Math.floor((px - R) / 16); cx <= Math.floor((px + R) / 16); cx++) {
+      const inst = anchorAt(exploreCfg, typeId, cx, cz, SEED);   // 内部按 region 缓存，重复扫描便宜
+      if (!inst) continue;
+      const d2 = (inst.ax + 0.5 - px) ** 2 + (inst.az + 0.5 - pz) ** 2;
+      if (d2 < bestD2) { bestD2 = d2; best = inst; }
+    }
+  return best;
+}
+
+/** 对话/奇遇共用：分食效果（giveFood）。有食物→扫 1 份 + 置旗标 + 口述情报；无→数据里的兑底文案 */
+function giveFoodEffect(eff) {
+  const FOOD_IDS = [ITEM.MILLET, ITEM.GREENS];
+  const fid = FOOD_IDS.find((id) => inventory.countOf(id) > 0);
+  if (fid == null) { ui.showPickup(eff.none ?? '行囊里翻遍了——没有能分人的吃食。'); return; }
+  inventory.consume(fid, 1);
+  timeline.setFlag(eff.flag ?? 'enc-food-shared', true);
+  ui.showPickup(eff.intel ?? `你分出一份${itemName(fid)}。`);
+}
+
+encounters.registerEffect('notify', (eff) => { if (eff.text) ui.showPickup(eff.text); });
+encounters.registerEffect('setFlag', (eff) => timeline.setFlag(eff.flag, eff.value !== false));
+encounters.registerEffect('giveFood', (eff) => giveFoodEffect(eff));   // fire/followUp 直接用时分食（对话路由见 dialogUI.onEffect）
+encounters.registerEffect('spawnNpc', (eff, _ctx, inst) => {
+  const def = eff.npc;
+  if (!def?.id) return;
+  const ang = Math.random() * Math.PI * 2;
+  npcManager.spawnDynamic({
+    ...def,
+    id: `enc-${def.id}-${Math.round(inst.at)}`,   // 每次触发唯一（同事件冷却内不重复；despawnNpc 按前缀回收）
+    spawn: { x: Math.floor(player.pos.x + Math.cos(ang) * 3), z: Math.floor(player.pos.z + Math.sin(ang) * 3) },
+    wander: def.wander ?? { radius: 2, speed: 1.1 },
+  });
+});
+encounters.registerEffect('despawnNpc', (eff) => { if (eff.id) npcManager.removeByIdPrefix(`enc-${eff.id}-`); });
+// 鬼火：最近荒冢封土顶放一支篝火（lights.js 0.6s 扫描自动点亮，夜雾边缘可见）；坐标回填实例供 undoBlocks 回收
+encounters.registerEffect('placeGhostFire', (_eff, _ctx, inst) => {
+  const t = nearestStructureOf('han-mound', player.pos.x, player.pos.z);
+  if (!t) return;
+  for (let y = t.ground + 9; y > t.ground; y--) {
+    if (world.getBlock(t.ax, y, t.az) === BLOCK.AIR) continue;
+    world.setBlock(t.ax, y + 1, t.az, BLOCK.CAMPFIRE);
+    inst.placedBlocks.push({ x: t.ax, y: y + 1, z: t.az, expect: BLOCK.CAMPFIRE });
+    return;
+  }
+});
+// 回收本实例放置的方块（仅当仍是放置时的方块——玩家改动优先）
+encounters.registerEffect('undoBlocks', (_eff, _ctx, inst) => {
+  for (const b of inst.placedBlocks) {
+    if (world.getBlock(b.x, b.y, b.z) === b.expect) world.setBlock(b.x, b.y, b.z, BLOCK.AIR);
+  }
+  inst.placedBlocks.length = 0;
+});
+// 荒冢被挖开：封土开 2×2×3 口子，坑底散容陶与翻土（接 D-2 荒冢的“盗墓后”状态；方块走差分持久）
+encounters.registerEffect('digMound', () => {
+  const t = nearestStructureOf('han-mound', player.pos.x, player.pos.z);
+  if (!t) return;
+  const ax = t.ax, az = t.az;
+  let top = t.ground;
+  for (let y = t.ground + 9; y > t.ground; y--) if (world.getBlock(ax, y, az) !== BLOCK.AIR) { top = y; break; }
+  for (let dz = 0; dz <= 1; dz++) for (let dx = 0; dx <= 1; dx++)
+    for (let dy = 0; dy <= 2; dy++) {
+      const b = world.getBlock(ax + dx, top - dy, az + dz);
+      if (b === BLOCK.GRASS || b === BLOCK.DIRT) world.setBlock(ax + dx, top - dy, az + dz, BLOCK.AIR);
+    }
+  if (world.getBlock(ax, top - 2, az) === BLOCK.AIR) world.setBlock(ax, top - 2, az, BLOCK.POTTERY);
+  if (world.getBlock(ax + 1, top - 2, az + 1) === BLOCK.AIR) world.setBlock(ax + 1, top - 2, az + 1, BLOCK.COBBLE);
+});
+// 刻痕：被拒的流民夜里留在门旁墙面的指甲痕（新方块 SCAR_MARK；优先落在最近判定房屋的门边）
+encounters.registerEffect('scarMark', () => {
+  let bx = Math.floor(player.pos.x), by = Math.floor(player.pos.y), bz = Math.floor(player.pos.z);
+  const house = building.houses.values().next().value;
+  if (house) { bx = house.door[0]; by = house.door[1]; bz = house.door[2]; }
+  for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    const x = bx + dx, y = by - 1, z = bz + dz;   // 门脚下那层的旁格（墙根）
+    if (world.getBlock(x, y, z) === BLOCK.AIR && isSolid(world.getBlock(x, y - 1, z))) {
+      world.setBlock(x, y, z, BLOCK.SCAR_MARK);
+      return;
+    }
+  }
+  const x = Math.floor(player.pos.x) + 1, y = Math.floor(player.pos.y), z = Math.floor(player.pos.z);
+  if (world.getBlock(x, y, z) === BLOCK.AIR && isSolid(world.getBlock(x, y - 1, z))) world.setBlock(x, y, z, BLOCK.SCAR_MARK);
+});
+// 掉落：玩家附近撒物品（掉落物实体，靠近吸附拾取）
+encounters.registerEffect('dropLoot', (eff) => {
+  for (const it of Array.isArray(eff.items) ? eff.items : []) {
+    if (!Number.isFinite(it?.id)) continue;
+    dropManager.spawn(it.id, [
+      player.pos.x + (Math.random() - 0.5) * 3,
+      player.pos.y + 0.5,
+      player.pos.z + (Math.random() - 0.5) * 3,
+    ], Math.max(1, Math.round(it.n ?? 1)));
+  }
+});
 /* ---------- 挖掘粒子（手感包） ---------- */
 const bursts = [];
 function spawnBurst(pos, tileIndex) {
@@ -872,6 +1005,10 @@ saveSystem.registerProvider('chapter', {
   },
 });
 saveSystem.registerProvider('quests', { capture: () => quests.serialize(), restore: (d) => quests.restore(d) });
+saveSystem.registerProvider('encounters', {
+  capture: () => encounters.serialize(),
+  restore: (d) => { encounters.restore(d); },   // MC-6 D-3：一次性册/冷却/进行中实例（placedBlocks 含在内，读档后鬼火仍可回收）
+});
 saveSystem.registerProvider('farming', { capture: () => farming.serialize(), restore: (d) => farming.restore(d) });
 saveSystem.registerProvider('building', {
   capture: () => building.serialize(),
@@ -994,6 +1131,7 @@ function loop(now) {
     updateTracker(dt);
     updateCompass(dt);
     timeline.update(dt, { isNight, playerPos: player.pos, stats: { blocksPlaced, blocksMined } });
+    encounters.update(dt, encCtx());   // MC-6 D-3：奇遇引擎（入夜/破晓沿抽签；followUp/watch 随帧推进）
     farming.update(dt);   // MC-4a：作物生长/水分与编年时间同源同门控（演出中不偷长）
   }
 
@@ -1020,7 +1158,8 @@ requestAnimationFrame(loop);
 // 调试钩子（?debug=1 才挂；末尾挂载——此时 lightsMgr/quests 等均已初始化，避免 TDZ；供 tools/ 自动化验证用）
 if (new URLSearchParams(location.search).get('debug') === '1') {
   window.__dbg = {
-    npcManager, player, world, lightsMgr, quests,
+    npcManager, player, world, lightsMgr, quests, encounters,
+    encounterCtx: encCtx,
     explore: {
       cfg: exploreCfg, memory: exploredMemory, seed: SEED,
       nearest: () => nearestTarget(exploreCfg, player.pos.x, player.pos.z, SEED, (k) => exploredMemory.has(k)),

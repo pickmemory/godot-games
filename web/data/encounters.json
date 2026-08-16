@@ -1,0 +1,222 @@
+{
+  "_comment": "MC-6 D-3 奇遇事件表（引擎 web/src/encounters.js；设计依据 docs/design/encounters.md）。schema：check=抽签参数（nightChance/dayChance=入夜/破晓沿的抽签命中率；globalCooldownDays=任何奇遇后的全局静默日数）。events[]：slot=抽签窗口（night 入夜沿/day 破晓沿/any 两者）；weight=加权抽签权重；once=整档一次；cooldownDays=同类事件冷却（游戏日）；gate.from/to=编年日期窗（简化格里历 {year,month,day}，可单侧）；gate.requireFlags/forbidFlags=章节旗标门（与 chapter.js 共享旗标池）；gate.nearStructure=近旁结构门（D-2 explore 锚点，type+radius 格）；fire=触发即执行效果；watch=接近反应（radius 格内靠近执行 effects；inDays 游戏日超时执行 timeoutEffects；锚=本实例放置的方块）；followUps[]=数日后延迟效果（inDays 游戏日；requireFlags/forbidFlags 到期复查）；resetFlags=实例收尾时清除的旗标（防污染下次同类事件）。效果类型由 main.js 注册（notify/setFlag/spawnNpc/despawnNpc/placeGhostFire/undoBlocks/digMound/scarMark/dropLoot/…与章节效果同构）。台词全在本文件，代码零台词。",
+  "check": { "nightChance": 0.4, "dayChance": 0.32, "globalCooldownDays": 2 },
+  "events": [
+    {
+      "id": "night-refugee",
+      "title": "流民投宿",
+      "slot": "night",
+      "weight": 10,
+      "cooldownDays": 16,
+      "gate": { "from": { "year": 184, "month": 2, "day": 12 } },
+      "fire": [
+        { "type": "notify", "text": "夜半，有人敲你的门。声音很轻，一下，又一下，像怕惊动墙外的东西。" },
+        {
+          "type": "spawnNpc",
+          "npc": {
+            "id": "refugee",
+            "name": "夜叩门的人",
+            "title": "逃难人",
+            "model": { "type": "procedural", "robe": "#5a5148", "skin": "#cbb392" },
+            "portrait": { "bg": "#2b2622", "fg": "#d8cbb0" },
+            "wander": { "radius": 2, "speed": 0.8 },
+            "dialogTree": {
+              "start": "knock",
+              "nodes": {
+                "knock": {
+                  "text": "（门外的男人抱着一个蓝布包袱，眼窝深陷。他不敢抬头，声音压得很低。）行行好……讨口吃的。孩子他娘走不动了，在前头破庙里躺着。俺不敢停——停下来，就得跪下去了。",
+                  "choices": [
+                    {
+                      "text": "（翻翻行囊，分他些吃食）",
+                      "effects": [
+                        {
+                          "type": "giveFood",
+                          "flag": "enc-refugee-fed",
+                          "intel": "他捧着吃食三口并作两口，忽然压低嗓子：「恩人，少走北边官道。钜鹿来的都在传，张大贤良师的人挨村送符水，官府已经开始拿人了……俺们，就是从那边逃出来的。」",
+                          "none": "你把行囊翻遍了——没有能分人的吃食。他等了半晌，轻轻说了句「叨扰」，退回黑暗里。"
+                        }
+                      ],
+                      "next": null
+                    },
+                    {
+                      "text": "隔着门，不做声。",
+                      "effects": [ { "type": "setFlag", "flag": "enc-refugee-refused" } ],
+                      "next": null
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "followUps": [
+        {
+          "inDays": 0.42,
+          "requireFlags": ["enc-refugee-fed"],
+          "effects": [
+            { "type": "notify", "text": "天蒙蒙亮，那人已经走了。门口放着一小捆扎好的干柴——是他夜里替你拾的。" },
+            { "type": "despawnNpc", "id": "refugee" }
+          ]
+        },
+        {
+          "inDays": 0.42,
+          "requireFlags": ["enc-refugee-refused"],
+          "effects": [
+            { "type": "notify", "text": "清晨推开门：门板上多了几道指甲挠出的刻痕。昨夜那人，终究在墙根坐到了天明。" },
+            { "type": "scarMark" },
+            { "type": "despawnNpc", "id": "refugee" }
+          ]
+        },
+        {
+          "inDays": 0.5,
+          "effects": [ { "type": "despawnNpc", "id": "refugee" } ]
+        }
+      ],
+      "resetFlags": ["enc-refugee-fed", "enc-refugee-refused"]
+    },
+    {
+      "id": "scout-gallop",
+      "title": "斥候快报",
+      "slot": "day",
+      "weight": 8,
+      "once": true,
+      "gate": { "from": { "year": 184, "month": 3, "day": 5 }, "to": { "year": 184, "month": 3, "day": 21 } },
+      "fire": [
+        { "type": "notify", "text": "官道方向尘头大起——一骑斥候打马疾驰而过，连铃铛都没挂。是往北去的。马蹄声过了很久，你手里的土才敢落。" }
+      ],
+      "followUps": [
+        {
+          "inDays": 3,
+          "effects": [
+            { "type": "notify", "text": "借宿的贩夫说：北边各县在换戍卒，驿马这半月跑死了好几匹——要出大事了。他说完就急着赶路，不敢多住一夜。" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ghost-fire",
+      "title": "夜半鬼火",
+      "slot": "night",
+      "weight": 9,
+      "cooldownDays": 15,
+      "gate": { "nearStructure": { "type": "han-mound", "radius": 48 } },
+      "fire": [
+        { "type": "placeGhostFire" },
+        { "type": "notify", "text": "荒冢那边浮起一点幽幽的火，贴着封土打转。不像人举的火把——它不灭，也不走。" }
+      ],
+      "watch": {
+        "radius": 7,
+        "inDays": 0.45,
+        "effects": [
+          { "type": "undoBlocks" },
+          { "type": "notify", "text": "你刚走近，那点火倏地缩进土里，灭了。四下只剩你自己的呼吸声。" }
+        ],
+        "timeoutEffects": [
+          { "type": "undoBlocks" },
+          { "type": "notify", "text": "天将亮时，荒冢那边的火自己熄了。像从来没有点过。" }
+        ]
+      },
+      "followUps": [
+        {
+          "inDays": 1,
+          "effects": [
+            { "type": "digMound" },
+            { "type": "notify", "text": "清晨再看那座荒冢：封土被翻开了一个人形的口子，坑底散着碎陶。周围没有脚印——至少，没有人的脚印。" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "peddler-bell",
+      "title": "货郎摇铃",
+      "slot": "day",
+      "weight": 7,
+      "cooldownDays": 12,
+      "gate": { "from": { "year": 184, "month": 2, "day": 8 } },
+      "fire": [
+        { "type": "notify", "text": "村口传来一串货郎铃。担子上一头针头线脑，一头各处的消息——乱世里，后者反倒贱些。" },
+        {
+          "type": "spawnNpc",
+          "npc": {
+            "id": "peddler",
+            "name": "摇铃货郎",
+            "title": "走村串户",
+            "model": { "type": "procedural", "robe": "#7a5a3a", "skin": "#d9b38c", "hat": true },
+            "portrait": { "bg": "#3a2e1e", "fg": "#e8d9b0" },
+            "wander": { "radius": 3, "speed": 1.1 },
+            "dialogTree": {
+              "start": "greet",
+              "nodes": {
+                "greet": {
+                  "text": "（货郎拨了拨担子上的铃，笑得客气。）客官要点什么？针、线、粗盐——都没有？那就听个消息吧，不要钱。如今道上的消息，比盐还贱。",
+                  "choices": [
+                    { "text": "北边有什么消息？", "next": "north" },
+                    { "text": "南边呢？", "next": "south" },
+                    { "text": "（摇摇头）告辞。", "next": null }
+                  ]
+                },
+                "north": {
+                  "text": "北边啊……钜鹿、魏郡那一片，符水治病的大贤良师名声越来越响。官府嘴上说拿人，村里的老人却偷偷给他上香。这世道，人心比官印好使。",
+                  "choices": [ { "text": "再听听南边的。", "next": "south" }, { "text": "（拱手）谢了。", "next": null } ]
+                },
+                "south": {
+                  "text": "南边收成好些，征粮也凶。洛阳市面上米价一天三涨，宫里的贵人还在修园子。咱们小老百姓啊——铃摇到哪儿，饭吃到哪儿。",
+                  "choices": [ { "text": "北边呢？", "next": "north" }, { "text": "（拱手）谢了。", "next": null } ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "followUps": [
+        { "inDays": 0.4, "effects": [ { "type": "despawnNpc", "id": "peddler" } ] }
+      ]
+    },
+    {
+      "id": "crow-burst",
+      "title": "鸦群惊起",
+      "slot": "day",
+      "weight": 12,
+      "cooldownDays": 3,
+      "gate": {},
+      "fire": [
+        { "type": "notify", "text": "一声哨响，官道旁的枯树炸起一片鸦，黑压压掠过头顶，往南去了。它们落过的那片地，半天没有虫鸣。" }
+      ]
+    },
+    {
+      "id": "beacon-smoke",
+      "title": "烽燧夜火",
+      "slot": "night",
+      "weight": 8,
+      "cooldownDays": 10,
+      "gate": { "nearStructure": { "type": "beacon-tower", "radius": 90 } },
+      "fire": [
+        { "type": "notify", "text": "远处残破的烽燧上，火光比往常亮。也许是戍卒换了防。也许——烽火重新点起来的时候，从来不是为了给人看热闹。" }
+      ]
+    },
+    {
+      "id": "night-wolves",
+      "title": "群狼夜嚎",
+      "slot": "night",
+      "weight": 9,
+      "cooldownDays": 9,
+      "gate": { "forbidFlags": ["war-begun"] },
+      "fire": [
+        { "type": "notify", "text": "后山的狼嚎一声接着一声，此起彼伏，像在围什么。鸡窝方向传来一阵扑腾——今夜把门抵紧些。" }
+      ]
+    },
+    {
+      "id": "roadside-pouch",
+      "title": "道旁遗囊",
+      "slot": "day",
+      "weight": 6,
+      "once": true,
+      "gate": { "from": { "year": 184, "month": 3, "day": 1 }, "to": { "year": 184, "month": 6, "day": 30 } },
+      "fire": [
+        { "type": "notify", "text": "官道边的草窠里，你踢到一只行囊——半旧的麻布，口子被人匆匆撕开过。它不会再有人来认领了。" },
+        { "type": "dropLoot", "items": [ { "id": 103, "n": 1 }, { "id": 104, "n": 2 } ] }
+      ]
+    }
+  ]
+}

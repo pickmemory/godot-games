@@ -8,6 +8,7 @@
 | chapters/184-yellow-turban.json | id, title, subtitle, start, end, dayLengthSeconds, seasons, worldState, events | events:10 |
 | chapters/190-dong-zhuo.json | id, title, subtitle, start, end, dayLengthSeconds, seasons, worldState, events | events:18 |
 | chapters/190-dong-zhuo/luoyang-fang.json | id, name, origin, palette, layers | — |
+| encounters.json | check, events | events:8 |
 | farming.json | seasonGrowth, till, moisture, crops | — |
 | mining.json | baseSeconds, mismatchFactor, tierPenalty | — |
 | mobs.json | name, maxHp, speed, damage, attackRange, attackCooldown, jumpVelocity, width, height, spawn, despawnDist | — |
