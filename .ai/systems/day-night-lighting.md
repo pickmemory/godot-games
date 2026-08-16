@@ -8,7 +8,7 @@
 - R2: **DAY_LEN 章节数据驱动**（`dayLengthSeconds`，两章均 300s；缺省 180）——锚点 `main.js · DAY_LEN`。2026-08-16 主创要求从 180s 调慢（白天 76s→126s）
 - R3: **十二时辰** `sky.js · shichen(c)`：c=0 → 卯时（日出），c=0.25 → 午时（天顶），c=0.5 → 酉时（日落）。与 R1 阶段精确对齐
 - R4: **天体** `sky.js · CelestialBodies`：太阳/月亮 canvas 径向渐变 sprite，东升西落弧线（略偏北，正午不穿天顶），随玩家平移（"无限远"近拟）；`fog:false + renderOrder:-10` 不被雾吞不写深度，但被地形正常遮挡；日落时段太阳金白→橙红
-- R5: **灯光池** `lights.js · LightManager`：**固定 8 盏 PointLight 常驻**（intensity=0 关闭）——灯数变化会触发 Three 材质重编译卡顿，所以永不增删灯对象；每 0.6s 扫玩家周围 5×5 chunk 的 Uint8Array（约 1ms）收集火把/篝火（`blocks.js` 注册表 `light` 字段：dist/intensity/color），按距离最近调度入池
+- R5: **灯光池** `lights.js · LightManager`：**固定 8 盏 PointLight 常驻**（intensity=0 关闭）——灯数变化会触发 Three 材质重编译卡顿，所以永不增删灯对象；每 0.6s（**墙钟 performance.now 调度，不用累积 dt**——主循环 dt 被 0.05s 钳制，慢机/无头软件渲染的帧尖峰会把累积 dt 的节流在墙钟上拖到远超 0.6s，见 known-issues「dt 钳制拉长节流」案）扫玩家周围 5×5 chunk 的 Uint8Array（约 1ms）收集火把/篝火（`blocks.js` 注册表 `light` 字段：dist/intensity/color），按距离最近调度入池
 - R6: **flicker**：篝火大幅跳动（双正弦 9Hz+23Hz，幅度 ±0.18），火把轻微呼吸（6.5Hz ±0.06）——锚点 `lights.js · update`
 - R7: **手持火把照明**：行囊手持 TORCH 时专用灯跟随玩家（y+1.3，亮度 1.1 呼吸）——锚点 `lights.js · hand`
 - R8: **日晷/时钟**：HUD 文字 `午时 · 日中 昼`（0.25s 限频）+ 右上 canvas 日晷（卯上/午右/酉下/子左刻度，日月双针，中心时辰大字）——锚点 `ui.js · setClock / drawSundial`
@@ -30,5 +30,5 @@
 
 ## 现状 vs 规划
 
-- 现状：无动态阴影（PointLight castShadow=false，性能优先）；天体为程序化占位贴图
-- 规划（未实现）：Kenney 天空盒/日月贴图替换（只换贴图不改逻辑）；D-2 烽燧顶部挂篝火做夜间地标
+- 现状：无动态阴影（PointLight castShadow=false，性能优先）；天体为程序化占位贴图；D-2 烽燧顶部篝火已落地（夜间地标，见 [explore.md](explore.md) R7）
+- 规划（未实现）：Kenney 天空盒/日月贴图替换（只换贴图不改逻辑）

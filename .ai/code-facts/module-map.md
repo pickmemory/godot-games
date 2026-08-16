@@ -21,8 +21,8 @@
 | interaction | 193 | blocks mining textures | main | Interaction |
 | inventory | 91 | items | main | Inventory |
 | items | 146 | — | blocks crafting drops farming helditem inventory mining ui | ITEM, ITEM_DEFS, isToolItem, maxStackOf, drawItemIcon |
-| lights | 109 | blocks | main | LightManager |
-| main | 1030 | diag blocks textures world terrain player interaction ui health mob inventory crafting helditem mining sfx drops farming building chapter structure npc dialog quests cutscene save steam-adapter sky lights explore | — |  |
+| lights | 112 | blocks | main | LightManager |
+| main | 1031 | diag blocks textures world terrain player interaction ui health mob inventory crafting helditem mining sfx drops farming building chapter structure npc dialog quests cutscene save steam-adapter sky lights explore | — |  |
 | mesher | 270 | blocks textures | world | buildChunkGeometry |
 | mining | 46 | items | interaction main | FALLBACK_MINING, digTime, dropOf, toolDefOf |
 | mob | 292 | blocks terrain | main | FALLBACK_MOB_CONFIG, MobManager |

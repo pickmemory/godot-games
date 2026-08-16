@@ -922,7 +922,8 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
 let last = performance.now();
 let frames = 0, fpsClock = 0;
 let groanT = 5; // 行尸呻吟随机计时
-let talkHintT = 0; // MC-3b：可交谈提示轮询计时（限频 0.15s）
+let talkHintT = 0; // MC-3b：可交谈提示轮询计时（限频 0.15s；墙钟调度——dt 钳制下拉长节流会让提示退现,
+                   //  慢机/无头软件渲染实测 >0.4s，见 .ai/ops/known-issues.md）
 let lastHintNpc;   // 诊断：提示出现/消失转换记录
 let lastSimOn;     // 诊断：主循环 sim 门开关记录
 
@@ -940,10 +941,10 @@ function loop(now) {
     mobManager.update(dt, player.pos, isNight);
     npcManager.update(dt, player.pos);   // MC-3b：NPC 漫游/接近/物理（AI 决策限频错峰）
 
-    // 可交谈提示：靠近可交谈 NPC 时显示「按 E 交谈」（限频轮询，避免每帧扫企列表）
-    talkHintT -= dt;
-    if (talkHintT <= 0) {
-      talkHintT = 0.15;
+    // 可交谈提示：靠近可交谈 NPC 时显示「按 E 交谈」（墙钟限频轮询，避免每帧扫企列表；
+    //  用 rAF 时间戳而非累积 dt：帧尖峰较 dt 钳制时游戏时间拉慢，提示刷新不应被拖慢）
+    if (now - talkHintT >= 150) {
+      talkHintT = now;
       const near = npcManager.nearestTalkable(player.pos, TALK_RANGE);
       const nearId = near?.id ?? null;
       if (nearId !== lastHintNpc) {

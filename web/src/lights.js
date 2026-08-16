@@ -5,6 +5,9 @@
 //     Three 材质重编译卡顿）；世界光源按距玩家最近调度入池。
 //   - 光源发现：限频 0.6s 扫玩家周围 loaded chunks 的 Uint8Array（每 chunk 16k 字节直读，
 //     49 chunk 约 1ms），收集 BLOCK.TORCH / CAMPFIRE（BLOCK_DEFS[id].light 即灯参数）。
+//     重扫按**墙钟**（performance.now）调度而非累积 dt：主循环 dt 被 0.05s 钳制，慢机帧尖峰时
+//     游戏时间被拉慢，累积 dt 的节流会在墙钟上拖到远超 0.6s（无头软件渲染环境实测 >0.9s，
+//     放/挖火把后灯迟迟不亮/不灭）；响应层用墙钟保证真实时间内的发现延迟上限。
 //   - 篝火 flicker：亮度随时间正弦+伪噪声抖动；火把轻微呼吸。
 //   - 手持火把：inventory 手持 TORCH 时，一盏专用灯跟随玩家（y+1.3，稍向前偏）。
 //   - 夜间效果最佳：白天点光被日光稀释属正常物理直觉，不做强制压暗。
@@ -20,7 +23,7 @@ export class LightManager {
   constructor(scene, world) {
     this.world = world;
     this._t = 0;               // flicker 时钟
-    this._rescanT = 0;
+    this._lastScanMs = -1e9;   // 上次重扫墙钟（ms）；初值 -∞ 保证首帧即扫
     /** @type {Map<string, {x:number,y:number,z:number,cfg:object}>} 世界光源（key=坐标） */
     this.sources = new Map();
 
@@ -69,9 +72,9 @@ export class LightManager {
    */
   update(dt, playerPos, heldId) {
     this._t += dt;
-    this._rescanT -= dt;
-    if (this._rescanT <= 0) {
-      this._rescanT = RESCAN_INTERVAL;
+    const nowMs = performance.now();
+    if (nowMs - this._lastScanMs >= RESCAN_INTERVAL * 1000) {
+      this._lastScanMs = nowMs;
       this._rescan(playerPos.x, playerPos.z);
     }
 

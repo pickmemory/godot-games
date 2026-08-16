@@ -48,3 +48,9 @@
 ## P3 · 冒烟误报：章节专属 NPC 数据探测 404
 
 - `data/npc/<章节>/npcs.json` 缺失走 fetchFirst 兜底链是**设计行为**，404 不是错。smoke-web.mjs 已过滤 `/data/npc/<章节>/` 的 404 与对应 console 报错。
+
+## P1 · dt 钳制拉长节流：响应层限频被帧尖峰拖慢（无头/慢机测试超时假失败）
+
+- 现象：`verify-mc5x.mjs` L1/L3 稳定失败（放/挖火把后 0.9s 内灯不亮/不灭）、`repro-e-talk.mjs` R2 偶发失败（贴脸 0.4s 内提示未出）——且在 **D-2 改动之前的提交上同样失败**（`git archive` 旧提交对照验证），非回归。
+- 根因：主循环 `dt = Math.min(0.05, real)` 防物理爆炸；无头软件渲染 ~20fps 且 setBlock 后 chunk 重网格化帧尖峰 → 游戏时间被拉慢，**累积 dt 的节流**（灯光 0.6s 重扫、交谈提示 0.15s 轮询）在墙钟上远超标称值。
+- 防再犯：**响应层节流（灯光发现/UI 提示类）一律墙钟调度**（`performance.now()` / rAF 时间戳，见 `lights.js · _lastScanMs`、`main.js · talkHintT`）；模拟层节流（昼夜/任务/罗盘）维持 dt 语义不变。测试等待窗要按「节流间隔 × 慢机拉伸系数」留余量；判定环境性失败先拿旧提交 `git archive` 对照，勿臆断回归。
