@@ -31,6 +31,7 @@ mmx 不可用（未装/无 key）→ 降级：先找 CC0 现成素材，再降�
   `node --check` 覆盖所有改动的 `web/src/*.js`（如 `for f in web/src/*.js; do node --check "$f" || exit 1; done`）
   + 若改动涉及新模块，核对 `docs/superpowers/plans/` 中 Interfaces 签名一致。
   通过后再核对结构（文件在指定路径、index.html 引用链完整）。失败则修到过。
+- **知识库同步（必做，AGENTS.md 维护协议）**：改了 `web/src/**` 或 `web/data/**` → 跑 `scripts/ai-context/refresh.sh`（.ai/code-facts/ 自动刷新，随工作区合入）；改了业务规则 → 增量更新对应 `.ai/systems/*.md`；踩坑追加 `.ai/ops/known-issues.md`。任务开始前应已按 AGENTS.md 知识地图读过 `.ai/CONTEXT.md` 与相关系统页。
 - 自验证未过不许收尾。
 
 ## 红线（违反会被 workflow 拒合并）

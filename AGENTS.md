@@ -3,6 +3,19 @@
 > 任何 AI agent（本地 pi 会话 / GitHub Actions 流水线里的 pi）在本项目干活前必读。
 > 本项目用「主理人派单 + 专家接力」的自主流水线推进，机制见 `.github/`。
 
+## 知识地图（按任务查，禁止不查 .ai/ 就翻源码）
+
+| 要干什么 | 查哪里 |
+|---|---|
+| 项目全貌/技术栈/约定 | **`.ai/CONTEXT.md`**（第一必读） |
+| 模块依赖/导出 | `.ai/code-facts/module-map.md`（自动） |
+| 方块数值/注册表 | `.ai/code-facts/blocks.md`（自动） |
+| 业务规则（挖掘/编年史/昼夜灯光…） | `.ai/systems/<系统>.md`（索引见其 README） |
+| 踩过的坑 | `.ai/ops/known-issues.md` |
+| 为什么这么设计 | `.ai/decisions/`（ADR） |
+
+**维护协议（任务收尾必做）**：改了 `web/src/**` 或 `web/data/**` → 跑 `scripts/ai-context/refresh.sh`（code-facts 自动同步，产物随工作区合入）；改了业务规则/架构 → 增量更新对应 `.ai/systems/*.md`；踩坑追加 known-issues。`.ai/code-facts/*` 勿手改。
+
 ## 项目一句话
 **《三国长卷》**：体素沙盒 × 亲历式历史剧。你不是改写者，你是长卷里的一个名字——从 184 年黄巾之乱的流民开始，在真实编年里活着：挖矿种田筑屋是生计，烽火烧过来时怎么活下来是抉择。**MC 骨架 100%（手感/第一夜/工具天梯）+ 平民视角亲历真实三国历史**。设计信条：先给恐惧，再给天梯，最后给沙盒。
 
@@ -29,21 +42,17 @@
 ## 目录结构
 ```
 godot-games/
-├── web/                     # 游戏根（index.html + src/ + assets/）
-│   ├── src/
-│   │   ├── main.js          # 装配/主循环/昼夜
-│   │   ├── world.js         # chunk 管理（16×16×64，视距加载/卸载）
-│   │   ├── terrain.js       # simplex 噪声地形 + 树
-│   │   ├── mesher.js        # 面剔除网格化
-│   │   ├── blocks.js        # 方块注册表（数据驱动）
-│   │   ├── textures.js      # 纹理 atlas（Kenney 优先，程序化占位）
-│   │   ├── player.js        # 第一人称 + AABB 体素碰撞 + 飞行
-│   │   ├── interaction.js   # DDA 射线选块 + 挖掘/放置 + 手感反馈
-│   │   └── ui.js            # 准星/hotbar/FPS
-│   └── assets/              # 第三方素材 + CREDITS.md（许可登记，必更）
+├── web/                     # 游戏根（index.html + src/ + data/ + assets/）
+│   ├── src/                 # ≈30 个 ES 模块，完整地图见 .ai/code-facts/module-map.md
+│   │   └── main.js          #   装配根：所有系统在此 new + 接线；主循环/昼夜/输入
+│   ├── data/                # 全部游戏数据 JSON（章节/事件/NPC/对话/配方/数值…）
+│   └── assets/              # 第三方素材 + CREDITS.md（许可登记红线）
+├── .ai/                     # AI 知识库（CONTEXT + code-facts 自动 + systems 手写 + ADR + 踩坑录）
+├── scripts/ai-context/      # code-facts 自动提取（refresh.sh）
+├── tools/                   # 测试三件套（smoke/e-talk 回归/mc5x 功能）+ 打包脚本
 ├── docs/
 │   ├── roadmap.md           # 路线图（主理人据此派单）
-│   └── superpowers/         # 设计文档 + 实施计划
+│   └── design/              # demo-vision（Demo 总纲）· art-bible · 章节设计…
 ├── team/                    # 专家团定义（人格 + SOP）
 └── .github/                 # 自主接力流水线（workflow / loop / prompts）
 ```
