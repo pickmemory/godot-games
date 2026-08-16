@@ -2,6 +2,14 @@
 
 > 按"以后还会踩"的价值排序；新坑追加到顶部。每条：现象 → 根因 → 防再犯。
 
+## P2 · mmx：vision 只支持图片，音频资产无自动审听
+
+- 现象：想用 `mmx vision xxx.mp3` 校验生成音频是否"纯环境无旋律"→ 报 Unsupported image format。
+- 根因：mmx vision 是图像理解接口，无音频分析能力。
+- 防再犯：音频资产核验三步：① 文件头（ID3 或 MPEG 帧同步 0xFFEx）+ 大小/时长估算（128kbps≈16KB/s）；
+  ② `tools/verify-audio.mjs` 跑运行时行为；③ 听觉审美走 asset-manifest.md §5 人工审听清单（不合格降级程序合成/OGA CC0）。
+  另：shell 里 `od -c | grep ID3` 永远匹配不到（od 会把字节拆开带空格），用 python 读头。
+
 ## P1 · 测试环境：verify-mc5x 的 L 组（火把/篝火点光）在慢无头环境必挂（预存在，非代码 bug）
 
 - 现象：`verify-mc5x.mjs` L1/L2/L3 间歇性 FAIL（sources=0 或挖掉后 sources 不降），**纯 HEAD（未改动）也能复现**；D-1 (#42) 时在 CI runner 实测 6/6 挂。

@@ -19,6 +19,7 @@ export class Cutscene {
     this._active = false;
     this._skipped = false;
     this._wake = null; // 当前 sleep 的提前唤醒器（skip 用）
+    this._skipGates = new Set();   // D-4：旁白播毕等待的提前唤醒器集合（skip 时全部放行）
   }
 
   get isActive() { return this._active; }
@@ -35,7 +36,10 @@ export class Cutscene {
   /**
    * 播放一场演出（正在播放时调用 → 立即 resolve，不叠加）。
    * @param {{title?:string, subtitle?:string, lines?:string[],
-   *          lineMs?:number, tailMs?:number, fadeMs?:number}} cfg
+   *          lineMs?:number, tailMs?:number, fadeMs?:number,
+   *          voice?:{speak(line:string):Promise<boolean>, stop():void}}} cfg
+   *   voice（D-4 可选）：逐行旁白同步——每行淡入后等语音播毕再走下一行；
+   *   speak 返回 false（无样音/无音频/模式关）时回落固定 lineMs 节奏（audio-direction.md §5.3）。
    * @returns {Promise<void>} 演出结束（含跳过）后 resolve
    */
   async play(cfg = {}) {
@@ -44,10 +48,11 @@ export class Cutscene {
       console.warn('[cutscene] #cutscene 容器缺失，演出跳过');
       return;
     }
-    const { title = '', subtitle = '', lines = [] } = cfg;
+    const { title = '', subtitle = '', lines = [], voice = null } = cfg;
     const lineMs = Number(cfg.lineMs) > 0 ? Number(cfg.lineMs) : 2800;
     const tailMs = Number(cfg.tailMs) > 0 ? Number(cfg.tailMs) : 2200;
     const fadeMs = Number(cfg.fadeMs) > 0 ? Number(cfg.fadeMs) : 1000;
+    const VOICE_TAIL_MS = 800;   // 语音播毕后的短停顿（句间呼吸；小于纯字幕 lineMs）
 
     this._active = true;
     this._skipped = false;
@@ -74,7 +79,18 @@ export class Cutscene {
       this.linesEl.appendChild(p);
       void p.offsetWidth;
       p.classList.add('on');
-      await this._sleep(lineMs);
+      if (voice && !this._skipped) {
+        // 等旁白播毕（skip 立即放行并收声）；未发声（false）回落固定 lineMs 节奏
+        let gateRes;
+        const gate = new Promise((res) => { gateRes = res; this._skipGates.add(res); });
+        let played = false;
+        try { played = await Promise.race([voice.speak(String(line)), gate]); } catch (e) { played = false; }
+        this._skipGates.delete(gateRes);
+        if (this._skipped) voice.stop?.();
+        await this._sleep(played && !this._skipped ? VOICE_TAIL_MS : lineMs);
+      } else {
+        await this._sleep(lineMs);
+      }
     }
     await this._sleep(tailMs);
 
@@ -84,10 +100,12 @@ export class Cutscene {
     this._active = false;
   }
 
-  /** 跳过：唤醒当前等待，标记跳过（后续步骤直通收尾） */
+  /** 跳过：唤醒当前等待（含旁白播毕等待），标记跳过（后续步骤直通收尾） */
   skip() {
     if (!this._active) return;
     this._skipped = true;
     this._wake?.();
+    for (const res of this._skipGates) res();
+    this._skipGates.clear();
   }
 }

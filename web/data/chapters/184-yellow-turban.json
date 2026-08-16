@@ -131,6 +131,11 @@
           "text": "黄巾起事！皆着黄巾为标帜，七州二十八郡一时俱起——你的村子也听得见远处的烟了。"
         },
         {
+          "type": "playBgm",
+          "state": "event",
+          "hold": 120
+        },
+        {
           "type": "mobs",
           "spawn": {
             "maxCount": 6,
@@ -210,6 +215,11 @@
           "text": "入秋，兵燹连绵，四野的烟压低了天。看得见的日子，也短了。"
         },
         {
+          "type": "ambient",
+          "layer": "distant-war",
+          "fade": 10
+        },
+        {
           "type": "sky",
           "fogNear": 28,
           "fogFar": 95
@@ -229,6 +239,11 @@
         {
           "type": "notify",
           "text": "广宗城破，张梁战死。首乱平了，可乱兵才刚开始流散四方——这个冬天，锁好你的门。"
+        },
+        {
+          "type": "playBgm",
+          "state": "event",
+          "hold": 90
         },
         {
           "type": "mobs",

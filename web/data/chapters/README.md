@@ -66,8 +66,10 @@
 | `mobs` | `spawn: {maxCount, interval, ...}` | 合并覆盖生物生成参数（`data/mobs.json` 同构） |
 | `sky` | `fogNear, fogFar, skyTint`（MC-5b） | 天光/雾参数覆盖：skyTint 为章节×情绪氛围色（美术圣经 §2.4；null 清除回季节默认），白昼混入 55%、深夜余 14% |
 | `stampStructure` | `src`（MC-5b） | 结构模板 JSON → 整平地基 + 逐层落方块（structure.js）；落成锚点登记供 `blockReplace` 的 `structure:<id>` 引用。模板示例：`190-dong-zhuo/luoyang-fang.json` |
-| `cutscene` | `title, subtitle, lines[], epilogue?` | MC-3d 章节开场/结尾演出：全屏黑底题签 + 旁白逐行淡入（cutscene.js），演出期间冻结玩家/AI/时间轴；任意键跳过；`epilogue` 在演出结束后作 HUD 短旁白弹出 |
+| `cutscene` | `title, subtitle, lines[], epilogue?` | MC-3d 章节开场/结尾演出：全屏黑底题签 + 旁白逐行淡入（cutscene.js；D-4 起逐行等旁白语音播毕再走下一行，无样音回落固定节奏），演出期间冻结玩家/AI/时间轴；任意键跳过；`epilogue` 在演出结束后作 HUD 短旁白弹出 |
 | `startQuest` | `id` | MC-3d 开启任务（quests.js `begin`；与对话效果同构，幂等） |
 | `setDialog` | `npc, dialog` | MC-3d 运行期切换 NPC 对话树（npc.js `NPCManager.setDialog`；用于旗标后台词切换，免 disappear/reappear 闪场） |
+| `playBgm` | `state:'event', hold:N`（MC-6 D-4） | 强制 BGM 态 N 游戏秒（music.js；cutscene 期间顺延，event 态不循环放完即回落，见 docs/design/audio/sound-layer.md §2.1） |
+| `ambient` | `layer, fade, on?=true`（MC-6 D-4） | 环境事件层开关（如 `distant-war` 战火远响；`on:false` 关层；同时 ≤1 层新层顶旧层，见 sound-layer.md §2.2） |
 
 未注册的 type 触发时 console.warn 并跳过，不会中断时间轴。

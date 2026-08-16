@@ -18,6 +18,7 @@ import { Crafting } from './crafting.js';
 import { HeldItem } from './helditem.js';
 import { FALLBACK_MINING, dropOf, toolDefOf } from './mining.js';
 import { SFX } from './sfx.js';
+import { MusicSystem } from './music.js';   // MC-6 D-4 声音层（BGM 四态/环境分层/事件旁白）
 import { DropManager } from './drops.js';
 import { Farming } from './farming.js';
 import { Building } from './building.js';
@@ -183,6 +184,21 @@ try {
   if (res.ok) encountersData = await res.json();
 } catch (e) { /* 同上 */ }
 
+/* ---------- MC-6 D-4 声音层数据（bgm 状态机/环境层/旁白清单；缺文件/离线 → music.js 同构兑底） ---------- */
+let bgmData = null, ambientData = null, narrationData = null;
+try {
+  const r = await fetch('data/audio/bgm.json');
+  if (r.ok) bgmData = await r.json();
+} catch (e) { /* 同上 */ }
+try {
+  const r = await fetch('data/audio/ambient.json');
+  if (r.ok) ambientData = await r.json();
+} catch (e) { /* 同上 */ }
+try {
+  const r = await fetch('data/audio/narrations.json');
+  if (r.ok) narrationData = await r.json();
+} catch (e) { /* 同上（旁白缺清单 → 自动回落纯字幕，零风险） */ }
+
 /* ---------- MC-4a 农耕数据（数据驱动；缺文件/离线 → farming.js 同构兑底） ---------- */
 let farmingData = null;
 try {
@@ -232,9 +248,15 @@ const mobManager = new MobManager(scene, world, mobConfig, {
   },
 });
 
-/* ---------- WebAudio 合成音效（sfx.js 模块；零外部文件，MC-2c 全覆盖） ---------- */
+/* ---------- WebAudio 合成音效（sfx.js 模块；零外部文件，MC-2c 全覆盖） + D-4 声音层 ---------- */
 const sfx = new SFX();
-function ensureAudio() { sfx.ensure(); }
+const music = new MusicSystem(sfx);   // D-4：与 sfx 共用 AudioContext（同一手势激活）；流式播放不整段解码
+music.setData({ bgm: bgmData, ambient: ambientData, narrations: narrationData });
+function ensureAudio() {
+  sfx.ensure();
+  // 环境采样层（amb-night 含草风）接管夜风 → 关掉程序合成风，防双风叠加（audio-direction.md §4）
+  if (music.ensure()) sfx.windEnabled = false;
+}
 
 /* ---------- MC-3a 章节时间轴引擎装配：时间数学在 chapter.js，世界迁移处理器在此注册 ---------- */
 const skyOverrides = {};   // sky 效果覆盖（雾距等；空值 = 不覆盖，见 updateDayNight）
@@ -242,6 +264,7 @@ const timeline = new ChapterTimeline(chapterResult.chapter, {
   dayLength: DAY_LEN,
   onEvent(ev) {
     console.log(`[chapter] ${timeline.formatDate()} 「${ev.title}」${ev.narration}`);
+    if (ev.narration) music.speak(ev.narration);   // D-4：事件旁白（先 duck 后 speak；缺样音自动回落 notify 字幕）
   },
   onDayChange() {
     ui.setDate(`${timeline.formatDate()} · ${timeline.season.label}`);
@@ -311,11 +334,13 @@ async function playCutscene(eff) {
   if (cutscene.isActive) return;   // 不叠加：上一场未收则忽略
   digHeld = placeHeld = false;
   Object.keys(input).forEach((k) => (input[k] = false));
+  music.stopSpeak();   // D-4：上一条事件旁白不压场；演出自带 event 态 BGM + 逐行旁白
   dlog('cutscene-play', { title: eff.title ?? '' });
   await cutscene.play({
     title: eff.title ?? '',
     subtitle: eff.subtitle ?? '',
     lines: Array.isArray(eff.lines) ? eff.lines : [],
+    voice: { speak: (t) => music.speak(t), stop: () => music.stopSpeak() },   // D-4：逐行等旁白播毕（无样音回落固定节奏）
   });
   dlog('cutscene-end', { skipped: cutscene._skipped === true });
   if (eff.epilogue) ui.showPickup(eff.epilogue);
@@ -324,6 +349,14 @@ timeline.registerEffect('cutscene', (eff) => { playCutscene(eff); });
 // MC-3d：章节事件里也能开任务（first-night → 拾柴）与动态换对话树（war-begun → 陈叟战后树）
 timeline.registerEffect('startQuest', (eff) => { if (eff.id) quests.begin(eff.id); });
 timeline.registerEffect('setDialog', (eff) => { if (eff.npc && eff.dialog) npcManager.setDialog(eff.npc, eff.dialog); });
+// MC-6 D-4 音频效果路由（schema 见 docs/design/audio/sound-layer.md §4）：playBgm=强制 event 态 N 游戏秒；
+//   ambient=事件层开关（on:false 关层；同时 ≤1 层，新层顶旧层）
+timeline.registerEffect('playBgm', (eff) => {
+  if (eff.state) music.setChapterOverride(eff.state, Number(eff.hold) || 0);
+});
+timeline.registerEffect('ambient', (eff) => {
+  if (eff.layer) music.ambientLayer(eff.layer, eff.on !== false, Number(eff.fade) || 8);
+});
 ui.setDate(`${timeline.formatDate()} · ${timeline.season.label}`);
 
 /* ---------- MC-3b NPC 系统：任务 → 对话 → 编年出场（模块只经导出签名通信，效果路由在此汇流） ---------- */
@@ -1053,7 +1086,10 @@ function doSave(reason) {
 }
 // 关页/切后台（含刷新）兑底一存；pagehide 覆盖 bfcache 场景，visibilitychange 覆盖切标签页
 addEventListener('pagehide', () => doSave('pagehide'));
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') doSave('hidden'); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') doSave('hidden');
+  music.setPageMuted(document.visibilityState === 'hidden');   // D-4：切后台静音（主总线归零 + 流暂停，回来续播）
+});
 
 /* ---------- 主循环 ---------- */
 let last = performance.now();
@@ -1135,6 +1171,17 @@ function loop(now) {
     farming.update(dt);   // MC-4a：作物生长/水分与编年时间同源同门控（演出中不偷长）
   }
 
+  // MC-6 D-4 声音层：演出中也照常 tick（cutscene 隐含 event 态，旁白 ducking 在其下）；
+  //   settlePoints = 已判定房屋门坐标（无房屋时 music 内部回落 blocksPlaced 粗代理，audio-direction.md §8.4）
+  if (started) {
+    music.tick(dt, {
+      isNight, playerPos: player.pos, stats: { blocksPlaced, blocksMined },
+      mobs: mobManager.mobs, cutsceneActive: cutscene.isActive,
+      season: timeline.season.name,
+      settlePoints: [...building.houses.values()].map((h) => h.door),
+    });
+  }
+
   // MC-4c：定时自动存档（未开卷/演出中冻结倒计时；写失败退避+告警，见 save.js）
   saveSystem.update(dt, started && !cutscene.isActive);
 
@@ -1158,7 +1205,7 @@ requestAnimationFrame(loop);
 // 调试钩子（?debug=1 才挂；末尾挂载——此时 lightsMgr/quests 等均已初始化，避免 TDZ；供 tools/ 自动化验证用）
 if (new URLSearchParams(location.search).get('debug') === '1') {
   window.__dbg = {
-    npcManager, player, world, lightsMgr, quests, encounters,
+    npcManager, player, world, lightsMgr, quests, encounters, music,
     encounterCtx: encCtx,
     explore: {
       cfg: exploreCfg, memory: exploredMemory, seed: SEED,

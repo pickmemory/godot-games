@@ -1,0 +1,385 @@
+{
+  "_comment": "MC-6 D-4 旁白清单（tools/gen-narration.mjs 生成，勿手改）。文案源唯一：web/data/chapters/*.json；music.js 按 text 精确匹配 → assets/audio/<file>，文案改动未重生成时自动回落纯字幕。",
+  "voice": "male-qn-qingse",
+  "speed": 0.9,
+  "entries": [
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "open",
+      "index": 1,
+      "id": null,
+      "text": "光和七年，天下大疫。你原籍的家，去年就没有了。",
+      "hash": "511f0ea5",
+      "file": "nar-184-yellow-turban-open-1.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "open",
+      "index": 2,
+      "id": null,
+      "text": "你随流民北上，在冀州一处里聚落下脚。村口的老者收留了你，条件是：自己动手，活下去。",
+      "hash": "691db091",
+      "file": "nar-184-yellow-turban-open-2.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "open",
+      "index": 3,
+      "id": null,
+      "text": "——挖矿、种田、筑屋，是你的生计。烽火烧过来的时候怎么活下来，是你的抉择。",
+      "hash": "97172f4d",
+      "file": "nar-184-yellow-turban-open-3.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "close",
+      "index": 1,
+      "id": null,
+      "text": "中平元年，过去了。",
+      "hash": "206241fd",
+      "file": "nar-184-yellow-turban-close-1.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "close",
+      "index": 2,
+      "id": null,
+      "text": "张角死了，张梁死了，张宝死了。朝廷的捷报送进了洛阳。",
+      "hash": "e5bf6380",
+      "file": "nar-184-yellow-turban-close-2.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "close",
+      "index": 3,
+      "id": null,
+      "text": "你活过了中平元年。你还在。",
+      "hash": "416471d9",
+      "file": "nar-184-yellow-turban-close-3.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "close",
+      "index": 4,
+      "id": null,
+      "text": "可这只是长卷的第一页——凉州的边报，已经在路上了。",
+      "hash": "56c9efbf",
+      "file": "nar-184-yellow-turban-close-4.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "event",
+      "index": 0,
+      "id": "first-night",
+      "text": "天黑得比昨日快。陈叟说，日落之后，墙外的东西不是人。",
+      "hash": "7512af9c",
+      "file": "nar-184-yellow-turban-ev-first-night.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "event",
+      "index": 0,
+      "id": "yellow-turban-rises",
+      "text": "二月末，唐周告变，马元义车裂于洛阳。张角仓促举兵：皆着黄巾为标帜，七州二十八郡，一时俱起。你村子也听得见远处的烟了。",
+      "hash": "d19418cc",
+      "file": "nar-184-yellow-turban-ev-yellow-turban-rises.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "event",
+      "index": 0,
+      "id": "army-marches-through",
+      "text": "朝廷发五校三河骑兵讨贼。大军过处，田垄践为尘土，道旁的青苗全没了。没有人向你们道一声歉。",
+      "hash": "63087681",
+      "file": "nar-184-yellow-turban-ev-army-marches-through.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "event",
+      "index": 0,
+      "id": "changshe-victory",
+      "text": "南边传来消息：皇甫嵩在长社纵火，大破黄巾波才部。捷报贴不到你的村子，粮价倒是先涨了。",
+      "hash": "9ded3fe9",
+      "file": "nar-184-yellow-turban-ev-changshe-victory.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "event",
+      "index": 0,
+      "id": "autumn-smoke",
+      "text": "入秋，兵燹连绵，四野的烟压低了天。看得见的日子，也短了。",
+      "hash": "d13ffe05",
+      "file": "nar-184-yellow-turban-ev-autumn-smoke.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "event",
+      "index": 0,
+      "id": "guangzong-falls",
+      "text": "皇甫嵩破广宗，张梁战死，三万余黄巾赴河。首乱平了。可散落各州的乱兵，才刚刚开始流散四方——这个冬天，锁好你的门。",
+      "hash": "0c83ce49",
+      "file": "nar-184-yellow-turban-ev-guangzong-falls.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "event",
+      "index": 0,
+      "id": "year-end",
+      "text": "中平元年就要过完了。你还活着。村里又少了三户人，也多了两个口。",
+      "hash": "5f3ae81f",
+      "file": "nar-184-yellow-turban-ev-year-end.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "event",
+      "index": 0,
+      "id": "first-shelter",
+      "text": "你亲手垒起了二十块砖石。在这条长卷里，你给自己挣出了一个能睡觉的地方。",
+      "hash": "f07c71aa",
+      "file": "nar-184-yellow-turban-ev-first-shelter.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "event",
+      "index": 0,
+      "id": "first-iron",
+      "text": "铁镐握在手里，比锄头沉，比命轻。乱世里，这也是一种底气。",
+      "hash": "a35697aa",
+      "file": "nar-184-yellow-turban-ev-first-iron.mp3"
+    },
+    {
+      "chapter": "184-yellow-turban",
+      "kind": "event",
+      "index": 0,
+      "id": "helped-the-widow",
+      "text": "你把干粮分了一半出去。这年头，善是一种很贵的东西。",
+      "hash": "8efa9cd6",
+      "file": "nar-184-yellow-turban-ev-helped-the-widow.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "open",
+      "index": 1,
+      "id": null,
+      "text": "中平六年，凉州董卓入了洛阳。皇帝换了一个，年号改成初平。",
+      "hash": "ae46a445",
+      "file": "nar-190-dong-zhuo-open-1.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "open",
+      "index": 2,
+      "id": null,
+      "text": "六年间你辗转南下——京畿有粮，京畿有工。你在洛阳城南、南市外郭的坊墙边落了脚。",
+      "hash": "9da508c1",
+      "file": "nar-190-dong-zhuo-open-2.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "open",
+      "index": 3,
+      "id": null,
+      "text": "挖矿、筑屋，还是你的生计。只是这一次，烽火不在远处——它就烧在你门前的天。",
+      "hash": "b016010d",
+      "file": "nar-190-dong-zhuo-open-3.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "close",
+      "index": 1,
+      "id": null,
+      "text": "初平元年，过去了。",
+      "hash": "5cd69456",
+      "file": "nar-190-dong-zhuo-close-1.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "close",
+      "index": 2,
+      "id": null,
+      "text": "皇帝在长安，联军在河内置酒。洛阳二百里内，无复鸡犬。",
+      "hash": "369f9cb0",
+      "file": "nar-190-dong-zhuo-close-2.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "close",
+      "index": 3,
+      "id": null,
+      "text": "你没有西去，也没有死。你的墙，从灰烬里又长了出来。",
+      "hash": "4425142e",
+      "file": "nar-190-dong-zhuo-close-3.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "close",
+      "index": 4,
+      "id": null,
+      "text": "长安来的诏书越来越轻——轻得像那枚买不到一斗谷的小钱。",
+      "hash": "973fbdf2",
+      "file": "nar-190-dong-zhuo-close-4.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "south-market-days",
+      "text": "南市的日子比乡下好过：坊墙替你挡了一半的风，市棚下换得到盐和针线。可郑伯说，今年的年成，悬。",
+      "hash": "8f6ea2b5",
+      "file": "nar-190-dong-zhuo-ev-south-market-days.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "first-night-190",
+      "text": "你在京畿数过了头一个安稳夜——只是安稳。夜里墙外的东西，这里也有，不比冀州少。",
+      "hash": "137e6893",
+      "file": "nar-190-dong-zhuo-ev-first-night-190.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "liangzhou-troops",
+      "text": "城里的凉州兵一天比一天多。他们不大买粮——他们直接牵牛。",
+      "hash": "d4c4f12a",
+      "file": "nar-190-dong-zhuo-ev-liangzhou-troops.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "guandong-rises",
+      "text": "正月，关东州郡俱起兵讨董，众数十万，推袁绍为盟主。兵锋未至，粮价先翻了三倍。夜里的东西，也多了。",
+      "hash": "abb2d715",
+      "file": "nar-190-dong-zhuo-ev-guandong-rises.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "yangcheng-raid",
+      "text": "凉州兵出城「就粮」。正逢社祭，他们杀了祭社的男女，把车牛和妇女一并掳走。你的田，被马蹄翻成了道。",
+      "hash": "88ec1d82",
+      "file": "nar-190-dong-zhuo-ev-yangcheng-raid.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "relocate-decree",
+      "text": "二月，诏迁都长安。董卓尽驱洛阳数百万人西行——步骑在后驱蹙，一路饥饿寇掠，积尸盈路。郑伯一家也被点了名。",
+      "hash": "5d0b8cbc",
+      "file": "nar-190-dong-zhuo-ev-relocate-decree.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "burn-luoyang-1",
+      "text": "火起了。先是南宫，后是官署、府库，再后来，是坊、是市、是你邻居家的屋梁。没有人救火——放火的就是兵。",
+      "hash": "30d9a825",
+      "file": "nar-190-dong-zhuo-ev-burn-luoyang-1.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "burn-luoyang-2",
+      "text": "第二日，风助火势。草木烧成了焦土，火也烧到了你的门——草顶最先着，木顶烧得快。夯土的墙还立着，墙里的人也还活着。",
+      "hash": "2848ef71",
+      "file": "nar-190-dong-zhuo-ev-burn-luoyang-2.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "burn-luoyang-3",
+      "text": "第三日，火自己灭了——因为没有剩下可烧的东西。二百里内，无复鸡犬。",
+      "hash": "9eca1ccf",
+      "file": "nar-190-dong-zhuo-ev-burn-luoyang-3.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "left-behind",
+      "text": "西去的队伍看不见了。……你没有走。井还在，椽子还在，郑伯教的版筑还在。灰里也能活——这是南市教你的。",
+      "hash": "e39034b2",
+      "file": "nar-190-dong-zhuo-ev-left-behind.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "biansui-defeat",
+      "text": "有人追了上去——曹操，在荥阳汴水边被徐荣打得大败，几乎是走着回来的。联军几十万人，在酸枣日日置酒高会。",
+      "hash": "84b7193a",
+      "file": "nar-190-dong-zhuo-ev-biansui-defeat.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "ashes-fall",
+      "text": "灰烬落了半个月，像一场不会化的雪。井水是苦的，柴是黑的，一碰就碎。",
+      "hash": "3cebdd47",
+      "file": "nar-190-dong-zhuo-ev-ashes-fall.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "heso-stalemate",
+      "text": "关东的兵还在河内对峙。听说有人放粮，也有人纵兵——都是听说。废墟里的日子，只看自己的手。",
+      "hash": "eb7a7c76",
+      "file": "nar-190-dong-zhuo-ev-heso-stalemate.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "small-coins",
+      "text": "长安来的新令：坏五铢，铸小钱。钱越来越轻，谷一斛卖到数十万。你把粮藏进了地窖——这年头，粮比钱金贵。",
+      "hash": "73873712",
+      "file": "nar-190-dong-zhuo-ev-small-coins.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "summer-end",
+      "text": "初平元年的夏天快过完了。洛阳还在冒烟，联军还在喝酒。你还活着——在一片焦土上，垒起了新的墙。",
+      "hash": "e21b5a3d",
+      "file": "nar-190-dong-zhuo-ev-summer-end.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "fireproof-home",
+      "text": "四十块砖石。火来的时候，你的墙站在原地，替你站在原地。这一夜之后，你信夯土，胜过信黄天。",
+      "hash": "3a2da553",
+      "file": "nar-190-dong-zhuo-ev-fireproof-home.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "ruin-scrapper",
+      "text": "你从灰里刨出了几百块砖石瓦砾。废墟在养活你——这话说出来，你自己都觉得不对。可乱世里没有对错，只有活。",
+      "hash": "8077ecfa",
+      "file": "nar-190-dong-zhuo-ev-ruin-scrapper.mp3"
+    },
+    {
+      "chapter": "190-dong-zhuo",
+      "kind": "event",
+      "index": 0,
+      "id": "helped-the-tang",
+      "text": "你把半袋粟塞进了唐氏的襁褓里。西迁的路上，这一点粮，也许就是一条命。",
+      "hash": "1e6a6ad6",
+      "file": "nar-190-dong-zhuo-ev-helped-the-tang.mp3"
+    }
+  ]
+}

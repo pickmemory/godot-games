@@ -4,6 +4,9 @@
 
 | 文件 | 顶层键 | 条目数（已知数组） |
 |---|---|---|
+| audio/ambient.json | bed, layers | — |
+| audio/bgm.json | bus, states, machine, fade, duck | — |
+| audio/narrations.json | voice, speed, entries | — |
 | building.json | house, villager, messages | — |
 | chapters/184-yellow-turban.json | id, title, subtitle, start, end, dayLengthSeconds, seasons, worldState, events | events:10 |
 | chapters/190-dong-zhuo.json | id, title, subtitle, start, end, dayLengthSeconds, seasons, worldState, events | events:18 |

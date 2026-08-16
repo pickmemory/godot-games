@@ -170,6 +170,11 @@
           "text": "关东起兵！州郡俱反，众数十万，推袁绍为盟主。兵还没到，粮价先翻了三倍。"
         },
         {
+          "type": "ambient",
+          "layer": "distant-war",
+          "fade": 15
+        },
+        {
           "type": "mobs",
           "spawn": {
             "maxCount": 6,
@@ -262,6 +267,16 @@
         {
           "type": "notify",
           "text": "洛阳起火了。烟从北边压过来——茅顶塌成了白灰，木楼烧成了黑炭。躲进土墙里，别出去。"
+        },
+        {
+          "type": "playBgm",
+          "state": "event",
+          "hold": 120
+        },
+        {
+          "type": "ambient",
+          "layer": "distant-war",
+          "fade": 8
         },
         {
           "type": "sky",
@@ -424,6 +439,12 @@
         {
           "type": "notify",
           "text": "火自己灭了——因为没有剩下可烧的东西。二百里内，无复鸡犬。"
+        },
+        {
+          "type": "ambient",
+          "layer": "distant-war",
+          "on": false,
+          "fade": 30
         },
         {
           "type": "sky",

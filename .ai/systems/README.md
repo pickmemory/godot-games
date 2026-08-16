@@ -31,7 +31,7 @@
 | 体素世界（chunk/地形色彩带/网格化/碰撞） | [voxel-world.md](voxel-world.md) | ✅（D-1 时补齐：色彩带+裸岩+河滩规则；碰撞细节待后续充实） |
 | 农耕/建造定居 | — | 待补 |
 | 存档（差分/适配器） | — | 待补 |
-| 音频（sfx.js WebAudio 合成） | — | 待补 |
+| 声音层（BGM 四态/环境分层/事件旁白；含 sfx.js 程序合成） | [audio.md](audio.md) | ✅（MC-6 D-4 新建） |
 | 流水线（.github 接力机制） | 见 AGENTS.md「接力制作机制」+ known-issues 流水线案 | ✅（散页） |
 
 > 待补页的义务：任何 agent 大改对应系统时，顺手把该页写出来（协议见 ../CONTEXT.md 维护规矩）。

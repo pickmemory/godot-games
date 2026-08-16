@@ -4,6 +4,8 @@
 export class SFX {
   constructor() {
     this.actx = null;
+    this.out = null;          // D-4：输出节点（music.js 总线接管后指向 busSfx；null = 直连 destination）
+    this.windEnabled = true;  // D-4：程序夜风开关（环境采样层 amb-night 接管后置 false，防双风叠加）
     this._wind = null;
   }
 
@@ -15,6 +17,12 @@ export class SFX {
     }
     if (this.actx && this.actx.state === 'suspended') this.actx.resume();
   }
+
+  /** D-4：输出迁入 music.js 总线（只改连接，不改音色；audio-direction.md §6.1） */
+  setOutput(node) { this.out = node; }
+
+  /** 当前输出终点（未迁总线时直连 destination，保持独立可用） */
+  _dest() { return this.out ?? this.actx.destination; }
 
   /* ---------- 基础合成单元 ---------- */
 
@@ -34,7 +42,7 @@ export class SFX {
     if (sweep) flt.frequency.exponentialRampToValueAtTime(Math.max(80, freq * sweep), actx.currentTime + dur);
     const g = actx.createGain();
     g.gain.value = gain;
-    src.connect(flt).connect(g).connect(actx.destination);
+    src.connect(flt).connect(g).connect(this._dest());
     src.start();
   }
 
@@ -50,7 +58,7 @@ export class SFX {
     const g = actx.createGain();
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g).connect(actx.destination);
+    o.connect(g).connect(this._dest());
     o.start(t); o.stop(t + dur + 0.03);
   }
 
@@ -94,7 +102,7 @@ export class SFX {
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(vol, t + 0.15);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 1.0);
-    o.connect(flt).connect(g).connect(actx.destination);
+    o.connect(flt).connect(g).connect(this._dest());
     o.start(t); o.stop(t + 1.05);
   }
 
@@ -124,7 +132,7 @@ export class SFX {
 
   _startWind() {
     const actx = this.actx;
-    if (!actx || this._wind) return;
+    if (!actx || this._wind || !this.windEnabled) return;   // D-4：采样环境层接管时不再双风叠加
     const buf = actx.createBuffer(1, actx.sampleRate * 2, actx.sampleRate);
     const ch = buf.getChannelData(0);
     for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
@@ -140,7 +148,7 @@ export class SFX {
     const lfoGain = actx.createGain();
     lfoGain.gain.value = 0.05;
     lfo.connect(lfoGain).connect(g.gain);
-    src.connect(flt).connect(g).connect(actx.destination);
+    src.connect(flt).connect(g).connect(this._dest());
     src.start(); lfo.start();
     this._wind = { src, g, lfo };
   }

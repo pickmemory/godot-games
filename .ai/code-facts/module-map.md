@@ -10,7 +10,7 @@
 | building | 260 | blocks | main | FALLBACK_BUILDING, Building |
 | chapter | 294 | — | encounters main npc | dateToSerial, serialToDate, FALLBACK_CHAPTER, normalizeChapter, loadChapter, ChapterTimeline |
 | crafting | 112 | blocks items | main | FALLBACK_RECIPES, Crafting |
-| cutscene | 94 | — | main | Cutscene |
+| cutscene | 112 | — | main | Cutscene |
 | diag | 90 | — | main | DIAG_VERSION, dlog, installDiag |
 | dialog | 123 | — | main | FALLBACK_DIALOGS, DialogUI |
 | drops | 211 | blocks items | main | DropManager |
@@ -23,15 +23,16 @@
 | inventory | 91 | items | main | Inventory |
 | items | 146 | — | blocks crafting drops farming helditem inventory main mining ui | ITEM, ITEM_DEFS, isToolItem, maxStackOf, drawItemIcon |
 | lights | 112 | blocks | main | LightManager |
-| main | 1170 | diag blocks items textures world terrain player interaction ui health mob inventory crafting helditem mining sfx drops farming building chapter structure npc dialog quests cutscene save steam-adapter sky lights explore encounters | — |  |
+| main | 1217 | diag blocks items textures world terrain player interaction ui health mob inventory crafting helditem mining sfx music drops farming building chapter structure npc dialog quests cutscene save steam-adapter sky lights explore encounters | — |  |
 | mesher | 270 | blocks textures | world | buildChunkGeometry |
 | mining | 46 | items | interaction main | FALLBACK_MINING, digTime, dropOf, toolDefOf |
 | mob | 292 | blocks terrain | main | FALLBACK_MOB_CONFIG, MobManager |
+| music | 420 | — | main | FALLBACK_BGM_CFG, FALLBACK_AMBIENT_CFG, MusicSystem |
 | npc | 512 | blocks terrain chapter | main | FALLBACK_NPC_DATA, NPCManager |
 | player | 135 | blocks | main | Player |
 | quests | 111 | — | main | FALLBACK_QUESTS, QuestSystem |
 | save | 284 | blocks | main | SAVE_VERSION, MemorySaveAdapter, LocalStorageSaveAdapter, serializeDiffs, parseDiffs, validateSnapshot …(7) |
-| sfx | 160 | — | main | SFX |
+| sfx | 168 | — | main | SFX |
 | sky | 92 | — | main | shichen, CelestialBodies |
 | steam-adapter | 131 | — | main | STEAM_ACHIEVEMENTS, hasSteamBridge, SteamCloudSaveAdapter, pickSaveAdapter, platformUnlock |
 | structure | 76 | terrain blocks | main | stampStructure |

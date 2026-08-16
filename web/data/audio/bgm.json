@@ -1,0 +1,20 @@
+{
+  "_comment": "MC-6 D-4 BGM 四态状态机参数（audio-direction.md §3；引擎 web/src/music.js 读表执行，代码零数值。文件相对 web/assets/audio/）。淡化表语义：toDanger=入危险淡入（恐惧要快）；fromDangerOut=出危险淡出（余缕）；toEvent/fromEventOut=演出准点进出；default=其余互转；first=首次起播（手势后/读档恢复，E-音频①④）。",
+  "bus": { "master": 0.9, "bgm": 0.35, "ambient": 0.25, "sfx": 0.6, "narration": 0.9 },
+  "states": {
+    "explore": { "file": "bgm-explore.mp3", "volume": 0.8, "loop": true },
+    "danger": { "file": "bgm-danger.mp3", "volume": 0.8, "loop": true },
+    "settle": { "file": "bgm-settle.mp3", "volume": 0.75, "loop": true },
+    "event": { "file": "bgm-chapter-event.mp3", "volume": 0.85, "loop": false }
+  },
+  "machine": {
+    "enterHysteresis": 2,
+    "dangerMobRadius": 20,
+    "dangerExitHysteresis": 8,
+    "settleRadius": 32,
+    "settleExitHysteresis": 20,
+    "settleStatBlocks": 40
+  },
+  "fade": { "toDanger": 1.5, "fromDangerOut": 5, "toEvent": 0.5, "fromEventOut": 1.5, "default": 3, "first": 2 },
+  "duck": { "bgm": 0.3, "ambient": 0.3, "sfx": 0.7, "restoreSec": 1 }
+}

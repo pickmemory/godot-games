@@ -1,0 +1,12 @@
+{
+  "_comment": "MC-6 D-4 环境音分层定义（audio-direction.md §4；引擎 web/src/music.js 读表执行）。三层：bed=昼夜背景层（isNight 翻沿交叉淡化 fadeSec）；layers=事件层（章节 ambient 效果开关，同时 ≤1 层，新层顶旧层）；单次层（鸡鸣/犬吠）留 P1 采样接入。seasonGain：冬季风 ×1.3（对位美术圣经冬季 fogFar 90 的「世界更空」）。文件相对 web/assets/audio/。",
+  "bed": {
+    "day": { "file": "amb-day.mp3", "volume": 0.55 },
+    "night": { "file": "amb-night.mp3", "volume": 0.7 },
+    "fadeSec": 5,
+    "seasonGain": { "winter": 1.3 }
+  },
+  "layers": {
+    "distant-war": { "file": "amb-distant-war.mp3", "volume": 0.6, "loop": true }
+  }
+}
